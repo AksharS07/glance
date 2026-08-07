@@ -797,40 +797,64 @@ var isPlaying = false;
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
         // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
-        // Find all buttons inside playerBar
-        var allBtns = deepQuery('tp-yt-paper-icon-button, button', playerBar);
-        var sBtn = null, rBtn = null;
-        for (var i = 0; i < allBtns.length; i++) {
-          var title = (allBtns[i].getAttribute('title') || allBtns[i].getAttribute('aria-label') || '').toLowerCase();
-          if (title.includes('shuffle')) sBtn = allBtns[i];
-          if (title.includes('repeat')) rBtn = allBtns[i];
+        // Find toggle renderers inside playerBar
+        var toggles = deepQuery('ytmusic-toggle-button-renderer, .shuffle, .repeat, button[aria-label*="shuffle" i], button[aria-label*="repeat" i]', playerBar);
+        var sRenderer = null, rRenderer = null;
+        for (var i = 0; i < toggles.length; i++) {
+          var title = (toggles[i].getAttribute('title') || toggles[i].getAttribute('aria-label') || '').toLowerCase();
+          if (title.includes('shuffle')) sRenderer = toggles[i];
+          if (title.includes('repeat')) rRenderer = toggles[i];
         }
 
-        if (sBtn) {
-          var sTitle = (sBtn.getAttribute('title') || sBtn.getAttribute('aria-label') || '').toLowerCase();
-          var sPressed = sBtn.getAttribute('aria-pressed') === 'true';
-          // Check if parent toggle-renderer has active attribute
-          var sParent = sBtn.closest ? sBtn.closest('ytmusic-toggle-button-renderer') : null;
-          var sParentPressed = sParent && (sParent.getAttribute('aria-pressed') === 'true' || sParent.hasAttribute('is-toggled') || sParent.classList.contains('active'));
-          var sColor = window.getComputedStyle(sBtn).color;
-          var sIsWhite = (sColor === 'rgb(255, 255, 255)' || sColor === 'rgba(255, 255, 255, 1)');
+        // If not found by renderer, try finding by raw SVGs (fallback)
+        if (!sRenderer || !rRenderer) {
+          var svgs = deepQuery('svg', playerBar);
+          for (var k = 0; k < svgs.length; k++) {
+             var p = svgs[k].querySelector('path');
+             if (p) {
+               var d = p.getAttribute('d') || '';
+               // Shuffle path usually starts with M10.59
+               if (!sRenderer && d.includes('10.59')) sRenderer = svgs[k].closest('button, ytmusic-toggle-button-renderer, tp-yt-paper-icon-button') || svgs[k];
+               // Repeat path usually starts with M7 7h10
+               if (!rRenderer && d.includes('M7 7')) rRenderer = svgs[k].closest('button, ytmusic-toggle-button-renderer, tp-yt-paper-icon-button') || svgs[k];
+             }
+          }
+        }
+
+        if (sRenderer) {
+          var sTitle = (sRenderer.getAttribute('title') || sRenderer.getAttribute('aria-label') || '').toLowerCase();
+          var innerS = deepQueryOne('button, tp-yt-paper-icon-button, yt-icon, svg', sRenderer) || sRenderer;
           
-          if (sPressed || sParentPressed || sIsWhite || sTitle.includes('turn off') || sTitle.includes('disable')) {
+          var sPressed = sRenderer.getAttribute('aria-pressed') === 'true' || 
+                         innerS.getAttribute('aria-pressed') === 'true' || 
+                         sRenderer.getAttribute('is-toggled') === 'true' ||
+                         innerS.getAttribute('is-toggled') === 'true';
+                         
+          var sColor = window.getComputedStyle(innerS).color || '';
+          var sFill = window.getComputedStyle(innerS).fill || '';
+          var isActiveColor = sColor.includes('255, 255, 255') || sFill.includes('255, 255, 255');
+          
+          if (sPressed || isActiveColor || sTitle.includes('turn off') || sTitle.includes('disable')) {
             shuffleOn = true;
           }
         }
 
-        if (rBtn) {
-          var rTitle = (rBtn.getAttribute('title') || rBtn.getAttribute('aria-label') || '').toLowerCase();
-          var rPressed = rBtn.getAttribute('aria-pressed') === 'true';
-          var rParent = rBtn.closest ? rBtn.closest('ytmusic-toggle-button-renderer') : null;
-          var rParentPressed = rParent && (rParent.getAttribute('aria-pressed') === 'true' || rParent.hasAttribute('is-toggled') || rParent.classList.contains('active'));
-          var rColor = window.getComputedStyle(rBtn).color;
-          var rIsWhite = (rColor === 'rgb(255, 255, 255)' || rColor === 'rgba(255, 255, 255, 1)');
+        if (rRenderer) {
+          var rTitle = (rRenderer.getAttribute('title') || rRenderer.getAttribute('aria-label') || '').toLowerCase();
+          var innerR = deepQueryOne('button, tp-yt-paper-icon-button, yt-icon, svg', rRenderer) || rRenderer;
+          
+          var rPressed = rRenderer.getAttribute('aria-pressed') === 'true' || 
+                         innerR.getAttribute('aria-pressed') === 'true' || 
+                         rRenderer.getAttribute('is-toggled') === 'true' ||
+                         innerR.getAttribute('is-toggled') === 'true';
+                         
+          var rColor = window.getComputedStyle(innerR).color || '';
+          var rFill = window.getComputedStyle(innerR).fill || '';
+          var rActiveColor = rColor.includes('255, 255, 255') || rFill.includes('255, 255, 255');
           
           if (rTitle.includes('one') || rTitle.includes('1')) {
             repeatMode = 'one';
-          } else if (rPressed || rParentPressed || rIsWhite || rTitle.includes('all') || rTitle.includes('turn off') || rTitle.includes('disable')) {
+          } else if (rPressed || rActiveColor || rTitle.includes('all') || rTitle.includes('turn off') || rTitle.includes('disable')) {
             repeatMode = 'all';
           }
         }
