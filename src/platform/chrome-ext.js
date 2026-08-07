@@ -49,21 +49,10 @@ VDI.Platform.ChromeExt = (function() {
   /* Background Script Side (for background.js) */
 
   function createBackgroundWorker() {
-    var returnTabId = null;
-    var S = {
-      isPlaying: false,
-      title: '',
-      artist: '',
-      artwork: null,
-      duration: 0,
-      position: 0,
-      hasMedia: false,
-      tabId: null,
-      windowId: null,
-      supportsPiP: false
-    };
-
+    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, repeatMode: 'off' };
     var pollInterval = 1000;
+    var returnTabId = null;
+    var returnWinId = null;
 
     function execInTab(tabId, fn, args, cb, world) {
       if (!tabId) {
@@ -210,6 +199,7 @@ VDI.Platform.ChromeExt = (function() {
             chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
               if (tabs && tabs.length > 0) {
                 returnTabId = tabs[0].id;
+                returnWinId = tabs[0].windowId;
                 if (S.tabId !== null) {
                   chrome.tabs.update(S.tabId, { active: true });
                   if (S.windowId !== null) {
@@ -220,7 +210,16 @@ VDI.Platform.ChromeExt = (function() {
             });
           } else {
             chrome.tabs.update(returnTabId, { active: true });
+            if (returnWinId !== null) {
+              chrome.windows.update(returnWinId, { focused: true });
+            }
             returnTabId = null;
+            returnWinId = null;
+          }
+        } else if (msg.act === 'VDI_TELEPORT_BACK') {
+          if (msg.val && msg.val.source) {
+            if (msg.val.source.tabId) chrome.tabs.update(msg.val.source.tabId, { active: true });
+            if (msg.val.source.winId) chrome.windows.update(msg.val.source.winId, { focused: true });
           }
         } else {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
@@ -251,9 +250,6 @@ VDI.Platform.ChromeExt = (function() {
           // Rapid poll after actions
           multiPoll(poll, [200, 600, 1200]);
         }
-      } else if (msg.type === 'VDI_TELEPORT_BACK' && msg.source) {
-        if (msg.source.tabId) chrome.tabs.update(msg.source.tabId, { active: true });
-        if (msg.source.winId) chrome.windows.update(msg.source.winId, { focused: true });
       } else if (msg.type === 'VDI_REQUEST_STATE') {
         sendResponse(S);
       } else if (msg.type === 'VDI_GET_NOW_PLAYING') {

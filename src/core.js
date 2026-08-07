@@ -467,6 +467,13 @@ VDI.Core = (function() {
       return results;
     };
 
+var isPlaying = false;
+    if (realEl) {
+      isPlaying = !realEl.paused;
+    } else if (playBtn) {
+      isPlaying = playBtn.getAttribute('aria-label') === 'Pause' || playBtn.getAttribute('aria-label') === 'Pause ';
+    }
+    
     var ms = navigator.mediaSession;
     var uiDur = 0;
     var uiCur = 0;
@@ -617,8 +624,6 @@ VDI.Core = (function() {
       }
     }
     
-    var isPlaying = playBtn ? playBtn.getAttribute('aria-label') === 'Pause' : false;
-
     // Spotify's UI string is often 1-3 seconds delayed due to chunked media buffering.
     // To sync lyrics perfectly, we MUST extract millisecond precision from the true audio element.
     var realCur = null;
@@ -635,7 +640,7 @@ VDI.Core = (function() {
       for (var m = 0; m < els.length; m++) {
         var d2 = els[m].duration;
         // Ignore < 30s elements to completely avoid 8-second looping Canvas videos!
-        if (!els[m].paused && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
+        if ((!els[m].paused || els[m].currentTime > 0) && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
       }
     }
     if (realEl && realEl.currentTime >= 0) {
