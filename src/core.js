@@ -797,25 +797,26 @@ var isPlaying = false;
         // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
         var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
         if (shuffleEl) {
-          // Check the element itself AND its inner paper-icon-button (second shadow level)
           var sInner = deepQueryOne('tp-yt-paper-icon-button, button', shuffleEl) || shuffleEl;
           var sLabel = (shuffleEl.getAttribute('aria-label') || shuffleEl.getAttribute('title') || sInner.getAttribute('aria-label') || sInner.getAttribute('title') || '').toLowerCase();
           shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
-                      shuffleEl.hasAttribute('active') ||
+                      shuffleEl.hasAttribute('active') || shuffleEl.classList.contains('active') ||
                       sInner.getAttribute('aria-pressed') === 'true' ||
-                      sInner.hasAttribute('active') ||
-                      sLabel.includes('off') || sLabel.includes('disable');
+                      sInner.hasAttribute('active') || sInner.classList.contains('active') ||
+                      sLabel.includes('turn shuffle off') || sLabel.includes('disable shuffle') || sLabel === 'shuffle on';
         }
         var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
         if (repeatEl) {
           var rInner = deepQueryOne('tp-yt-paper-icon-button, button', repeatEl) || repeatEl;
           var rLabel = (repeatEl.getAttribute('aria-label') || repeatEl.getAttribute('title') || rInner.getAttribute('aria-label') || rInner.getAttribute('title') || '').toLowerCase();
           var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' ||
-                         repeatEl.hasAttribute('active') ||
+                         repeatEl.hasAttribute('active') || repeatEl.classList.contains('active') ||
                          rInner.getAttribute('aria-pressed') === 'true' ||
-                         rInner.hasAttribute('active');
+                         rInner.hasAttribute('active') || rInner.classList.contains('active');
           if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
-          else if (rPressed || rLabel.includes('off') || rLabel.includes('disable')) repeatMode = 'all';
+          else if (rLabel.includes('all')) repeatMode = 'all';
+          else if (rLabel.includes('turn repeat off') || rLabel === 'repeat on') repeatMode = 'all';
+          else if (rPressed && !rLabel.includes('off')) repeatMode = 'all';
         }
       }
 
