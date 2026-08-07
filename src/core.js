@@ -804,19 +804,6 @@ VDI.Core = (function() {
           else if (rPressed || rLabel.includes(' on')) repeatMode = 'all';
         }
       }
-        var rb = deepQueryOne('tp-yt-paper-icon-button.repeat, .repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
-        if (rb) {
-          var rbInner = VDI.Core.deepQueryOne('button, tp-yt-paper-icon-button', rb) || rb;
-          var rbWrap = rb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || rb;
-          var rbTitle = (rbWrap.getAttribute('title') || rbWrap.getAttribute('aria-label') || '').toLowerCase();
-          var isPressed = rb.getAttribute('aria-pressed') === 'true' || rbInner.getAttribute('aria-pressed') === 'true' || rbWrap.getAttribute('aria-pressed') === 'true' || rbWrap.hasAttribute('active');
-          if (rbTitle.includes('one') || rbTitle.includes('1')) {
-            repeatMode = 'one';
-          } else if (isPressed || rbTitle.includes('all') || rbTitle.includes('on')) {
-            repeatMode = 'all';
-          }
-        }
-      }
 
       return {
         title: (ms && ms.metadata && ms.metadata.title) || '',
