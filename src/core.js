@@ -797,41 +797,41 @@ var isPlaying = false;
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
         // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
-        // YTM right controls: [Volume, Repeat, Shuffle, ...]
-        var rc = deepQueryOne('.right-controls-buttons, .right-controls', playerBar);
-        if (rc) {
-          var toggles = Array.from(rc.querySelectorAll('ytmusic-toggle-button-renderer, tp-yt-paper-icon-button[aria-pressed]'));
-          // Find based on attributes to be safe, but fallback to index if missing
-          var shuffleEl = toggles.find(el => (el.getAttribute('aria-label')||'').toLowerCase().includes('shuffle') || (el.getAttribute('title')||'').toLowerCase().includes('shuffle')) || toggles[1];
-          var repeatEl = toggles.find(el => (el.getAttribute('aria-label')||'').toLowerCase().includes('repeat') || (el.getAttribute('title')||'').toLowerCase().includes('repeat')) || toggles[0];
+        // Find all buttons inside playerBar
+        var allBtns = deepQuery('tp-yt-paper-icon-button, button', playerBar);
+        var sBtn = null, rBtn = null;
+        for (var i = 0; i < allBtns.length; i++) {
+          var title = (allBtns[i].getAttribute('title') || allBtns[i].getAttribute('aria-label') || '').toLowerCase();
+          if (title.includes('shuffle')) sBtn = allBtns[i];
+          if (title.includes('repeat')) rBtn = allBtns[i];
+        }
+
+        if (sBtn) {
+          var sTitle = (sBtn.getAttribute('title') || sBtn.getAttribute('aria-label') || '').toLowerCase();
+          var sPressed = sBtn.getAttribute('aria-pressed') === 'true';
+          // Check if parent toggle-renderer has active attribute
+          var sParent = sBtn.closest ? sBtn.closest('ytmusic-toggle-button-renderer') : null;
+          var sParentPressed = sParent && (sParent.getAttribute('aria-pressed') === 'true' || sParent.hasAttribute('is-toggled') || sParent.classList.contains('active'));
+          var sColor = window.getComputedStyle(sBtn).color;
+          var sIsWhite = (sColor === 'rgb(255, 255, 255)' || sColor === 'rgba(255, 255, 255, 1)');
           
-          if (shuffleEl) {
-            var sLabel = (shuffleEl.getAttribute('aria-label') || shuffleEl.getAttribute('title') || '').toLowerCase();
-            shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
-                        shuffleEl.hasAttribute('is-toggled') ||
-                        (shuffleEl.hasAttribute('aria-label') && sLabel.includes('turn off')) ||
-                        sLabel === 'shuffle on';
-            
-            // YTM sets color to white/var(--ytmusic-text-primary) when active.
-            var sInner = deepQueryOne('tp-yt-paper-icon-button, button', shuffleEl) || shuffleEl;
-            var c = window.getComputedStyle(sInner).color;
-            if (c === 'rgb(255, 255, 255)' || c === 'rgba(255, 255, 255, 1)' || shuffleEl.getAttribute('aria-pressed') === 'true' || sInner.getAttribute('aria-pressed') === 'true') {
-              shuffleOn = true;
-            }
+          if (sPressed || sParentPressed || sIsWhite || sTitle.includes('turn off') || sTitle.includes('disable')) {
+            shuffleOn = true;
           }
-          if (repeatEl) {
-            var rLabel = (repeatEl.getAttribute('aria-label') || repeatEl.getAttribute('title') || '').toLowerCase();
-            var isOne = rLabel.includes('one') || rLabel.includes('1');
-            
-            var rInner = deepQueryOne('tp-yt-paper-icon-button, button', repeatEl) || repeatEl;
-            var c2 = window.getComputedStyle(rInner).color;
-            var rActive = c2 === 'rgb(255, 255, 255)' || c2 === 'rgba(255, 255, 255, 1)' || repeatEl.getAttribute('aria-pressed') === 'true' || rInner.getAttribute('aria-pressed') === 'true' || repeatEl.hasAttribute('is-toggled') || rLabel.includes('turn off') || rLabel.includes('repeat all');
-            
-            if (isOne) {
-              repeatMode = 'one';
-            } else if (rActive) {
-              repeatMode = 'all';
-            }
+        }
+
+        if (rBtn) {
+          var rTitle = (rBtn.getAttribute('title') || rBtn.getAttribute('aria-label') || '').toLowerCase();
+          var rPressed = rBtn.getAttribute('aria-pressed') === 'true';
+          var rParent = rBtn.closest ? rBtn.closest('ytmusic-toggle-button-renderer') : null;
+          var rParentPressed = rParent && (rParent.getAttribute('aria-pressed') === 'true' || rParent.hasAttribute('is-toggled') || rParent.classList.contains('active'));
+          var rColor = window.getComputedStyle(rBtn).color;
+          var rIsWhite = (rColor === 'rgb(255, 255, 255)' || rColor === 'rgba(255, 255, 255, 1)');
+          
+          if (rTitle.includes('one') || rTitle.includes('1')) {
+            repeatMode = 'one';
+          } else if (rPressed || rParentPressed || rIsWhite || rTitle.includes('all') || rTitle.includes('turn off') || rTitle.includes('disable')) {
+            repeatMode = 'all';
           }
         }
       }
