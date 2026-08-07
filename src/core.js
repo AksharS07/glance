@@ -789,14 +789,16 @@ VDI.Core = (function() {
       var repeatMode = 'off';
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
-        var shuffleEl = playerBar ? playerBar.querySelector('ytmusic-toggle-button-renderer.shuffle') : null;
+        // ytmusic-player-bar renders buttons in its shadow DOM
+        var barRoot = (playerBar && playerBar.shadowRoot) ? playerBar.shadowRoot : playerBar;
+        var shuffleEl = barRoot ? barRoot.querySelector('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i]') : null;
         if (shuffleEl) {
           var sLabel = (shuffleEl.getAttribute('aria-label') || '').toLowerCase();
           shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
                       shuffleEl.hasAttribute('active') ||
                       sLabel.includes(' on');
         }
-        var repeatEl = playerBar ? playerBar.querySelector('ytmusic-toggle-button-renderer.repeat') : null;
+        var repeatEl = barRoot ? barRoot.querySelector('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i]') : null;
         if (repeatEl) {
           var rLabel = (repeatEl.getAttribute('aria-label') || '').toLowerCase();
           var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' || repeatEl.hasAttribute('active');
