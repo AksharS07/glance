@@ -6,8 +6,8 @@
   <link rel="icon" href="icon128.png" type="image/png">
   <style>
     body {
-      background-color: #0d0d0d;
-      color: #ffffff;
+      background-color: #09090b;
+      color: #fafafa;
       font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
       margin: 0;
       padding: 0;
@@ -19,16 +19,25 @@
     .container {
       max-width: 600px;
       padding: 40px;
-      background: rgba(255, 255, 255, 0.03);
+      background: #18181b;
       border-radius: 24px;
       box-shadow: 0 20px 40px rgba(0,0,0,0.5);
       border: 1px solid rgba(255,255,255,0.05);
     }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 8px;
+    }
+    .logo {
+      width: 48px;
+      height: 48px;
+    }
     h1 {
       font-size: 32px;
       font-weight: 700;
-      margin-top: 0;
-      margin-bottom: 8px;
+      margin: 0;
       background: linear-gradient(135deg, #fff, #a78bfa);
       -webkit-background-clip: text;
       -webkit-text-fill-color: transparent;
@@ -37,39 +46,40 @@
       font-size: 16px;
       color: rgba(255, 255, 255, 0.5);
       margin-bottom: 32px;
+      line-height: 1.5;
     }
     .feature {
       display: flex;
-      gap: 14px;
+      gap: 16px;
       margin-bottom: 24px;
       align-items: flex-start;
+      background: rgba(255,255,255,0.02);
+      padding: 16px;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: background 0.2s;
+    }
+    .feature:hover {
+      background: rgba(255,255,255,0.04);
     }
     .feature-icon {
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      min-width: 40px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-top: 2px;
+      font-size: 20px;
     }
-    .feature-icon svg {
-      width: 18px;
-      height: 18px;
-    }
-    .icon-settings { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.2); }
-    .icon-settings svg { fill: #a78bfa; }
-    .icon-move { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.2); }
-    .icon-move svg { fill: #60a5fa; }
-    .icon-hide { background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.2); }
-    .icon-hide svg { fill: #fbbf24; }
-    .icon-lyrics { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.2); }
-    .icon-lyrics svg { fill: #34d399; }
+    .icon-1 { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.2); }
+    .icon-2 { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.2); }
+    .icon-3 { background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.2); }
+    .icon-4 { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.2); }
     .feature-content h3 {
       font-size: 16px;
       font-weight: 600;
-      margin: 0 0 4px 0;
+      margin: 0 0 6px 0;
     }
     .feature-content p {
       margin: 0;
@@ -79,38 +89,77 @@
     }
     .btn {
       display: inline-block;
-      margin-top: 24px;
-      padding: 12px 24px;
+      margin-top: 12px;
+      padding: 14px 28px;
       background: #fff;
       color: #000;
       text-decoration: none;
       font-weight: 600;
-      border-radius: 12px;
-      transition: opacity 0.2s;
+      border-radius: 30px;
+      transition: all 0.2s;
+      text-align: center;
+      width: calc(100% - 56px);
+      box-sizing: border-box;
     }
     .btn:hover {
-      opacity: 0.8;
-    }
-    .icon-spotify {
-      background: rgba(29, 185, 84, 0.1) !important;
-    }
-    .icon-spotify svg {
-      fill: #1DB954 !important;
+      opacity: 0.9;
+      transform: translateY(-2px);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Dynamic Island V1.6</h1>
-    <div class="subtitle">The Polish & Power Update! Added Shuffle/Repeat support for Spotify and Apple Music, Keyboard Shortcuts (Alt+Space/Right/Left), a Teleport toggle to jump between tabs, Quick Playlist shortcuts in the popup, and a much smoother UI.</div>
+    <div class="header">
+      <img src="icon128.png" alt="Logo" class="logo">
+      <h1>Dynamic Island V1.6</h1>
+    </div>
+    <div class="subtitle">The Polish & Power Update! Added Shuffle/Repeat support for Spotify and Apple Music, Keyboard Shortcuts, a Teleport toggle to jump between tabs, Quick Playlist shortcuts, and a much smoother UI.</div>
+
+    <div class="feature">
+      <div class="feature-icon icon-1">🔀</div>
+      <div class="feature-content">
+        <h3>Shuffle & Repeat Support</h3>
+        <p>Take full control of your queue. The Island now natively supports Apple Music and Spotify's advanced playback modes including Smart Shuffle.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon icon-2">⌨️</div>
+      <div class="feature-content">
+        <h3>Keyboard Shortcuts</h3>
+        <p>Control your media from any tab without using your mouse. Use Alt+Space to toggle play/pause, and Alt+Left/Right to skip tracks.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon icon-3">⚡</div>
+      <div class="feature-content">
+        <h3>Quick Playlists & Teleport</h3>
+        <p>Instantly launch your favorite playlists right from the extension popup, and teleport directly back to your active media tab from the Island.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon icon-4">✨</div>
+      <div class="feature-content">
+        <h3>Smooth Polish</h3>
+        <p>Re-engineered click targets, removed confusing animations, and fixed Apple Music timing bugs for a seamless, perfectly-synced experience.</p>
+      </div>
+    </div>
 
     <a href="#" id="close-btn" class="btn">Awesome, let's go!</a>
   </div>
   <script>
     document.getElementById('close-btn').addEventListener('click', function(e) {
       e.preventDefault();
-      window.close();
-      setTimeout(() => { chrome.tabs.query({active: true, currentWindow: true}, tabs => { if(tabs.length) chrome.tabs.remove(tabs[0].id); }); }, 100);
+      if (typeof chrome !== 'undefined' && chrome.tabs && chrome.tabs.getCurrent) {
+        chrome.tabs.getCurrent(function(tab) {
+          if (tab && tab.id) chrome.tabs.remove(tab.id);
+          else window.close();
+        });
+      } else {
+        window.close();
+      }
     });
   </script>
 </body>
