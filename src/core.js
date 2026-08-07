@@ -797,66 +797,49 @@ var isPlaying = false;
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
         // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
-        // Find toggle renderers inside playerBar
-        var toggles = deepQuery('ytmusic-toggle-button-renderer, .shuffle, .repeat, button[aria-label*="shuffle" i], button[aria-label*="repeat" i]', playerBar);
-        var sRenderer = null, rRenderer = null;
-        for (var i = 0; i < toggles.length; i++) {
-          var title = (toggles[i].getAttribute('title') || toggles[i].getAttribute('aria-label') || '').toLowerCase();
-          if (title.includes('shuffle')) sRenderer = toggles[i];
-          if (title.includes('repeat')) rRenderer = toggles[i];
+        function isNodeActive(el) {
+          if (!el) return false;
+          if (el.getAttribute('aria-pressed') === 'true') return true;
+          if (el.getAttribute('is-toggled') === 'true') return true;
+          var title = (el.getAttribute('title') || el.getAttribute('aria-label') || '').toLowerCase();
+          if (title.includes('turn off') || title.includes('disable')) return true;
+          
+          // Check children for aria-pressed
+          var children = deepQuery('*', el);
+          for (var i = 0; i < children.length; i++) {
+             if (children[i].getAttribute('aria-pressed') === 'true') return true;
+             if (children[i].getAttribute('is-toggled') === 'true') return true;
+             var ct = (children[i].getAttribute('title') || children[i].getAttribute('aria-label') || '').toLowerCase();
+             if (ct.includes('turn off') || ct.includes('disable')) return true;
+          }
+          
+          // Check color of SVG/Icon
+          var icon = deepQueryOne('yt-icon, svg', el) || el;
+          var c = window.getComputedStyle(icon).color || '';
+          var f = window.getComputedStyle(icon).fill || '';
+          if (c.includes('255, 255, 255') || f.includes('255, 255, 255')) return true;
+          
+          return false;
         }
 
-        // If not found by renderer, try finding by raw SVGs (fallback)
-        if (!sRenderer || !rRenderer) {
-          var svgs = deepQuery('svg', playerBar);
-          for (var k = 0; k < svgs.length; k++) {
-             var p = svgs[k].querySelector('path');
-             if (p) {
-               var d = p.getAttribute('d') || '';
-               // Shuffle path usually starts with M10.59
-               if (!sRenderer && d.includes('10.59')) sRenderer = svgs[k].closest('button, ytmusic-toggle-button-renderer, tp-yt-paper-icon-button') || svgs[k];
-               // Repeat path usually starts with M7 7h10
-               if (!rRenderer && d.includes('M7 7')) rRenderer = svgs[k].closest('button, ytmusic-toggle-button-renderer, tp-yt-paper-icon-button') || svgs[k];
-             }
-          }
+        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="shuffle" i], ytmusic-toggle-button-renderer[title*="shuffle" i], tp-yt-paper-icon-button[aria-label*="shuffle" i], tp-yt-paper-icon-button[title*="shuffle" i], button[aria-label*="shuffle" i], button[title*="shuffle" i]', playerBar);
+        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="repeat" i], ytmusic-toggle-button-renderer[title*="repeat" i], tp-yt-paper-icon-button[aria-label*="repeat" i], tp-yt-paper-icon-button[title*="repeat" i], button[aria-label*="repeat" i], button[title*="repeat" i]', playerBar);
+        
+        if (shuffleEl && isNodeActive(shuffleEl)) {
+           shuffleOn = true;
         }
-
-        if (sRenderer) {
-          var sTitle = (sRenderer.getAttribute('title') || sRenderer.getAttribute('aria-label') || '').toLowerCase();
-          var innerS = deepQueryOne('button, tp-yt-paper-icon-button, yt-icon, svg', sRenderer) || sRenderer;
-          
-          var sPressed = sRenderer.getAttribute('aria-pressed') === 'true' || 
-                         innerS.getAttribute('aria-pressed') === 'true' || 
-                         sRenderer.getAttribute('is-toggled') === 'true' ||
-                         innerS.getAttribute('is-toggled') === 'true';
-                         
-          var sColor = window.getComputedStyle(innerS).color || '';
-          var sFill = window.getComputedStyle(innerS).fill || '';
-          var isActiveColor = sColor.includes('255, 255, 255') || sFill.includes('255, 255, 255');
-          
-          if (sPressed || isActiveColor || sTitle.includes('turn off') || sTitle.includes('disable')) {
-            shuffleOn = true;
-          }
-        }
-
-        if (rRenderer) {
-          var rTitle = (rRenderer.getAttribute('title') || rRenderer.getAttribute('aria-label') || '').toLowerCase();
-          var innerR = deepQueryOne('button, tp-yt-paper-icon-button, yt-icon, svg', rRenderer) || rRenderer;
-          
-          var rPressed = rRenderer.getAttribute('aria-pressed') === 'true' || 
-                         innerR.getAttribute('aria-pressed') === 'true' || 
-                         rRenderer.getAttribute('is-toggled') === 'true' ||
-                         innerR.getAttribute('is-toggled') === 'true';
-                         
-          var rColor = window.getComputedStyle(innerR).color || '';
-          var rFill = window.getComputedStyle(innerR).fill || '';
-          var rActiveColor = rColor.includes('255, 255, 255') || rFill.includes('255, 255, 255');
-          
-          if (rTitle.includes('one') || rTitle.includes('1')) {
-            repeatMode = 'one';
-          } else if (rPressed || rActiveColor || rTitle.includes('all') || rTitle.includes('turn off') || rTitle.includes('disable')) {
-            repeatMode = 'all';
-          }
+        
+        if (repeatEl) {
+           var rTitle = (repeatEl.getAttribute('title') || repeatEl.getAttribute('aria-label') || '').toLowerCase();
+           var children = deepQuery('*', repeatEl);
+           for (var j = 0; j < children.length; j++) {
+              rTitle += ' ' + (children[j].getAttribute('title') || children[j].getAttribute('aria-label') || '').toLowerCase();
+           }
+           if (rTitle.includes('one') || rTitle.includes('1')) {
+              repeatMode = 'one';
+           } else if (rTitle.includes('all') || isNodeActive(repeatEl)) {
+              repeatMode = 'all';
+           }
         }
       }
 
