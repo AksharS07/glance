@@ -1117,15 +1117,14 @@ VDI.UI = (function() {
 
       $('vdi-play').addEventListener('click', function(e) {
         e.stopPropagation();
+        if (!state.hasMedia || !state.tabId) return;
+        
         platform.sendAction(state.tabId, 'toggle');
         state.isPlaying = !state.isPlaying;
         setPlayIcon(state.isPlaying);
-
+        
         state.isPlayToggling = true;
-        if (state.playToggleTimeout) clearTimeout(state.playToggleTimeout);
-        state.playToggleTimeout = setTimeout(function() {
-          state.isPlayToggling = false;
-        }, 300);
+        state.playToggleLockTime = Date.now();
       });
 
       $('vdi-prog').addEventListener('click', function(e) {
@@ -1268,7 +1267,8 @@ VDI.UI = (function() {
       var prevKey = state.title + '|' + state.artist;
 
       state.hasMedia = newState.hasMedia;
-      if (!state.isPlayToggling) {
+      if (!state.isPlayToggling || (Date.now() - (state.playToggleLockTime || 0) > 300)) {
+        state.isPlayToggling = false;
         state.isPlaying = newState.isPlaying;
       }
       state.title = newState.title;

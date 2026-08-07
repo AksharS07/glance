@@ -194,6 +194,15 @@ document.addEventListener('DOMContentLoaded', function() {
   document.getElementById('shortcut-link')?.addEventListener('click', function(e) {
     e.preventDefault();
     var isFirefox = navigator.userAgent.includes('Firefox') || navigator.userAgent.includes('Zen');
-    chrome.tabs.create({url: isFirefox ? 'about:addons' : 'chrome://extensions/shortcuts'});
+    var targetUrl = isFirefox ? 'about:addons' : 'chrome://extensions/shortcuts';
+    try {
+      chrome.tabs.create({url: targetUrl}, function() {
+        if (chrome.runtime.lastError) {
+          alert(isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.');
+        }
+      });
+    } catch(err) {
+      alert(isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.');
+    }
   });
 });
