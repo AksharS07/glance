@@ -197,14 +197,13 @@ document.addEventListener('DOMContentLoaded', function() {
     var targetUrl = isFirefox ? 'about:addons' : 'chrome://extensions/shortcuts';
     
     var showError = function() {
-      var msg = document.getElementById('shortcut-msg');
-      if (!msg) {
-        msg = document.createElement('div');
-        msg.id = 'shortcut-msg';
-        msg.style.cssText = 'color: #ff6b6b; font-size: 11px; text-align: center; margin-top: 8px; padding: 0 10px;';
-        document.getElementById('shortcut-link').parentNode.insertBefore(msg, document.getElementById('shortcut-link').nextSibling);
+      var link = document.getElementById('shortcut-link');
+      if (link) {
+        link.textContent = isFirefox ? 'Go to about:addons to set shortcuts' : 'Could not open shortcuts page';
+        link.style.color = '#ff6b6b';
+        link.style.cursor = 'default';
+        link.style.textDecoration = 'none';
       }
-      msg.textContent = isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.';
     };
 
     if (isFirefox) {

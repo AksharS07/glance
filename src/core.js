@@ -772,36 +772,19 @@ VDI.Core = (function() {
       var repeatMode = 'off';
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
-        var searchRoot = playerBar ? (playerBar.shadowRoot || playerBar) : document;
-        
-        // Sometimes YT Music wraps them in another component that also has a shadowRoot (like ytmusic-toggle-button-renderer)
-        var findDeep = function(selector) {
-          var el = searchRoot.querySelector(selector);
-          if (!el && playerBar && playerBar.shadowRoot) {
-             var wrappers = playerBar.shadowRoot.querySelectorAll('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer');
-             for (var i=0; i<wrappers.length; i++) {
-               if (wrappers[i].shadowRoot) {
-                 el = wrappers[i].shadowRoot.querySelector(selector);
-                 if (el) break;
-               }
-             }
-          }
-          return el || document.querySelector(selector);
-        };
-
-        var sb = findDeep('tp-yt-paper-icon-button.shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]');
+        var sb = deepQueryOne('tp-yt-paper-icon-button.shuffle, .shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
         if (sb) {
-          var sbBtn = sb.closest('tp-yt-paper-icon-button, button') || sb;
-          var sbTitle = (sbBtn.getAttribute('title') || sbBtn.getAttribute('aria-label') || '').toLowerCase();
-          if (sbBtn.getAttribute('aria-pressed') === 'true' || sbBtn.hasAttribute('active') || sbTitle.includes('on')) {
+          var sbWrap = sb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || sb;
+          var sbTitle = (sbWrap.getAttribute('title') || sbWrap.getAttribute('aria-label') || '').toLowerCase();
+          if (sb.getAttribute('aria-pressed') === 'true' || sbWrap.getAttribute('aria-pressed') === 'true' || sbWrap.hasAttribute('active') || sbTitle.includes('on')) {
             shuffleOn = true;
           }
         }
-        var rb = findDeep('tp-yt-paper-icon-button.repeat, [aria-label*="repeat" i], [title*="repeat" i]');
+        var rb = deepQueryOne('tp-yt-paper-icon-button.repeat, .repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
         if (rb) {
-          var rbBtn = rb.closest('tp-yt-paper-icon-button, button') || rb;
-          var rbTitle = (rbBtn.getAttribute('title') || rbBtn.getAttribute('aria-label') || '').toLowerCase();
-          var isPressed = rbBtn.getAttribute('aria-pressed') === 'true' || rbBtn.hasAttribute('active');
+          var rbWrap = rb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || rb;
+          var rbTitle = (rbWrap.getAttribute('title') || rbWrap.getAttribute('aria-label') || '').toLowerCase();
+          var isPressed = rb.getAttribute('aria-pressed') === 'true' || rbWrap.getAttribute('aria-pressed') === 'true' || rbWrap.hasAttribute('active');
           if (rbTitle.includes('one') || rbTitle.includes('1')) {
             repeatMode = 'one';
           } else if (isPressed || rbTitle.includes('all') || rbTitle.includes('on')) {
