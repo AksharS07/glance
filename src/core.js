@@ -752,18 +752,19 @@ VDI.Core = (function() {
         var sb = document.querySelector('ytmusic-player-bar tp-yt-paper-icon-button.shuffle, ytmusic-player-bar [aria-label*="shuffle" i], [title*="shuffle" i]');
         if (sb) {
           var sbBtn = sb.closest('tp-yt-paper-icon-button, button') || sb;
-          if (sbBtn.getAttribute('aria-pressed') === 'true' || sbBtn.classList.contains('active')) {
+          var sbTitle = (sbBtn.getAttribute('title') || sbBtn.getAttribute('aria-label') || '').toLowerCase();
+          if (sbBtn.getAttribute('aria-pressed') === 'true' || sbBtn.hasAttribute('active') || sbTitle.includes('on')) {
             shuffleOn = true;
           }
         }
         var rb = document.querySelector('ytmusic-player-bar tp-yt-paper-icon-button.repeat, ytmusic-player-bar [aria-label*="repeat" i], [title*="repeat" i]');
         if (rb) {
           var rbBtn = rb.closest('tp-yt-paper-icon-button, button') || rb;
-          var isPressed = rbBtn.getAttribute('aria-pressed') === 'true' || rbBtn.classList.contains('active');
-          var titleStr = (rbBtn.getAttribute('title') || rbBtn.getAttribute('aria-label') || '').toLowerCase();
-          if (titleStr.indexOf('one') > -1) {
+          var rbTitle = (rbBtn.getAttribute('title') || rbBtn.getAttribute('aria-label') || '').toLowerCase();
+          var isPressed = rbBtn.getAttribute('aria-pressed') === 'true' || rbBtn.hasAttribute('active');
+          if (rbTitle.includes('one') || rbTitle.includes('1')) {
             repeatMode = 'one';
-          } else if (isPressed || titleStr.indexOf('all') > -1 || titleStr.indexOf('on') > -1) {
+          } else if (isPressed || rbTitle.includes('all') || rbTitle.includes('on')) {
             repeatMode = 'all';
           }
         }

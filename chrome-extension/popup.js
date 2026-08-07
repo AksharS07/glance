@@ -195,14 +195,26 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     var isFirefox = navigator.userAgent.includes('Firefox') || navigator.userAgent.includes('Zen');
     var targetUrl = isFirefox ? 'about:addons' : 'chrome://extensions/shortcuts';
+    
+    var showError = function() {
+      var msg = document.getElementById('shortcut-msg');
+      if (!msg) {
+        msg = document.createElement('div');
+        msg.id = 'shortcut-msg';
+        msg.style.cssText = 'color: #ff6b6b; font-size: 11px; text-align: center; margin-top: 8px; padding: 0 10px;';
+        document.getElementById('shortcut-link').parentNode.insertBefore(msg, document.getElementById('shortcut-link').nextSibling);
+      }
+      msg.textContent = isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.';
+    };
+
     try {
       chrome.tabs.create({url: targetUrl}, function() {
         if (chrome.runtime.lastError) {
-          alert(isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.');
+          showError();
         }
       });
     } catch(err) {
-      alert(isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.');
+      showError();
     }
   });
 });
