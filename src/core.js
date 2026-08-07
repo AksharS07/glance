@@ -141,6 +141,8 @@ VDI.Core = (function() {
   function deepQuery(selector, root) {
     var results = [];
     var traverse = function(node) {
+      if (!node) return;
+      if (node.shadowRoot) traverse(node.shadowRoot);
       var els = node.querySelectorAll(selector);
       for (var i = 0; i < els.length; i++) results.push(els[i]);
       var all = node.querySelectorAll('*');
