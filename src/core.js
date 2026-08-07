@@ -570,14 +570,103 @@ var isPlaying = false;
     }
 
     var shuffleOn = false;
-    var repeatMode = 'off';
-    if (window.MusicKit && window.MusicKit.getInstance()) {
-      var m = window.MusicKit.getInstance();
-      shuffleOn = m.shuffleMode === 1;
-      repeatMode = m.repeatMode === 1 ? 'one' : (m.repeatMode === 2 ? 'all' : 'off');
-    }
+      var repeatMode = 'off';
+      if (isYTMusic) {
+        var playerBar = document.querySelector('ytmusic-player-bar');
+        
+        function isNodeActive(el) {
+          if (!el) return false;
+          if (el.getAttribute('aria-pressed') === 'true') return true;
+          if (el.getAttribute('is-toggled') === 'true') return true;
+          if (el.hasAttribute('active') && el.getAttribute('active') !== 'false') return true;
+          
+          var title = (el.getAttribute('title') || el.getAttribute('aria-label') || '').toLowerCase();
+          if (title.includes('turn off') || title.includes('disable')) return true;
+          
+          var children = deepQuery('*', el);
+          for (var i = 0; i < children.length; i++) {
+             if (children[i].getAttribute('aria-pressed') === 'true') return true;
+             if (children[i].getAttribute('is-toggled') === 'true') return true;
+             if (children[i].hasAttribute('active') && children[i].getAttribute('active') !== 'false') return true;
+             var ct = (children[i].getAttribute('title') || children[i].getAttribute('aria-label') || '').toLowerCase();
+             if (ct.includes('turn off') || ct.includes('disable')) return true;
+          }
+          
+          var icon = deepQueryOne('yt-icon, svg', el) || el;
+          if (icon) {
+             var cStr = window.getComputedStyle(icon).color || '';
+             var fStr = window.getComputedStyle(icon).fill || '';
+             // Active state usually sets color to white. 
+             // We check for '255, 255, 255' ignoring alpha
+             if (cStr.includes('255, 255, 255') || fStr.includes('255, 255, 255')) return true;
+             
+             // Also check for 'rgb(255,255,255)' with no spaces just in case
+             if (cStr.includes('rgb(255,255,255)') || fStr.includes('rgb(255,255,255)')) return true;
+             
+             // Check if it matches Vivaldi dark theme explicit white
+             if (cStr === '#fff' || cStr === '#ffffff' || fStr === '#fff' || fStr === '#ffffff') return true;
+          }
+          return false;
+        }
 
-    return {
+        var rc = deepQueryOne('.right-controls-buttons, .right-controls', playerBar);
+        var shuffleEl = null;
+        var repeatEl = null;
+        
+        if (rc) {
+           var toggles = [];
+           var children = rc.children;
+           for (var i = 0; i < children.length; i++) {
+              if (children[i].tagName.toLowerCase() === 'ytmusic-toggle-button-renderer') {
+                 toggles.push(children[i]);
+              }
+           }
+           if (toggles.length === 2) {
+              repeatEl = toggles[0];
+              shuffleEl = toggles[1];
+           } else {
+              // Fallback to searching the whole bar if layout changed
+              shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="shuffle" i], ytmusic-toggle-button-renderer[title*="shuffle" i]', playerBar);
+              repeatEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="repeat" i], ytmusic-toggle-button-renderer[title*="repeat" i]', playerBar);
+           }
+        } else {
+           // Fallback if right-controls isn't found
+           shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="shuffle" i], ytmusic-toggle-button-renderer[title*="shuffle" i]', playerBar);
+           repeatEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="repeat" i], ytmusic-toggle-button-renderer[title*="repeat" i]', playerBar);
+        }
+        
+        if (shuffleEl && isNodeActive(shuffleEl)) {
+           shuffleOn = true;
+        }
+        
+        if (repeatEl) {
+           var rTitle = (repeatEl.getAttribute('title') || repeatEl.getAttribute('aria-label') || '').toLowerCase();
+           var elChildren = deepQuery('*', repeatEl);
+           var hasOneSvg = false;
+           
+           for (var j = 0; j < elChildren.length; j++) {
+              rTitle += ' ' + (elChildren[j].getAttribute('title') || elChildren[j].getAttribute('aria-label') || '').toLowerCase();
+              if (elChildren[j].tagName === 'path') {
+                 var d = elChildren[j].getAttribute('d') || '';
+                 if (d.includes('M11.5 14h1v-4h-2v1h1v3z') || d.includes('zm-4-2V9h-1l-2 1v1h1.5v4H13z') || d.includes('M11 14v-4h-2v1h1v3h1')) {
+                    hasOneSvg = true;
+                 }
+              }
+           }
+           
+           if (isNodeActive(repeatEl)) {
+              if (rTitle.includes('one') || rTitle.includes('1') || hasOneSvg) {
+                 repeatMode = 'one';
+              } else {
+                 repeatMode = 'all';
+              }
+           } else if (rTitle.includes('one') || rTitle.includes('1') || hasOneSvg) {
+              repeatMode = 'one';
+           }
+        }
+      }
+
+      return {
       title: finalTitle,
       artist: finalArtist,
       artwork: art,

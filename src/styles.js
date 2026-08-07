@@ -168,6 +168,7 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
     rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.4);}');
     rules.push('#vdi-shuffle:hover, #vdi-repeat:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);}');
+    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color:var(--vdi-accent,' + accent + ') !important; filter: drop-shadow(0 0 5px var(--vdi-accent,' + accent + '));}');
     
     rules.push('#vdi-repeat{position:relative;}');
 
