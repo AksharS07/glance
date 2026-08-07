@@ -239,7 +239,7 @@ VDI.Platform.ChromeExt = (function() {
           }, args, null, 'MAIN');
 
           // Rapid poll after actions
-          multiPoll(poll, [200, 500, 1000]);
+          multiPoll(poll, [200, 600, 1200]);
         }
       } else if (msg.type === 'VDI_TELEPORT_BACK' && msg.source) {
         if (msg.source.tabId) chrome.tabs.update(msg.source.tabId, { active: true });

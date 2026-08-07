@@ -22,7 +22,13 @@
       </div>
       <div class="np-info">
         <div id="np-title" class="np-title">No media playing</div>
-        <div id="np-artist" class="np-artist">Open a supported site</div>
+        <div id="np-artist" class="np-artist" style="display: none;"></div>
+        <div id="quick-launch" class="quick-launch">
+          <div id="ql-yt" class="ql-icon" title="YouTube">▶️</div>
+          <div id="ql-ytm" class="ql-icon" title="YouTube Music">🎵</div>
+          <div id="ql-spot" class="ql-icon" title="Spotify">🎧</div>
+          <div id="ql-am" class="ql-icon" title="Apple Music">🍎</div>
+        </div>
       </div>
       <button id="np-playpause" class="np-btn" disabled>▶</button>
     </div>
@@ -84,6 +90,28 @@
   </div>
 
   <div class="section card">
+    <h3>Quick Playlists</h3>
+    <div id="playlists-container">
+      <div class="playlist-row">
+        <input type="text" id="pl-name-0" placeholder="Name" class="pl-input name">
+        <input type="text" id="pl-url-0" placeholder="URL" class="pl-input url">
+        <button id="pl-go-0" class="pl-btn">↗</button>
+      </div>
+      <div class="playlist-row">
+        <input type="text" id="pl-name-1" placeholder="Name" class="pl-input name">
+        <input type="text" id="pl-url-1" placeholder="URL" class="pl-input url">
+        <button id="pl-go-1" class="pl-btn">↗</button>
+      </div>
+      <div class="playlist-row">
+        <input type="text" id="pl-name-2" placeholder="Name" class="pl-input name">
+        <input type="text" id="pl-url-2" placeholder="URL" class="pl-input url">
+        <button id="pl-go-2" class="pl-btn">↗</button>
+      </div>
+    </div>
+    <button id="save-playlists" class="save-btn">Save</button>
+  </div>
+
+  <div class="section card">
     <h3>Position Presets</h3>
     <div class="setting-row">
       <label for="freePlacement">Free Placement (Drag anywhere)</label>
@@ -119,28 +147,9 @@
     </div>
   </div>
 
-  <div class="section card">
-    <h3>Quick Playlists</h3>
-    <div id="playlists-container">
-      <div class="playlist-row">
-        <input type="text" id="pl-name-0" placeholder="Name" class="pl-input name">
-        <input type="text" id="pl-url-0" placeholder="URL" class="pl-input url">
-        <button id="pl-go-0" class="pl-btn">↗</button>
-      </div>
-      <div class="playlist-row">
-        <input type="text" id="pl-name-1" placeholder="Name" class="pl-input name">
-        <input type="text" id="pl-url-1" placeholder="URL" class="pl-input url">
-        <button id="pl-go-1" class="pl-btn">↗</button>
-      </div>
-      <div class="playlist-row">
-        <input type="text" id="pl-name-2" placeholder="Name" class="pl-input name">
-        <input type="text" id="pl-url-2" placeholder="URL" class="pl-input url">
-        <button id="pl-go-2" class="pl-btn">↗</button>
-      </div>
-    </div>
-    <button id="save-playlists" class="save-btn">Save</button>
-  </div>
 
+
+  <a id="shortcut-link" href="#" style="font-size: 11px; color: #888; text-decoration: underline; margin-top: 10px; display: block; text-align: center;">Customize Keyboard Shortcuts</a>
   <script src="popup.js"></script>
 </body>
 </html>

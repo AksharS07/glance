@@ -623,8 +623,8 @@ VDI.Core = (function() {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
     }
 
-    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"]');
-    var repBtn = document.querySelector('[data-testid="control-button-repeat"]');
+    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
+    var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
     var shuffleOn = shufBtn ? shufBtn.getAttribute('aria-checked') === 'true' : false;
     var repeatMode = 'off';
     if (repBtn) {
@@ -803,10 +803,10 @@ VDI.Core = (function() {
         var nb = document.querySelector('[data-testid="control-button-skip-forward"]');
         if (nb) nb.click();
       } else if (act === 'shuffle') {
-        var sb = document.querySelector('[data-testid="control-button-shuffle"]');
+        var sb = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
         if (sb) sb.click();
       } else if (act === 'repeat') {
-        var rb = document.querySelector('[data-testid="control-button-repeat"]');
+        var rb = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
         if (rb) rb.click();
       } else if (act === 'seek' && typeof val === 'number') {
         var durEls = document.querySelectorAll('[data-testid="playback-duration"]');

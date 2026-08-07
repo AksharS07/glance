@@ -1,3 +1,14 @@
+function openOrUpdateTab(url) {
+  var domain = new URL(url).hostname.replace('www.', '');
+  chrome.tabs.query({url: '*://*.' + domain + '/*'}, function(tabs) {
+    if (tabs.length > 0) {
+      chrome.tabs.update(tabs[0].id, {url: url, active: true});
+    } else {
+      chrome.tabs.create({url: url});
+    }
+  });
+}
+
 document.addEventListener('DOMContentLoaded', function() {
   const tglYouTube = document.getElementById('hideYouTube');
   const tglYouTubeMusic = document.getElementById('hideYouTubeMusic');
@@ -111,9 +122,14 @@ document.addEventListener('DOMContentLoaded', function() {
 
   // Fetch now playing state
   chrome.runtime.sendMessage({ type: 'VDI_GET_NOW_PLAYING' }, function(state) {
+    const quickLaunch = document.getElementById('quick-launch');
+    const npArtist = document.getElementById('np-artist');
+
     if (state && state.hasMedia) {
       document.getElementById('np-title').textContent = state.title || 'Unknown Title';
-      document.getElementById('np-artist').textContent = state.artist || 'Unknown Artist';
+      npArtist.textContent = state.artist || 'Unknown Artist';
+      npArtist.style.display = 'block';
+      if(quickLaunch) quickLaunch.style.display = 'none';
       
       const art = document.getElementById('np-art');
       if (state.artwork) {
@@ -125,6 +141,10 @@ document.addEventListener('DOMContentLoaded', function() {
       const btn = document.getElementById('np-playpause');
       btn.disabled = false;
       btn.textContent = state.isPlaying ? '⏸' : '▶';
+    } else {
+      document.getElementById('np-title').textContent = 'No media playing';
+      npArtist.style.display = 'none';
+      if(quickLaunch) quickLaunch.style.display = 'flex';
     }
   });
 
@@ -143,7 +163,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       document.getElementById(`pl-go-${i}`).addEventListener('click', function() {
         const url = document.getElementById(`pl-url-${i}`).value;
-        if (url) chrome.tabs.create({ url: url });
+        if (url) openOrUpdateTab(url);
       });
     }
   });
@@ -162,5 +182,17 @@ document.addEventListener('DOMContentLoaded', function() {
       btn.textContent = 'Saved!';
       setTimeout(() => btn.textContent = oldTxt, 1500);
     });
+  });
+
+  // Quick Launch clicks
+  document.getElementById('ql-yt')?.addEventListener('click', () => openOrUpdateTab('https://www.youtube.com'));
+  document.getElementById('ql-ytm')?.addEventListener('click', () => openOrUpdateTab('https://music.youtube.com'));
+  document.getElementById('ql-spot')?.addEventListener('click', () => openOrUpdateTab('https://open.spotify.com'));
+  document.getElementById('ql-am')?.addEventListener('click', () => openOrUpdateTab('https://music.apple.com'));
+
+  // Shortcut Link
+  document.getElementById('shortcut-link')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    chrome.tabs.create({url: 'chrome://extensions/shortcuts'});
   });
 });
