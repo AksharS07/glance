@@ -653,7 +653,14 @@ VDI.Core = (function() {
 
     var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
-    var shuffleOn = shufBtn ? (shufBtn.getAttribute('aria-checked') === 'true' || shufBtn.getAttribute('aria-checked') === 'mixed' || shufBtn.getAttribute('data-state') === 'active') : false;
+    var shuffleOn = shufBtn ? (
+      shufBtn.getAttribute('aria-checked') === 'true' ||
+      shufBtn.getAttribute('aria-checked') === 'mixed' ||
+      shufBtn.getAttribute('aria-pressed') === 'true' ||
+      shufBtn.getAttribute('aria-pressed') === 'mixed' ||
+      shufBtn.getAttribute('data-state') === 'active' ||
+      shufBtn.classList.contains('active')
+    ) : false;
     var repeatMode = 'off';
     if (repBtn) {
       var ariaChecked = repBtn.getAttribute('aria-checked');
@@ -785,9 +792,18 @@ VDI.Core = (function() {
         var sb = deepQueryOne('tp-yt-paper-icon-button.shuffle, .shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
         if (sb) {
           var sbInner = VDI.Core.deepQueryOne('button, tp-yt-paper-icon-button', sb) || sb;
-          var sbWrap = sb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || sb;
-          var sbTitle = (sbWrap.getAttribute('title') || sbWrap.getAttribute('aria-label') || '').toLowerCase();
-          if (sb.getAttribute('aria-pressed') === 'true' || sbInner.getAttribute('aria-pressed') === 'true' || sbWrap.getAttribute('aria-pressed') === 'true' || sbWrap.hasAttribute('active') || sbTitle.includes('on')) {
+          var sbParent = sb.parentElement || sb;
+          var sbWrap = sb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || sbParent;
+          var sbTitle = (sbWrap.getAttribute('title') || sbWrap.getAttribute('aria-label') || sb.getAttribute('title') || sb.getAttribute('aria-label') || '').toLowerCase();
+          if (
+            sb.getAttribute('aria-pressed') === 'true' ||
+            sb.getAttribute('aria-checked') === 'true' ||
+            sbInner.getAttribute('aria-pressed') === 'true' ||
+            sbWrap.getAttribute('aria-pressed') === 'true' ||
+            sbWrap.hasAttribute('active') ||
+            sbParent.hasAttribute('active') ||
+            sbTitle.includes('shuffle on') || sbTitle.includes('shuffle: on')
+          ) {
             shuffleOn = true;
           }
         }
