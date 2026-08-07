@@ -657,6 +657,15 @@ VDI.Core = (function() {
   // Tab media state extraction (injected into content pages)
   // ─────────────────────────────────────────────────────────────
   function getTabMediaState() {
+    // URL LOCKDOWN: Only detect media on supported sites
+    var ALLOWED_HOSTS = ['music.apple.com', 'open.spotify.com', 'spotify.com', 'youtube.com', 'www.youtube.com', 'music.youtube.com'];
+    var host = window.location.hostname;
+    var isAllowed = false;
+    for (var i = 0; i < ALLOWED_HOSTS.length; i++) {
+      if (host === ALLOWED_HOSTS[i] || host.endsWith('.' + ALLOWED_HOSTS[i])) { isAllowed = true; break; }
+    }
+    if (!isAllowed) return null;
+
     // 100% ISOLATION: Intercept Apple Music immediately
     if (window.location.hostname.includes('music.apple.com')) {
       return getAppleMusicMediaState();

@@ -8,32 +8,8 @@ var VDI = VDI || {};
 VDI.UI = (function() {
   'use strict';
 
-  var ALLOWED_HOSTS = [
-    'music.apple.com',
-    'open.spotify.com',
-    'spotify.com',
-    'youtube.com',
-    'www.youtube.com',
-    'music.youtube.com'
-  ];
-
-  if (typeof window !== 'undefined' && window.location && ALLOWED_HOSTS.indexOf(window.location.hostname) === -1) {
-    return {
-      createIsland: function() { return document.createElement('div'); },
-      createSettingsPanel: function() { return document.createElement('div'); },
-      createSettingsTooltip: function() { return document.createElement('div'); },
-      createLyricsPanel: function() { return document.createElement('div'); },
-      createController: function() { 
-        return { 
-          init: function() {}, 
-          setState: function() {}, 
-          getState: function() { return {}; }, 
-          updateUI: function() {}, 
-          refreshProgress: function() {} 
-        }; 
-      }
-    };
-  }
+  // URL lockdown moved to core.js media detection — island must render on ALL tabs
+  // so users can control music from any page
 
   var DEFAULTS = VDI.Styles.DEFAULTS;
 
