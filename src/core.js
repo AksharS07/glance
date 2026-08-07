@@ -136,6 +136,28 @@ VDI.Core = (function() {
   }
 
   // ─────────────────────────────────────────────────────────────
+  // DOM Utilities
+  // ─────────────────────────────────────────────────────────────
+  function deepQuery(selector, root) {
+    var results = [];
+    var traverse = function(node) {
+      var els = node.querySelectorAll(selector);
+      for (var i = 0; i < els.length; i++) results.push(els[i]);
+      var all = node.querySelectorAll('*');
+      for (var j = 0; j < all.length; j++) {
+        if (all[j].shadowRoot) traverse(all[j].shadowRoot);
+      }
+    };
+    traverse(root || document);
+    return results;
+  }
+
+  function deepQueryOne(selector, root) {
+    var els = deepQuery(selector, root);
+    return els.length > 0 ? els[0] : null;
+  }
+
+  // ─────────────────────────────────────────────────────────────
   // High-Res Album Art Fetching (iTunes API)
   // ─────────────────────────────────────────────────────────────
   function fetchHighResArt(title, artist, cb) {
@@ -749,7 +771,25 @@ VDI.Core = (function() {
       var shuffleOn = false;
       var repeatMode = 'off';
       if (isYTMusic) {
-        var sb = document.querySelector('ytmusic-player-bar tp-yt-paper-icon-button.shuffle, ytmusic-player-bar [aria-label*="shuffle" i], [title*="shuffle" i]');
+        var playerBar = document.querySelector('ytmusic-player-bar');
+        var searchRoot = playerBar ? (playerBar.shadowRoot || playerBar) : document;
+        
+        // Sometimes YT Music wraps them in another component that also has a shadowRoot (like ytmusic-toggle-button-renderer)
+        var findDeep = function(selector) {
+          var el = searchRoot.querySelector(selector);
+          if (!el && playerBar && playerBar.shadowRoot) {
+             var wrappers = playerBar.shadowRoot.querySelectorAll('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer');
+             for (var i=0; i<wrappers.length; i++) {
+               if (wrappers[i].shadowRoot) {
+                 el = wrappers[i].shadowRoot.querySelector(selector);
+                 if (el) break;
+               }
+             }
+          }
+          return el || document.querySelector(selector);
+        };
+
+        var sb = findDeep('tp-yt-paper-icon-button.shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]');
         if (sb) {
           var sbBtn = sb.closest('tp-yt-paper-icon-button, button') || sb;
           var sbTitle = (sbBtn.getAttribute('title') || sbBtn.getAttribute('aria-label') || '').toLowerCase();
@@ -757,7 +797,7 @@ VDI.Core = (function() {
             shuffleOn = true;
           }
         }
-        var rb = document.querySelector('ytmusic-player-bar tp-yt-paper-icon-button.repeat, ytmusic-player-bar [aria-label*="repeat" i], [title*="repeat" i]');
+        var rb = findDeep('tp-yt-paper-icon-button.repeat, [aria-label*="repeat" i], [title*="repeat" i]');
         if (rb) {
           var rbBtn = rb.closest('tp-yt-paper-icon-button, button') || rb;
           var rbTitle = (rbBtn.getAttribute('title') || rbBtn.getAttribute('aria-label') || '').toLowerCase();
@@ -851,24 +891,6 @@ VDI.Core = (function() {
     }
     
     try {
-      var deepQuery = function(selector, root) {
-        var results = [];
-        var traverse = function(node) {
-          var els = node.querySelectorAll(selector);
-          for (var i = 0; i < els.length; i++) results.push(els[i]);
-          var all = node.querySelectorAll('*');
-          for (var j = 0; j < all.length; j++) {
-            if (all[j].shadowRoot) traverse(all[j].shadowRoot);
-          }
-        };
-        traverse(root || document);
-        return results;
-      };
-      var deepQueryOne = function(selector, root) {
-        var els = deepQuery(selector, root);
-        return els.length > 0 ? els[0] : null;
-      };
-
       // 100% ISOLATION: Intercept Apple Music actions
       if (window.location.hostname.includes('music.apple.com')) {
         // Vivaldi Web Panel executes this in the MAIN world natively, so MusicKit is available!

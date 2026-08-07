@@ -207,6 +207,11 @@ document.addEventListener('DOMContentLoaded', function() {
       msg.textContent = isFirefox ? 'Please go to your Add-ons manager (about:addons) and click the gear icon to customize shortcuts.' : 'Could not open shortcuts page automatically.';
     };
 
+    if (isFirefox) {
+      showError();
+      return;
+    }
+
     try {
       chrome.tabs.create({url: targetUrl}, function() {
         if (chrome.runtime.lastError) {
