@@ -15,6 +15,7 @@ document.addEventListener('DOMContentLoaded', function() {
   const tglSpotify = document.getElementById('hideSpotify');
   const tglAppleMusic = document.getElementById('hideAppleMusic');
   const tglLyrics = document.getElementById('enableLyrics');
+  const tglShortcuts = document.getElementById('enableShortcuts');
   const tglFree = document.getElementById('freePlacement');
   const tglPreset = document.getElementById('presetPlacement');
 
@@ -36,6 +37,7 @@ document.addEventListener('DOMContentLoaded', function() {
     hideSpotify: false,
     hideAppleMusic: false,
     enableLyrics: true,
+    enableShortcuts: true,
     freePlacement: true,
     presetPlacement: false,
     activePreset: null
@@ -45,6 +47,7 @@ document.addEventListener('DOMContentLoaded', function() {
     tglSpotify.checked = res.hideSpotify;
     tglAppleMusic.checked = res.hideAppleMusic;
     tglLyrics.checked = res.enableLyrics;
+    if (tglShortcuts) tglShortcuts.checked = res.enableShortcuts !== false;
     tglFree.checked = res.freePlacement;
     tglPreset.checked = res.presetPlacement;
     
@@ -59,6 +62,7 @@ document.addEventListener('DOMContentLoaded', function() {
       hideSpotify: tglSpotify.checked,
       hideAppleMusic: tglAppleMusic.checked,
       enableLyrics: tglLyrics.checked,
+      enableShortcuts: tglShortcuts ? tglShortcuts.checked : true,
       freePlacement: tglFree.checked,
       presetPlacement: tglPreset.checked
     });
@@ -69,6 +73,7 @@ document.addEventListener('DOMContentLoaded', function() {
   tglSpotify.addEventListener('change', saveSettings);
   tglAppleMusic.addEventListener('change', saveSettings);
   tglLyrics.addEventListener('change', saveSettings);
+  if (tglShortcuts) tglShortcuts.addEventListener('change', saveSettings);
 
   tglFree.addEventListener('change', function() {
     if (tglFree.checked) tglPreset.checked = false;
@@ -163,7 +168,7 @@ document.addEventListener('DOMContentLoaded', function() {
       }
       document.getElementById(`pl-go-${i}`).addEventListener('click', function() {
         const url = document.getElementById(`pl-url-${i}`).value;
-        if (url) openOrUpdateTab(url);
+        if (url) chrome.tabs.create({url: url});
       });
     }
   });

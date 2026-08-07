@@ -222,9 +222,26 @@ VDI.Platform.ChromeExt = (function() {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
           chrome.tabs.get(S.tabId, function(tab) {
             var isAM = tab && tab.url && tab.url.includes('music.apple.com');
-            execInTab(S.tabId, function(act, val) {
-              if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
-            }, args, null, isAM ? 'MAIN' : 'ISOLATED');
+            if (isAM) {
+              // Apple Music: inject self-contained MusicKit call in MAIN world (VDI not available there)
+              execInTab(S.tabId, function(act, val) {
+                try {
+                  if (window.MusicKit && window.MusicKit.getInstance) {
+                    var m = window.MusicKit.getInstance();
+                    if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); }
+                    else if (act === 'prev') { m.skipToPreviousItem(); }
+                    else if (act === 'next') { m.skipToNextItem(); }
+                    else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; }
+                    else if (act === 'repeat') { m.repeatMode = (m.repeatMode + 1) % 3; }
+                    else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
+                  }
+                } catch(e) {}
+              }, args, null, 'MAIN');
+            } else {
+              execInTab(S.tabId, function(act, val) {
+                if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
+              }, args, null, 'ISOLATED');
+            }
           });
 
           // Rapid poll after actions
@@ -259,9 +276,12 @@ VDI.Platform.ChromeExt = (function() {
       chrome.windows.onFocusChanged.addListener(function() { poll(); });
 
       chrome.commands.onCommand.addListener(function(command) {
-        if (command === 'toggle-playback') handleMessage({type: 'VDI_ACTION', act: 'toggle'});
-        else if (command === 'next-track') handleMessage({type: 'VDI_ACTION', act: 'next'});
-        else if (command === 'prev-track') handleMessage({type: 'VDI_ACTION', act: 'prev'});
+        chrome.storage.local.get({ enableShortcuts: true }, function(res) {
+          if (!res.enableShortcuts) return;
+          if (command === 'toggle-playback') handleMessage({type: 'VDI_ACTION', act: 'toggle'});
+          else if (command === 'next-track') handleMessage({type: 'VDI_ACTION', act: 'next'});
+          else if (command === 'prev-track') handleMessage({type: 'VDI_ACTION', act: 'prev'});
+        });
       });
 
       chrome.runtime.onInstalled.addListener(function(details) {

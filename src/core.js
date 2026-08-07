@@ -511,9 +511,15 @@ VDI.Core = (function() {
     }
     if (times.length > 0) {
       times.sort(function(a, b) { return a - b; });
-      uiDur = times[times.length - 1]; // Largest is duration
-      if (!uiCur || uiCur === 0) {
-        uiCur = times.length >= 2 ? times[0] : (times[0] !== uiDur ? times[0] : 0);
+      // Sanity cap: discard values over 60 minutes (likely accumulated bug across songs)
+      var validTimes = times.filter(function(t) { return t <= 3600; });
+      if (validTimes.length > 0) {
+        uiDur = validTimes[validTimes.length - 1]; // Largest valid = duration
+        if (!uiCur || uiCur === 0) {
+          uiCur = validTimes.length >= 2 ? validTimes[0] : (validTimes[0] !== uiDur ? validTimes[0] : 0);
+        }
+      } else if (times.length > 0) {
+        uiDur = times[times.length - 1];
       }
     }
 
@@ -778,17 +784,19 @@ VDI.Core = (function() {
         var playerBar = document.querySelector('ytmusic-player-bar');
         var sb = deepQueryOne('tp-yt-paper-icon-button.shuffle, .shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
         if (sb) {
+          var sbInner = VDI.Core.deepQueryOne('button, tp-yt-paper-icon-button', sb) || sb;
           var sbWrap = sb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || sb;
           var sbTitle = (sbWrap.getAttribute('title') || sbWrap.getAttribute('aria-label') || '').toLowerCase();
-          if (sb.getAttribute('aria-pressed') === 'true' || sbWrap.getAttribute('aria-pressed') === 'true' || sbWrap.hasAttribute('active') || sbTitle.includes('on')) {
+          if (sb.getAttribute('aria-pressed') === 'true' || sbInner.getAttribute('aria-pressed') === 'true' || sbWrap.getAttribute('aria-pressed') === 'true' || sbWrap.hasAttribute('active') || sbTitle.includes('on')) {
             shuffleOn = true;
           }
         }
         var rb = deepQueryOne('tp-yt-paper-icon-button.repeat, .repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
         if (rb) {
+          var rbInner = VDI.Core.deepQueryOne('button, tp-yt-paper-icon-button', rb) || rb;
           var rbWrap = rb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || rb;
           var rbTitle = (rbWrap.getAttribute('title') || rbWrap.getAttribute('aria-label') || '').toLowerCase();
-          var isPressed = rb.getAttribute('aria-pressed') === 'true' || rbWrap.getAttribute('aria-pressed') === 'true' || rbWrap.hasAttribute('active');
+          var isPressed = rb.getAttribute('aria-pressed') === 'true' || rbInner.getAttribute('aria-pressed') === 'true' || rbWrap.getAttribute('aria-pressed') === 'true' || rbWrap.hasAttribute('active');
           if (rbTitle.includes('one') || rbTitle.includes('1')) {
             repeatMode = 'one';
           } else if (isPressed || rbTitle.includes('all') || rbTitle.includes('on')) {
