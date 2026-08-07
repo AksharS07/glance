@@ -104,11 +104,11 @@ VDI.Styles = (function() {
 
     rules.push(
       '#vdi-teleport-btn{',
-        'position:absolute;top:12px;right:44px;width:28px;height:28px;z-index:50;',
-        'background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);border-radius:50%;padding:5px;cursor:pointer;',
-        'color:#fff;opacity:1;transition:background 0.2s,transform 0.15s;display:flex;flex-shrink:0;',
+        'position:absolute;top:14px;right:46px;width:20px;height:20px;z-index:50;',
+        'background:none;border:none;border-radius:50%;padding:3px;cursor:pointer;',
+        'color:rgba(255,255,255,0.45);opacity:1;transition:color 0.2s,transform 0.15s;display:flex;flex-shrink:0;',
       '}',
-      '#vdi-teleport-btn:hover{background:rgba(255,255,255,0.32);transform:scale(1.1);}',
+      '#vdi-teleport-btn:hover{color:rgba(255,255,255,0.9);transform:scale(1.15);}',
       '#vdi-teleport-btn svg{width:100%;height:100%;pointer-events:none;}'
     );
 
