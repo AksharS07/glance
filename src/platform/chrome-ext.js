@@ -220,23 +220,12 @@ VDI.Platform.ChromeExt = (function() {
           }
         } else {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
-          execInTab(S.tabId, VDI.Core.executeMediaAction, args, null);
-
-          // APPLE MUSIC: Inject into the MAIN world to access MusicKit JS (Apple's public SDK).
-          // This silently does nothing on Spotify/YouTube, but flawlessly controls Apple Music natively.
-          execInTab(S.tabId, function(act, val) {
-            if (window.location && window.location.hostname && window.location.hostname.includes('music.apple.com')) {
-              if (window.MusicKit && window.MusicKit.getInstance()) {
-                var m = window.MusicKit.getInstance();
-                if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); }
-                else if (act === 'prev') { m.skipToPreviousItem(); }
-                else if (act === 'next') { m.skipToNextItem(); }
-                else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
-                else if (act === 'shuffle') { m.shuffle = m.shuffle === 0 ? 1 : 0; }
-                else if (act === 'repeat') { m.repeat = m.repeat === 0 ? 2 : 0; }
-              }
-            }
-          }, args, null, 'MAIN');
+          chrome.tabs.get(S.tabId, function(tab) {
+            var isAM = tab && tab.url && tab.url.includes('music.apple.com');
+            execInTab(S.tabId, function(act, val) {
+              if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
+            }, args, null, isAM ? 'MAIN' : 'ISOLATED');
+          });
 
           // Rapid poll after actions
           multiPoll(poll, [200, 600, 1200]);

@@ -277,13 +277,13 @@ VDI.UI = (function() {
       $('vdi-artist').textContent = state.artist || 'Unknown Artist';
 
       if ($('vdi-shuffle')) {
-        $('vdi-shuffle').style.display = onYT ? 'none' : '';
+        $('vdi-shuffle').style.display = state.isYouTubeVideo ? 'none' : '';
         if (state.shuffleOn) $('vdi-shuffle').classList.add('vdi-active');
         else $('vdi-shuffle').classList.remove('vdi-active');
       }
 
       if ($('vdi-repeat')) {
-        $('vdi-repeat').style.display = onYT ? 'none' : '';
+        $('vdi-repeat').style.display = state.isYouTubeVideo ? 'none' : '';
         $('vdi-repeat').classList.remove('vdi-active', 'vdi-repeat-one');
         var repeatSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg>';
         var repeatOneSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/><text x="12" y="15.5" font-size="8.5" font-weight="900" font-family="sans-serif" text-anchor="middle">1</text></svg>';
@@ -1125,7 +1125,7 @@ VDI.UI = (function() {
         if (state.playToggleTimeout) clearTimeout(state.playToggleTimeout);
         state.playToggleTimeout = setTimeout(function() {
           state.isPlayToggling = false;
-        }, 1500);
+        }, 300);
       });
 
       $('vdi-prog').addEventListener('click', function(e) {

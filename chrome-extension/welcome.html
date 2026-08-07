@@ -200,18 +200,23 @@
     <div class="steps">
       <div class="step-card">
         <div class="emoji">🎵</div>
-        <h3>Open a supported site</h3>
-        <p>YouTube, Spotify, Apple Music, or YT Music</p>
-      </div>
-      <div class="step-card">
-        <div class="emoji">▶️</div>
-        <h3>Play some music</h3>
-        <p>Start any video or song on those sites</p>
+        <h3>Seamless Lyrics</h3>
+        <p>Perfectly synced live lyrics across all platforms</p>
       </div>
       <div class="step-card">
         <div class="emoji">✨</div>
-        <h3>Watch the magic</h3>
-        <p>The Dynamic Island appears automatically</p>
+        <h3>Cross-Platform Control</h3>
+        <p>Control YouTube, Spotify, and Apple Music from anywhere</p>
+      </div>
+      <div class="step-card">
+        <div class="emoji">🚀</div>
+        <h3>PiP Teleport</h3>
+        <p>Jump directly to your active media tab instantly</p>
+      </div>
+      <div class="step-card">
+        <div class="emoji">⚡</div>
+        <h3>Quick Playlists</h3>
+        <p>Launch your favorite playlists right from the popup</p>
       </div>
     </div>
 
@@ -262,7 +267,8 @@
 
   <script>
     document.getElementById('close-btn').addEventListener('click', function() {
-      chrome.tabs.getCurrent(function(tab) { chrome.tabs.remove(tab.id); });
+      window.close();
+      setTimeout(() => { chrome.tabs.query({active: true, currentWindow: true}, tabs => { if(tabs.length) chrome.tabs.remove(tabs[0].id); }); }, 100);
     });
   </script>
 </body>

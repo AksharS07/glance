@@ -479,7 +479,7 @@ VDI.Core = (function() {
     // Apple Music pads its HLS video durations, and ms.getPositionState is notoriously buggy on Apple Music Web.
     // The ONLY source of truth is the visual time strings in the playback controls bar.
     var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
-    var timeEls = deepQuery('[class*="time"], [class*="duration"], [class*="current"], time', playerBar);
+    var timeEls = deepQuery('[data-testid="playback-duration"], [data-testid="playback-time"], .lcd-time, [class*="time"], [class*="duration"], [class*="current"], time', playerBar);
     var times = [];
     for (var i = 0; i < timeEls.length; i++) {
       if (timeEls[i].getBoundingClientRect().width > 0) {
@@ -625,7 +625,7 @@ VDI.Core = (function() {
 
     var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
-    var shuffleOn = shufBtn ? shufBtn.getAttribute('aria-checked') === 'true' : false;
+    var shuffleOn = shufBtn ? (shufBtn.getAttribute('aria-checked') === 'true' || shufBtn.getAttribute('aria-checked') === 'mixed' || shufBtn.getAttribute('data-state') === 'active') : false;
     var repeatMode = 'off';
     if (repBtn) {
       var ariaChecked = repBtn.getAttribute('aria-checked');
@@ -875,19 +875,6 @@ VDI.Core = (function() {
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
           else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
           else if (act === 'repeat') { m.repeatMode = (m.repeatMode + 1) % 3; return; }
-        } else if (act === 'shuffle' || act === 'repeat') {
-          // Chrome Extension fallback for MusicKit (isolated world -> main world injection)
-          var script = document.createElement('script');
-          script.textContent = `
-            if (window.MusicKit && window.MusicKit.getInstance()) {
-              var m = window.MusicKit.getInstance();
-              if ('${act}' === 'shuffle') m.shuffleMode = m.shuffleMode === 0 ? 1 : 0;
-              if ('${act}' === 'repeat') m.repeatMode = (m.repeatMode + 1) % 3;
-            }
-          `;
-          document.body.appendChild(script);
-          script.remove();
-          return;
         }
 
         if (act === 'toggle') {

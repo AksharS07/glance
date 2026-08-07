@@ -1,6 +1,6 @@
 function openOrUpdateTab(url) {
-  var domain = new URL(url).hostname.replace('www.', '');
-  chrome.tabs.query({url: '*://*.' + domain + '/*'}, function(tabs) {
+  var domain = new URL(url).hostname;
+  chrome.tabs.query({url: '*://' + domain + '/*'}, function(tabs) {
     if (tabs.length > 0) {
       chrome.tabs.update(tabs[0].id, {url: url, active: true});
     } else {
@@ -193,6 +193,7 @@ document.addEventListener('DOMContentLoaded', function() {
   // Shortcut Link
   document.getElementById('shortcut-link')?.addEventListener('click', function(e) {
     e.preventDefault();
-    chrome.tabs.create({url: 'chrome://extensions/shortcuts'});
+    var isFirefox = navigator.userAgent.includes('Firefox') || navigator.userAgent.includes('Zen');
+    chrome.tabs.create({url: isFirefox ? 'about:addons' : 'chrome://extensions/shortcuts'});
   });
 });
