@@ -795,25 +795,27 @@ var isPlaying = false;
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
         // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
-        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i]', playerBar);
+        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
         if (shuffleEl) {
           // Check the element itself AND its inner paper-icon-button (second shadow level)
           var sInner = deepQueryOne('tp-yt-paper-icon-button, button', shuffleEl) || shuffleEl;
-          var sLabel = (shuffleEl.getAttribute('aria-label') || '').toLowerCase();
+          var sLabel = (shuffleEl.getAttribute('aria-label') || shuffleEl.getAttribute('title') || sInner.getAttribute('aria-label') || sInner.getAttribute('title') || '').toLowerCase();
           shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
                       shuffleEl.hasAttribute('active') ||
                       sInner.getAttribute('aria-pressed') === 'true' ||
-                      sLabel.includes(' on') || sLabel.includes(': on');
+                      sInner.hasAttribute('active') ||
+                      sLabel.includes('off') || sLabel.includes('disable');
         }
-        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i]', playerBar);
+        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
         if (repeatEl) {
           var rInner = deepQueryOne('tp-yt-paper-icon-button, button', repeatEl) || repeatEl;
-          var rLabel = (repeatEl.getAttribute('aria-label') || '').toLowerCase();
+          var rLabel = (repeatEl.getAttribute('aria-label') || repeatEl.getAttribute('title') || rInner.getAttribute('aria-label') || rInner.getAttribute('title') || '').toLowerCase();
           var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' ||
                          repeatEl.hasAttribute('active') ||
-                         rInner.getAttribute('aria-pressed') === 'true';
-          if (rLabel.includes('one') || rLabel.includes('song')) repeatMode = 'one';
-          else if (rPressed || rLabel.includes(' on') || rLabel.includes(': on')) repeatMode = 'all';
+                         rInner.getAttribute('aria-pressed') === 'true' ||
+                         rInner.hasAttribute('active');
+          if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
+          else if (rPressed || rLabel.includes('off') || rLabel.includes('disable')) repeatMode = 'all';
         }
       }
 

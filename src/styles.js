@@ -169,7 +169,7 @@ VDI.Styles = (function() {
     rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.4);}');
     rules.push('#vdi-shuffle:hover, #vdi-repeat:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);}');
     rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color:var(--vdi-accent,' + accent + ') !important; background:rgba(255,255,255,0.12) !important; border-radius:6px !important; filter: drop-shadow(0 0 5px var(--vdi-accent,' + accent + '));}');
-    rules.push('#vdi-repeat.vdi-repeat-one{color:#f5a623 !important; background:rgba(245,166,35,0.18) !important; border-radius:6px !important;}');
+    
     rules.push('#vdi-repeat{position:relative;}');
 
     // Icon button (smaller, square-ish)
