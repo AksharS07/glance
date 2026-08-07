@@ -564,8 +564,27 @@ VDI.Core = (function() {
       }
     }
 
+    // Apple Music shuffle/repeat detection
     var shuffleOn = false;
     var repeatMode = 'off';
+    var amShufBtn = deepQuery('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]', playerBar);
+    for (var si = 0; si < amShufBtn.length; si++) {
+      var sLabel = (amShufBtn[si].getAttribute('aria-label') || '').toLowerCase();
+      var sPressed = amShufBtn[si].getAttribute('aria-pressed');
+      if (sPressed === 'true' || sLabel.includes('on') || sLabel.includes('disable') || sLabel.includes('turn off')) {
+        shuffleOn = true; break;
+      }
+    }
+    var amRepBtn = deepQuery('button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]', playerBar);
+    for (var ri = 0; ri < amRepBtn.length; ri++) {
+      var rLabel = (amRepBtn[ri].getAttribute('aria-label') || '').toLowerCase();
+      var rPressed = amRepBtn[ri].getAttribute('aria-pressed');
+      if (rPressed === 'true' || rLabel.includes('on') || rLabel.includes('disable') || rLabel.includes('turn off')) {
+        if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
+        else repeatMode = 'all';
+        break;
+      }
+    }
 
       return {
       title: finalTitle,
@@ -648,21 +667,31 @@ VDI.Core = (function() {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
     }
 
+    // Spotify shuffle: also detect smart shuffle via data-testid
     var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
-    var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
-    var shuffleOn = shufBtn ? (
+    var isSmartShuffle = !!document.querySelector('[data-testid="control-button-smart-shuffle"]');
+    var shuffleOn = isSmartShuffle || (shufBtn ? (
       shufBtn.getAttribute('aria-checked') === 'true' ||
       shufBtn.getAttribute('aria-checked') === 'mixed' ||
       shufBtn.getAttribute('aria-pressed') === 'true' ||
       shufBtn.getAttribute('aria-pressed') === 'mixed' ||
       shufBtn.getAttribute('data-state') === 'active' ||
       shufBtn.classList.contains('active')
-    ) : false;
+    ) : false);
     var repeatMode = 'off';
+    var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
     if (repBtn) {
       var ariaChecked = repBtn.getAttribute('aria-checked');
       if (ariaChecked === 'true' || ariaChecked === 'mixed') {
-        repeatMode = repBtn.getAttribute('aria-label') && repBtn.getAttribute('aria-label').toLowerCase().indexOf('one') > -1 ? 'one' : 'all';
+        // IMPORTANT: Spotify aria-label describes the NEXT action, not current state!
+        // "Enable repeat one" means currently in repeat-all mode
+        // "Disable repeat" means currently in repeat-one mode
+        var rLabel = (repBtn.getAttribute('aria-label') || '').toLowerCase();
+        if (rLabel.includes('disable') || rLabel.includes('turn off')) {
+          repeatMode = 'one';
+        } else {
+          repeatMode = 'all';
+        }
       }
     }
 
