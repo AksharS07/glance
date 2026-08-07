@@ -797,28 +797,42 @@ var isPlaying = false;
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
         // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
-        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
-        if (shuffleEl) {
-          var sInner = deepQueryOne('tp-yt-paper-icon-button, button', shuffleEl) || shuffleEl;
-          var sLabel = (shuffleEl.getAttribute('aria-label') || shuffleEl.getAttribute('title') || sInner.getAttribute('aria-label') || sInner.getAttribute('title') || '').toLowerCase();
-          shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
-                      shuffleEl.hasAttribute('active') || shuffleEl.classList.contains('active') ||
-                      sInner.getAttribute('aria-pressed') === 'true' ||
-                      sInner.hasAttribute('active') || sInner.classList.contains('active') ||
-                      sLabel.includes('turn shuffle off') || sLabel.includes('disable shuffle') || sLabel === 'shuffle on';
-        }
-        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
-        if (repeatEl) {
-          var rInner = deepQueryOne('tp-yt-paper-icon-button, button', repeatEl) || repeatEl;
-          var rLabel = (repeatEl.getAttribute('aria-label') || repeatEl.getAttribute('title') || rInner.getAttribute('aria-label') || rInner.getAttribute('title') || '').toLowerCase();
-          var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' ||
-                         repeatEl.hasAttribute('active') || repeatEl.classList.contains('active') ||
-                         rInner.getAttribute('aria-pressed') === 'true' ||
-                         rInner.hasAttribute('active') || rInner.classList.contains('active');
-          if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
-          else if (rLabel.includes('all')) repeatMode = 'all';
-          else if (rLabel.includes('turn repeat off') || rLabel === 'repeat on') repeatMode = 'all';
-          else if (rPressed && !rLabel.includes('off')) repeatMode = 'all';
+        // YTM right controls: [Volume, Repeat, Shuffle, ...]
+        var rc = deepQueryOne('.right-controls-buttons, .right-controls', playerBar);
+        if (rc) {
+          var toggles = Array.from(rc.querySelectorAll('ytmusic-toggle-button-renderer, tp-yt-paper-icon-button[aria-pressed]'));
+          // Find based on attributes to be safe, but fallback to index if missing
+          var shuffleEl = toggles.find(el => (el.getAttribute('aria-label')||'').toLowerCase().includes('shuffle') || (el.getAttribute('title')||'').toLowerCase().includes('shuffle')) || toggles[1];
+          var repeatEl = toggles.find(el => (el.getAttribute('aria-label')||'').toLowerCase().includes('repeat') || (el.getAttribute('title')||'').toLowerCase().includes('repeat')) || toggles[0];
+          
+          if (shuffleEl) {
+            var sLabel = (shuffleEl.getAttribute('aria-label') || shuffleEl.getAttribute('title') || '').toLowerCase();
+            shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
+                        shuffleEl.hasAttribute('is-toggled') ||
+                        (shuffleEl.hasAttribute('aria-label') && sLabel.includes('turn off')) ||
+                        sLabel === 'shuffle on';
+            
+            // YTM sets color to white/var(--ytmusic-text-primary) when active.
+            var sInner = deepQueryOne('tp-yt-paper-icon-button, button', shuffleEl) || shuffleEl;
+            var c = window.getComputedStyle(sInner).color;
+            if (c === 'rgb(255, 255, 255)' || c === 'rgba(255, 255, 255, 1)' || shuffleEl.getAttribute('aria-pressed') === 'true' || sInner.getAttribute('aria-pressed') === 'true') {
+              shuffleOn = true;
+            }
+          }
+          if (repeatEl) {
+            var rLabel = (repeatEl.getAttribute('aria-label') || repeatEl.getAttribute('title') || '').toLowerCase();
+            var isOne = rLabel.includes('one') || rLabel.includes('1');
+            
+            var rInner = deepQueryOne('tp-yt-paper-icon-button, button', repeatEl) || repeatEl;
+            var c2 = window.getComputedStyle(rInner).color;
+            var rActive = c2 === 'rgb(255, 255, 255)' || c2 === 'rgba(255, 255, 255, 1)' || repeatEl.getAttribute('aria-pressed') === 'true' || rInner.getAttribute('aria-pressed') === 'true' || repeatEl.hasAttribute('is-toggled') || rLabel.includes('turn off') || rLabel.includes('repeat all');
+            
+            if (isOne) {
+              repeatMode = 'one';
+            } else if (rActive) {
+              repeatMode = 'all';
+            }
+          }
         }
       }
 
