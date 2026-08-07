@@ -679,6 +679,10 @@ VDI.Core = (function() {
   // Tab media state extraction (injected into content pages)
   // ─────────────────────────────────────────────────────────────
   function getTabMediaState() {
+    var deepQuery = VDI.Core.deepQuery;
+    var deepQueryOne = VDI.Core.deepQueryOne;
+    var getAppleMusicMediaState = VDI.Core.getAppleMusicMediaState;
+    var getSpotifyMediaState = VDI.Core.getSpotifyMediaState;
     // URL LOCKDOWN: Only detect media on supported sites
     var ALLOWED_HOSTS = ['music.apple.com', 'open.spotify.com', 'spotify.com', 'youtube.com', 'www.youtube.com', 'music.youtube.com'];
     var host = window.location.hostname;
@@ -819,6 +823,9 @@ VDI.Core = (function() {
   // Media actions (injected into content pages)
   // ─────────────────────────────────────────────────────────────
   function executeMediaAction(act, val) {
+    var deepQuery = VDI.Core.deepQuery;
+    var deepQueryOne = VDI.Core.deepQueryOne;
+    
     // 100% ISOLATION: Intercept Spotify immediately
     if (window.location.hostname.includes('spotify.com')) {
       if (act === 'toggle') {
@@ -1177,6 +1184,10 @@ VDI.Core = (function() {
     fetchLyrics: fetchLyrics,
     batchRomanize: batchRomanize,
     getTabMediaState: getTabMediaState,
+    deepQuery: deepQuery,
+    deepQueryOne: deepQueryOne,
+    getAppleMusicMediaState: getAppleMusicMediaState,
+    getSpotifyMediaState: getSpotifyMediaState,
     executeMediaAction: executeMediaAction,
     togglePiP: togglePiP
   };
