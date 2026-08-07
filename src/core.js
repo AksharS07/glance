@@ -789,21 +789,26 @@ VDI.Core = (function() {
       var repeatMode = 'off';
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
-        // ytmusic-player-bar renders buttons in its shadow DOM
-        var barRoot = (playerBar && playerBar.shadowRoot) ? playerBar.shadowRoot : playerBar;
-        var shuffleEl = barRoot ? barRoot.querySelector('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i]') : null;
+        // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
+        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer.shuffle, [aria-label*="shuffle" i]', playerBar);
         if (shuffleEl) {
+          // Check the element itself AND its inner paper-icon-button (second shadow level)
+          var sInner = deepQueryOne('tp-yt-paper-icon-button, button', shuffleEl) || shuffleEl;
           var sLabel = (shuffleEl.getAttribute('aria-label') || '').toLowerCase();
           shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
                       shuffleEl.hasAttribute('active') ||
-                      sLabel.includes(' on');
+                      sInner.getAttribute('aria-pressed') === 'true' ||
+                      sLabel.includes(' on') || sLabel.includes(': on');
         }
-        var repeatEl = barRoot ? barRoot.querySelector('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i]') : null;
+        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer.repeat, [aria-label*="repeat" i]', playerBar);
         if (repeatEl) {
+          var rInner = deepQueryOne('tp-yt-paper-icon-button, button', repeatEl) || repeatEl;
           var rLabel = (repeatEl.getAttribute('aria-label') || '').toLowerCase();
-          var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' || repeatEl.hasAttribute('active');
-          if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
-          else if (rPressed || rLabel.includes(' on')) repeatMode = 'all';
+          var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' ||
+                         repeatEl.hasAttribute('active') ||
+                         rInner.getAttribute('aria-pressed') === 'true';
+          if (rLabel.includes('one') || rLabel.includes('song')) repeatMode = 'one';
+          else if (rPressed || rLabel.includes(' on') || rLabel.includes(': on')) repeatMode = 'all';
         }
       }
 
