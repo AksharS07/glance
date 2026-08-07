@@ -789,24 +789,21 @@ VDI.Core = (function() {
       var repeatMode = 'off';
       if (isYTMusic) {
         var playerBar = document.querySelector('ytmusic-player-bar');
-        var sb = deepQueryOne('tp-yt-paper-icon-button.shuffle, .shuffle, [aria-label*="shuffle" i], [title*="shuffle" i]', playerBar);
-        if (sb) {
-          var sbInner = VDI.Core.deepQueryOne('button, tp-yt-paper-icon-button', sb) || sb;
-          var sbParent = sb.parentElement || sb;
-          var sbWrap = sb.closest('ytmusic-toggle-button-renderer, ytmusic-like-button-renderer, button, tp-yt-paper-icon-button') || sbParent;
-          var sbTitle = (sbWrap.getAttribute('title') || sbWrap.getAttribute('aria-label') || sb.getAttribute('title') || sb.getAttribute('aria-label') || '').toLowerCase();
-          if (
-            sb.getAttribute('aria-pressed') === 'true' ||
-            sb.getAttribute('aria-checked') === 'true' ||
-            sbInner.getAttribute('aria-pressed') === 'true' ||
-            sbWrap.getAttribute('aria-pressed') === 'true' ||
-            sbWrap.hasAttribute('active') ||
-            sbParent.hasAttribute('active') ||
-            sbTitle.includes('shuffle on') || sbTitle.includes('shuffle: on')
-          ) {
-            shuffleOn = true;
-          }
+        var shuffleEl = playerBar ? playerBar.querySelector('ytmusic-toggle-button-renderer.shuffle') : null;
+        if (shuffleEl) {
+          var sLabel = (shuffleEl.getAttribute('aria-label') || '').toLowerCase();
+          shuffleOn = shuffleEl.getAttribute('aria-pressed') === 'true' ||
+                      shuffleEl.hasAttribute('active') ||
+                      sLabel.includes(' on');
         }
+        var repeatEl = playerBar ? playerBar.querySelector('ytmusic-toggle-button-renderer.repeat') : null;
+        if (repeatEl) {
+          var rLabel = (repeatEl.getAttribute('aria-label') || '').toLowerCase();
+          var rPressed = repeatEl.getAttribute('aria-pressed') === 'true' || repeatEl.hasAttribute('active');
+          if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
+          else if (rPressed || rLabel.includes(' on')) repeatMode = 'all';
+        }
+      }
         var rb = deepQueryOne('tp-yt-paper-icon-button.repeat, .repeat, [aria-label*="repeat" i], [title*="repeat" i]', playerBar);
         if (rb) {
           var rbInner = VDI.Core.deepQueryOne('button, tp-yt-paper-icon-button', rb) || rb;
