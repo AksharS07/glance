@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome to Dynamic Island</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #09090b;
+      color: #fafafa;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      line-height: 1.6;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+    }
+    
+    .hero {
+      text-align: center;
+      padding: 60px 20px;
+      background: radial-gradient(circle at 50% -20%, rgba(99,102,241,0.25) 0%, rgba(9,9,11,1) 60%);
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    h1 {
+      font-size: 48px;
+      margin: 0 0 16px;
+      font-weight: 800;
+      letter-spacing: -1px;
+      background: linear-gradient(135deg, #fff 0%, #a1a1aa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .subtitle {
+      font-size: 20px;
+      color: #a1a1aa;
+      margin: 0;
+      font-weight: 400;
+    }
+
+    .container {
+      max-width: 800px;
+      width: 100%;
+      padding: 40px 20px;
+      box-sizing: border-box;
+      display: flex;
+      flex-direction: column;
+      gap: 60px;
+    }
+
+    .steps {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+      gap: 24px;
+    }
+
+    .step-card {
+      background: #18181b;
+      border: 1px solid rgba(255,255,255,0.05);
+      border-radius: 16px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .step-card:hover {
+      transform: translateY(-4px);
+      background: #27272a;
+    }
+
+    .emoji {
+      font-size: 48px;
+      margin-bottom: 20px;
+      display: inline-block;
+      filter: drop-shadow(0 4px 12px rgba(0,0,0,0.3));
+    }
+
+    .step-card h3 {
+      margin: 0 0 12px;
+      font-size: 20px;
+    }
+
+    .step-card p {
+      margin: 0;
+      color: #a1a1aa;
+      font-size: 15px;
+    }
+
+    .platforms {
+      text-align: center;
+    }
+
+    .platforms h2, .shortcuts h2 {
+      font-size: 28px;
+      margin: 0 0 32px;
+    }
+
+    .platform-list {
+      display: flex;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+
+    .platform-badge {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 16px;
+      font-weight: 600;
+      color: #e4e4e7;
+    }
+
+    .shortcuts {
+      background: #18181b;
+      border-radius: 16px;
+      padding: 40px;
+      border: 1px solid rgba(255,255,255,0.05);
+      text-align: center;
+    }
+
+    .shortcut-list {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-top: 24px;
+    }
+
+    .shortcut-item {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .kbd-group {
+      display: flex;
+      gap: 8px;
+    }
+
+    kbd {
+      background: #27272a;
+      border: 1px solid #3f3f46;
+      border-radius: 6px;
+      padding: 6px 12px;
+      font-family: inherit;
+      font-size: 14px;
+      font-weight: 600;
+      box-shadow: 0 2px 0 #18181b;
+    }
+
+    .action {
+      color: #a1a1aa;
+      font-size: 15px;
+    }
+
+    .btn-container {
+      text-align: center;
+      margin-top: 20px;
+      margin-bottom: 60px;
+    }
+
+    .btn-primary {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 16px 40px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 30px;
+      cursor: pointer;
+      box-shadow: 0 4px 14px 0 rgba(99,102,241,0.39);
+      transition: all 0.2s ease;
+    }
+
+    .btn-primary:hover {
+      background: #4f46e5;
+      box-shadow: 0 6px 20px rgba(99,102,241,0.23);
+      transform: translateY(-2px);
+    }
+  </style>
+</head>
+<body>
+  <div class="hero">
+    <h1>Welcome to Dynamic Island</h1>
+    <p class="subtitle">Your media, seamlessly integrated across the web.</p>
+  </div>
+
+  <div class="container">
+    <div class="steps">
+      <div class="step-card">
+        <div class="emoji">🎵</div>
+        <h3>Open a supported site</h3>
+        <p>YouTube, Spotify, Apple Music, or YT Music</p>
+      </div>
+      <div class="step-card">
+        <div class="emoji">▶️</div>
+        <h3>Play some music</h3>
+        <p>Start any video or song on those sites</p>
+      </div>
+      <div class="step-card">
+        <div class="emoji">✨</div>
+        <h3>Watch the magic</h3>
+        <p>The Dynamic Island appears automatically</p>
+      </div>
+    </div>
+
+    <div class="platforms">
+      <h2>Supported Platforms</h2>
+      <div class="platform-list">
+        <div class="platform-badge">YouTube</div>
+        <div class="platform-badge">YouTube Music</div>
+        <div class="platform-badge">Spotify</div>
+        <div class="platform-badge">Apple Music</div>
+      </div>
+    </div>
+
+    <div class="shortcuts">
+      <h2>Keyboard Shortcuts</h2>
+      <div class="shortcut-list">
+        <div class="shortcut-item">
+          <div class="kbd-group"><kbd>Alt</kbd><kbd>Space</kbd></div>
+          <span class="action">Play / Pause</span>
+        </div>
+        <div class="shortcut-item">
+          <div class="kbd-group"><kbd>Alt</kbd><kbd>→</kbd></div>
+          <span class="action">Next Track</span>
+        </div>
+        <div class="shortcut-item">
+          <div class="kbd-group"><kbd>Alt</kbd><kbd>←</kbd></div>
+          <span class="action">Previous Track</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="btn-container">
+      <button class="btn-primary" id="close-btn">Get Started</button>
+    </div>
+  </div>
+
+  <script>
+    document.getElementById('close-btn').addEventListener('click', function() {
+      window.close();
+    });
+  </script>
+</body>
+</html>

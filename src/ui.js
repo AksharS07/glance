@@ -8,6 +8,33 @@ var VDI = VDI || {};
 VDI.UI = (function() {
   'use strict';
 
+  var ALLOWED_HOSTS = [
+    'music.apple.com',
+    'open.spotify.com',
+    'spotify.com',
+    'youtube.com',
+    'www.youtube.com',
+    'music.youtube.com'
+  ];
+
+  if (typeof window !== 'undefined' && window.location && ALLOWED_HOSTS.indexOf(window.location.hostname) === -1) {
+    return {
+      createIsland: function() { return document.createElement('div'); },
+      createSettingsPanel: function() { return document.createElement('div'); },
+      createSettingsTooltip: function() { return document.createElement('div'); },
+      createLyricsPanel: function() { return document.createElement('div'); },
+      createController: function() { 
+        return { 
+          init: function() {}, 
+          setState: function() {}, 
+          getState: function() { return {}; }, 
+          updateUI: function() {}, 
+          refreshProgress: function() {} 
+        }; 
+      }
+    };
+  }
+
   var DEFAULTS = VDI.Styles.DEFAULTS;
 
   function createIsland(opts) {
@@ -33,6 +60,7 @@ VDI.UI = (function() {
         '<button id="vdi-close-btn" title="Hide Island" style="position:absolute; top:12px; right:12px; z-index:100; background:rgba(255,255,255,0.1); border:none; border-radius:50%; width:24px; height:24px; color:rgba(255,255,255,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
         '</button>' +
+        '<button id="vdi-teleport-btn" title="Jump to Media Tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></button>' +
         '<div id="vdi-art">' +
           '<div id="vdi-art-ph">\uD83C\uDFB5</div>' +
           '<img id="vdi-art-img" src="" alt="" crossorigin="anonymous"/>' +
@@ -49,9 +77,11 @@ VDI.UI = (function() {
           '</div>' +
           '<div id="vdi-ctrl-row">' +
             '<div id="vdi-ctrl-main">' +
+              '<button class="vdi-btn" id="vdi-shuffle" title="Shuffle" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>' +
               '<button class="vdi-btn" id="vdi-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>' +
               '<button class="vdi-btn" id="vdi-play" title="Play/Pause"><svg id="vdi-pp" viewBox="0 0 24 24" fill="currentColor">' + VDI.Core.getPlayIcon(false) + '</svg></button>' +
               '<button class="vdi-btn" id="vdi-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>' +
+              '<button class="vdi-btn" id="vdi-repeat" title="Repeat" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>' +
             '</div>' +
             '<div id="vdi-ctrl-extra">' +
               '<button class="vdi-icon-btn" id="vdi-lyr-btn" title="Lyrics">' +
@@ -141,6 +171,8 @@ VDI.UI = (function() {
       autoscroll: true,
       isSeeking: false,
       isPlayToggling: false,
+      shuffleOn: false,
+      repeatMode: 'off',
       lyricsLines: [],
       lyricsIdx: -1,
       lastLyricsKey: '',
@@ -267,6 +299,22 @@ VDI.UI = (function() {
       $('vdi-col-inner').textContent = label;
       $('vdi-title').textContent = state.title || 'Unknown Track';
       $('vdi-artist').textContent = state.artist || 'Unknown Artist';
+
+      if ($('vdi-shuffle')) {
+        $('vdi-shuffle').style.display = onYT ? 'none' : '';
+        if (state.shuffleOn) $('vdi-shuffle').classList.add('vdi-active');
+        else $('vdi-shuffle').classList.remove('vdi-active');
+      }
+
+      if ($('vdi-repeat')) {
+        $('vdi-repeat').style.display = onYT ? 'none' : '';
+        $('vdi-repeat').classList.remove('vdi-active', 'vdi-repeat-one');
+        if (state.repeatMode === 'one') {
+          $('vdi-repeat').classList.add('vdi-active', 'vdi-repeat-one');
+        } else if (state.repeatMode === 'all') {
+          $('vdi-repeat').classList.add('vdi-active');
+        }
+      }
 
       setPlayIcon(state.isPlaying);
 
@@ -929,10 +977,12 @@ VDI.UI = (function() {
         }
       });
 
-      // Double-click to jump to tab
-      island.addEventListener('dblclick', function() {
-        platform.jumpToTab(state.tabId, state.windowId);
-      });
+      if ($('vdi-teleport-btn')) {
+        $('vdi-teleport-btn').addEventListener('click', function(e) {
+          e.stopPropagation();
+          platform.sendAction(state.tabId, 'teleport');
+        });
+      }
 
       if ($('vdi-col-btn')) {
         $('vdi-col-btn').addEventListener('click', function(e) {
@@ -951,6 +1001,20 @@ VDI.UI = (function() {
         e.stopPropagation();
         platform.sendAction(state.tabId, 'next');
       });
+
+      if ($('vdi-shuffle')) {
+        $('vdi-shuffle').addEventListener('click', function(e) {
+          e.stopPropagation();
+          platform.sendAction(state.tabId, 'shuffle');
+        });
+      }
+
+      if ($('vdi-repeat')) {
+        $('vdi-repeat').addEventListener('click', function(e) {
+          e.stopPropagation();
+          platform.sendAction(state.tabId, 'repeat');
+        });
+      }
 
       if ($('vdi-close-btn')) {
         $('vdi-close-btn').addEventListener('click', function(e) {
@@ -1229,6 +1293,8 @@ VDI.UI = (function() {
       state.artist = newState.artist;
       state.artwork = newState.artwork;
       state.duration = newState.duration;
+      state.shuffleOn = newState.shuffleOn || false;
+      state.repeatMode = newState.repeatMode || 'off';
       
       // Use exact clock interpolation instead of dt accumulation
       if (!state.isSeeking) {

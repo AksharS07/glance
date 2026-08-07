@@ -532,6 +532,14 @@ VDI.Core = (function() {
       }
     }
 
+    var shuffleOn = false;
+    var repeatMode = 'off';
+    if (window.MusicKit && window.MusicKit.getInstance()) {
+      var m = window.MusicKit.getInstance();
+      shuffleOn = m.shuffleMode === 1;
+      repeatMode = m.repeatMode === 1 ? 'one' : (m.repeatMode === 2 ? 'all' : 'off');
+    }
+
     return {
       title: finalTitle,
       artist: finalArtist,
@@ -545,6 +553,8 @@ VDI.Core = (function() {
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
+      shuffleOn: shuffleOn,
+      repeatMode: repeatMode,
       timestamp: Date.now()
     };
   }
@@ -613,6 +623,17 @@ VDI.Core = (function() {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
     }
 
+    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"]');
+    var repBtn = document.querySelector('[data-testid="control-button-repeat"]');
+    var shuffleOn = shufBtn ? shufBtn.getAttribute('aria-checked') === 'true' : false;
+    var repeatMode = 'off';
+    if (repBtn) {
+      var ariaChecked = repBtn.getAttribute('aria-checked');
+      if (ariaChecked === 'true' || ariaChecked === 'mixed') {
+        repeatMode = repBtn.getAttribute('aria-label') && repBtn.getAttribute('aria-label').toLowerCase().indexOf('one') > -1 ? 'one' : 'all';
+      }
+    }
+
     return {
       title: (ms && ms.metadata && ms.metadata.title) || document.title.replace(' - Spotify', '').trim() || '',
       artist: (ms && ms.metadata && ms.metadata.artist) || '',
@@ -626,6 +647,8 @@ VDI.Core = (function() {
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
+      shuffleOn: shuffleOn,
+      repeatMode: repeatMode,
       timestamp: Date.now()
     };
   }
@@ -714,6 +737,25 @@ VDI.Core = (function() {
 
       var finalPos = (uiCur !== null) ? uiCur : (el ? el.currentTime : 0);
 
+      var shuffleOn = false;
+      var repeatMode = 'off';
+      if (isYTMusic) {
+        var sb = document.querySelector('ytmusic-player-bar .shuffle, ytmusic-player-bar .shuffle-button, [aria-label*="shuffle" i], [title*="shuffle" i]');
+        if (sb && (sb.getAttribute('aria-pressed') === 'true' || sb.classList.contains('active'))) {
+          shuffleOn = true;
+        }
+        var rb = document.querySelector('ytmusic-player-bar .repeat, ytmusic-player-bar .repeat-button, [aria-label*="repeat" i], [title*="repeat" i]');
+        if (rb) {
+          var isPressed = rb.getAttribute('aria-pressed') === 'true' || rb.classList.contains('active');
+          var titleStr = (rb.getAttribute('title') || rb.getAttribute('aria-label') || '').toLowerCase();
+          if (titleStr.indexOf('one') > -1) {
+            repeatMode = 'one';
+          } else if (isPressed || titleStr.indexOf('all') > -1 || titleStr.indexOf('on') > -1) {
+            repeatMode = 'all';
+          }
+        }
+      }
+
       return {
         title: (ms && ms.metadata && ms.metadata.title) || '',
         artist: (ms && ms.metadata && ms.metadata.artist) || '',
@@ -727,6 +769,8 @@ VDI.Core = (function() {
         isFullscreen: !!document.fullscreenElement,
         isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
         isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
+        shuffleOn: shuffleOn,
+        repeatMode: repeatMode,
         timestamp: Date.now()
       };
     } catch (e) {
@@ -749,6 +793,12 @@ VDI.Core = (function() {
       } else if (act === 'next') {
         var nb = document.querySelector('[data-testid="control-button-skip-forward"]');
         if (nb) nb.click();
+      } else if (act === 'shuffle') {
+        var sb = document.querySelector('[data-testid="control-button-shuffle"]');
+        if (sb) sb.click();
+      } else if (act === 'repeat') {
+        var rb = document.querySelector('[data-testid="control-button-repeat"]');
+        if (rb) rb.click();
       } else if (act === 'seek' && typeof val === 'number') {
         var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
         var dur = 0;
@@ -814,6 +864,21 @@ VDI.Core = (function() {
           else if (act === 'prev') { m.skipToPreviousItem(); return; }
           else if (act === 'next') { m.skipToNextItem(); return; }
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
+          else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
+          else if (act === 'repeat') { m.repeatMode = (m.repeatMode + 1) % 3; return; }
+        } else if (act === 'shuffle' || act === 'repeat') {
+          // Chrome Extension fallback for MusicKit (isolated world -> main world injection)
+          var script = document.createElement('script');
+          script.textContent = `
+            if (window.MusicKit && window.MusicKit.getInstance()) {
+              var m = window.MusicKit.getInstance();
+              if ('${act}' === 'shuffle') m.shuffleMode = m.shuffleMode === 0 ? 1 : 0;
+              if ('${act}' === 'repeat') m.repeatMode = (m.repeatMode + 1) % 3;
+            }
+          `;
+          document.body.appendChild(script);
+          script.remove();
+          return;
         }
 
         if (act === 'toggle') {
@@ -939,6 +1004,12 @@ VDI.Core = (function() {
           if (nb) nb.click();
           else el.currentTime = el.duration;
         }
+      } else if (act === 'shuffle') {
+        var sb = deepQueryOne('ytmusic-player-bar .shuffle, ytmusic-player-bar .shuffle-button, [aria-label*="shuffle" i], [title*="shuffle" i]');
+        if (sb) sb.click();
+      } else if (act === 'repeat') {
+        var rb = deepQueryOne('ytmusic-player-bar .repeat, ytmusic-player-bar .repeat-button, [aria-label*="repeat" i], [title*="repeat" i]');
+        if (rb) rb.click();
       } else if (act === 'seek' && typeof val === 'number') {
         var isYTM = window.location.hostname === 'music.youtube.com';
         var v = deepQuery('video, audio');

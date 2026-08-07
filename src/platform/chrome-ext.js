@@ -49,6 +49,7 @@ VDI.Platform.ChromeExt = (function() {
   /* Background Script Side (for background.js) */
 
   function createBackgroundWorker() {
+    var returnTabId = null;
     var S = {
       isPlaying: false,
       title: '',
@@ -200,6 +201,23 @@ VDI.Platform.ChromeExt = (function() {
               chrome.windows.update(S.windowId, { focused: true });
             }
           }
+        } else if (msg.act === 'teleport') {
+          if (returnTabId === null) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+              if (tabs && tabs.length > 0) {
+                returnTabId = tabs[0].id;
+                if (S.tabId !== null) {
+                  chrome.tabs.update(S.tabId, { active: true });
+                  if (S.windowId !== null) {
+                    chrome.windows.update(S.windowId, { focused: true });
+                  }
+                }
+              }
+            });
+          } else {
+            chrome.tabs.update(returnTabId, { active: true });
+            returnTabId = null;
+          }
         } else {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
           execInTab(S.tabId, VDI.Core.executeMediaAction, args, null);
@@ -214,6 +232,8 @@ VDI.Platform.ChromeExt = (function() {
                 else if (act === 'prev') { m.skipToPreviousItem(); }
                 else if (act === 'next') { m.skipToNextItem(); }
                 else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
+                else if (act === 'shuffle') { m.shuffle = m.shuffle === 0 ? 1 : 0; }
+                else if (act === 'repeat') { m.repeat = m.repeat === 0 ? 2 : 0; }
               }
             }
           }, args, null, 'MAIN');
@@ -225,6 +245,8 @@ VDI.Platform.ChromeExt = (function() {
         if (msg.source.tabId) chrome.tabs.update(msg.source.tabId, { active: true });
         if (msg.source.winId) chrome.windows.update(msg.source.winId, { focused: true });
       } else if (msg.type === 'VDI_REQUEST_STATE') {
+        sendResponse(S);
+      } else if (msg.type === 'VDI_GET_NOW_PLAYING') {
         sendResponse(S);
       } else if (msg.type === 'VDI_FETCH_LYRICS') {
         VDI.Core.fetchLyrics(msg.title, msg.artist, msg.duration, function(result) {
@@ -247,8 +269,16 @@ VDI.Platform.ChromeExt = (function() {
       chrome.tabs.onActivated.addListener(function() { poll(); });
       chrome.windows.onFocusChanged.addListener(function() { poll(); });
 
+      chrome.commands.onCommand.addListener(function(command) {
+        if (command === 'toggle-playback') handleMessage({type: 'VDI_ACTION', act: 'toggle'});
+        else if (command === 'next-track') handleMessage({type: 'VDI_ACTION', act: 'next'});
+        else if (command === 'prev-track') handleMessage({type: 'VDI_ACTION', act: 'prev'});
+      });
+
       chrome.runtime.onInstalled.addListener(function(details) {
-        if (details.reason === "update") {
+        if (details.reason === "install") {
+          chrome.tabs.create({ url: "welcome.html" });
+        } else if (details.reason === "update") {
           chrome.tabs.create({ url: "patch-notes.html" });
         }
       });

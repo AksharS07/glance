@@ -10,7 +10,21 @@
     <img class="logo" src="icon128.png" alt="Logo">
     <div class="header-text">
       <h2 class="title">Dynamic Island</h2>
-      <span class="version">v1.5</span>
+      <span class="version">v1.6</span>
+    </div>
+  </div>
+
+  <div id="now-playing" class="section card now-playing-card">
+    <div class="np-content">
+      <div class="np-art-container">
+        <img id="np-art" src="" alt="">
+        <div id="np-placeholder" class="np-placeholder">🎵</div>
+      </div>
+      <div class="np-info">
+        <div id="np-title" class="np-title">No media playing</div>
+        <div id="np-artist" class="np-artist">Open a supported site</div>
+      </div>
+      <button id="np-playpause" class="np-btn" disabled>▶</button>
     </div>
   </div>
 
@@ -103,6 +117,28 @@
         Right
       </button>
     </div>
+  </div>
+
+  <div class="section card">
+    <h3>Quick Playlists</h3>
+    <div id="playlists-container">
+      <div class="playlist-row">
+        <input type="text" id="pl-name-0" placeholder="Name" class="pl-input name">
+        <input type="text" id="pl-url-0" placeholder="URL" class="pl-input url">
+        <button id="pl-go-0" class="pl-btn">↗</button>
+      </div>
+      <div class="playlist-row">
+        <input type="text" id="pl-name-1" placeholder="Name" class="pl-input name">
+        <input type="text" id="pl-url-1" placeholder="URL" class="pl-input url">
+        <button id="pl-go-1" class="pl-btn">↗</button>
+      </div>
+      <div class="playlist-row">
+        <input type="text" id="pl-name-2" placeholder="Name" class="pl-input name">
+        <input type="text" id="pl-url-2" placeholder="URL" class="pl-input url">
+        <button id="pl-go-2" class="pl-btn">↗</button>
+      </div>
+    </div>
+    <button id="save-playlists" class="save-btn">Save</button>
   </div>
 
   <script src="popup.js"></script>

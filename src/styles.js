@@ -36,8 +36,8 @@ VDI.Styles = (function() {
         'opacity:0;pointer-events:none;',
         'font-family:-apple-system,Inter,Segoe UI,sans-serif;',
         '-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;letter-spacing:normal;line-height:normal;',
-        'transition:width .55s cubic-bezier(.32,.72,0,1),height .55s cubic-bezier(.32,.72,0,1),',
-          'border-radius .55s cubic-bezier(.32,.72,0,1),background .7s ease,box-shadow .7s ease,opacity .3s ease;',
+        'transition:width .55s cubic-bezier(0.34, 1.56, 0.64, 1),height .55s cubic-bezier(0.34, 1.56, 0.64, 1),',
+          'border-radius .55s cubic-bezier(0.34, 1.56, 0.64, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease;',
       '}'
     );
 
@@ -78,7 +78,7 @@ VDI.Styles = (function() {
     );
 
     // Track text
-    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;}');
+    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;transition:width 0.3s ease, flex 0.3s ease;}');
     rules.push(
       '#vdi-col-inner{',
         'display:inline-block;font-size:11px;font-weight:500;color:rgba(255,255,255,.82);',
@@ -102,6 +102,16 @@ VDI.Styles = (function() {
     );
     rules.push('#vdi.vdi-expanded #vdi-exp{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:all;}');
 
+    rules.push(
+      '#vdi-teleport-btn{',
+        'position:absolute;top:16px;right:44px;width:16px;height:16px;',
+        'background:transparent;border:none;padding:0;cursor:pointer;',
+        'color:#fff;opacity:0.4;transition:opacity 0.2s;display:flex;',
+      '}',
+      '#vdi-teleport-btn:hover{opacity:1;}',
+      '#vdi-teleport-btn svg{width:100%;height:100%;pointer-events:none;}'
+    );
+
     // Album Art
     rules.push(
       '#vdi-art{',
@@ -112,7 +122,7 @@ VDI.Styles = (function() {
         'transition:background .7s ease;',
       '}'
     );
-    rules.push('#vdi-art img{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;max-width:100% !important;max-height:100% !important;object-fit:cover !important;border-radius:14px !important;opacity:0;transition:opacity .4s ease;box-sizing:border-box !important;padding:0 !important;margin:0 !important;border:none !important;display:block !important;min-width:100% !important;min-height:100% !important;}');
+    rules.push('#vdi-art img{position:absolute !important;inset:0 !important;width:100% !important;height:100% !important;max-width:100% !important;max-height:100% !important;object-fit:cover !important;border-radius:14px !important;opacity:0;transition:opacity .4s ease, filter .4s ease;box-sizing:border-box !important;padding:0 !important;margin:0 !important;border:none !important;display:block !important;min-width:100% !important;min-height:100% !important;}');
     rules.push('#vdi-art img.ok{opacity:1 !important;}');
     rules.push('#vdi-art-ph{font-size:28px;line-height:1;}');
 
@@ -156,6 +166,11 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn:hover{background:rgba(255,255,255,.16);color:#fff;transform:scale(1.1);}');
     rules.push('.vdi-btn:active{transform:scale(.92);}');
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
+    rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.4);}');
+    rules.push('#vdi-shuffle:hover, #vdi-repeat:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);}');
+    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color:var(--vdi-accent,' + accent + '); filter: drop-shadow(0 0 6px var(--vdi-accent,' + accent + '));}');
+    rules.push('#vdi-repeat{position:relative;}');
+    rules.push('#vdi-repeat.vdi-repeat-one::after{content:"1";position:absolute;font-size:8px;font-weight:900;top:6px;right:6px;color:var(--vdi-dark,' + dark + ');background:var(--vdi-accent,' + accent + ');border-radius:50%;width:10px;height:10px;display:flex;align-items:center;justify-content:center;}');
 
     // Icon button (smaller, square-ish)
     rules.push(
@@ -191,6 +206,7 @@ VDI.Styles = (function() {
       '}'
     );
     rules.push('#vdi-play:hover{transform:scale(1.08);filter:brightness(1.1);}');
+    rules.push('#vdi-play:active{transform:scale(0.85);transition:transform 0.15s cubic-bezier(0.34, 1.56, 0.64, 1);}');
     rules.push('#vdi-play svg{width:18px;height:18px;}');
 
     // ═══════════════════════════════════════════════════════════
