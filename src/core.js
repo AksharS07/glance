@@ -667,16 +667,16 @@ VDI.Core = (function() {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
     }
 
-    // Spotify shuffle: also detect smart shuffle via data-testid
+    // Spotify shuffle: detect via aria-pressed (primary) or smart shuffle testid
     var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
     var isSmartShuffle = !!document.querySelector('[data-testid="control-button-smart-shuffle"]');
     var shuffleOn = isSmartShuffle || (shufBtn ? (
-      shufBtn.getAttribute('aria-checked') === 'true' ||
-      shufBtn.getAttribute('aria-checked') === 'mixed' ||
       shufBtn.getAttribute('aria-pressed') === 'true' ||
       shufBtn.getAttribute('aria-pressed') === 'mixed' ||
-      shufBtn.getAttribute('data-state') === 'active' ||
-      shufBtn.classList.contains('active')
+      shufBtn.getAttribute('aria-checked') === 'true' ||
+      shufBtn.getAttribute('aria-checked') === 'mixed' ||
+      shufBtn.getAttribute('data-active') === 'true' ||
+      (shufBtn.querySelector && !!shufBtn.querySelector('[data-encore-id="icon"]')  && window.getComputedStyle(shufBtn).color.includes('30, 215, 96'))
     ) : false);
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
