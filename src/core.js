@@ -1038,7 +1038,6 @@ VDI.Core = (function() {
               }
             }
           }
-        }
         } else if (act === 'shuffle') {
           var sb = deepQueryOne('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]');
           if (sb) sb.click();
