@@ -449,6 +449,92 @@ VDI.Core = (function() {
   // Apple Music Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getAppleMusicMediaState() {
+    var ms = navigator.mediaSession;
+    var uiDur = 0, uiCur = 0;
+    var isPlaying = false;
+    var shuffleOn = false;
+    var repeatMode = 'off';
+    var finalTitle = '', finalArtist = '', art = null;
+
+    // Apple Music has a known audio element with id="apple-music-player"
+    var realEl = document.getElementById('apple-music-player');
+    if (!realEl) {
+      // Fallback: scan for any audio/video with substantial duration
+      var els = document.querySelectorAll('audio, video');
+      for (var k = 0; k < els.length; k++) {
+        if (!els[k].paused && els[k].currentTime > 0) { realEl = els[k]; break; }
+      }
+      if (!realEl && els.length > 0) realEl = els[0];
+    }
+
+    if (realEl) {
+      uiCur = realEl.currentTime || 0;
+      isPlaying = !realEl.paused;
+      // HLS may pad duration, but use as fallback
+      if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
+    }
+
+    // Use mediaSession for better duration and metadata
+    if (ms) {
+      if (typeof ms.getPositionState === 'function') {
+        try {
+          var ps = ms.getPositionState();
+          if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+          if (ps && ps.position > 0 && (!uiCur || uiCur === 0)) uiCur = ps.position;
+        } catch(e) {}
+      }
+      if (ms.metadata) {
+        finalTitle = ms.metadata.title || '';
+        finalArtist = ms.metadata.artist || '';
+        if (ms.metadata.artwork && ms.metadata.artwork.length) {
+          art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+        }
+      }
+      if (!isPlaying) isPlaying = ms.playbackState === 'playing';
+    }
+
+    // Parse title attribute from the audio element: "Song Name - Album - Artist"
+    if (!finalTitle && realEl && realEl.title) {
+      var tParts = realEl.title.split(' - ');
+      if (tParts.length >= 1) finalTitle = tParts[0].replace(/\(From ".*?"\)/, '').trim() || tParts[0].trim();
+      if (tParts.length >= 3 && !finalArtist) finalArtist = tParts[tParts.length - 1].trim();
+    }
+
+    // Fallback to page title
+    if (!finalTitle && document.title) {
+      var parts = document.title.split(' - ');
+      if (parts.length >= 2) {
+        finalTitle = parts[0].trim();
+        if (!finalArtist) finalArtist = parts[1].trim();
+      } else {
+        finalTitle = document.title.replace(' - Apple Music', '').trim();
+      }
+    }
+
+    // ─── Remaining time text scan for accurate duration ───
+    // Apple Music shows "-M:SS" as remaining time near the progress bar.
+    // Walk ALL visible text nodes looking for this pattern.
+    if (uiCur > 0) {
+      var timeRx = /^-\d{1,2}:\d{2}$/;
+      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+      var tNode;
+      while ((tNode = walker.nextNode())) {
+        var txt = tNode.textContent.trim();
+        if (timeRx.test(txt)) {
+          // Parse remaining time
+          var cleaned = txt.replace(/^-/, '');
+          var tp = cleaned.split(':').map(Number);
+          var remaining = tp.length === 2 ? tp[0] * 60 + tp[1] : 0;
+          if (remaining > 0) {
+            uiDur = uiCur + remaining;
+            break;
+          }
+        }
+      }
+    }
+
+    // ─── Shuffle / Repeat detection ───
+    // Use deepQuery to penetrate shadow DOMs for Apple Music's custom elements
     var deepQuery = function(selector, root) {
       var results = [];
       var traverse = function(node) {
@@ -463,133 +549,49 @@ VDI.Core = (function() {
       return results;
     };
 
-    var ms = navigator.mediaSession;
-
-    // === MAIN WORLD BRIDGE ===
-    // Inject code into MAIN world via Blob URL to bypass Apple Music's CSP.
-    var bridge = document.getElementById('vdi-am-bridge');
-    if (!bridge) {
-      bridge = document.createElement('div');
-      bridge.id = 'vdi-am-bridge';
-      bridge.style.display = 'none';
-      document.body.appendChild(bridge);
-    }
-    if (!document.getElementById('vdi-am-bridge-script')) {
-      var code = [
-        '(function(){',
-        'setInterval(function(){',
-        'try{',
-        'var mk=window.MusicKit&&window.MusicKit.getInstance();',
-        'var el=document.getElementById("vdi-am-bridge");',
-        'if(!mk||!el)return;',
-        'var ni=mk.nowPlayingItem;',
-        'var dur=0;',
-        'if(ni&&ni.attributes&&ni.attributes.durationInMillis)dur=ni.attributes.durationInMillis/1000;',
-        'else if(ni&&ni.playbackDuration)dur=ni.playbackDuration/1000;',
-        'else if(ni&&ni.playbackDuration)dur=ni.playbackDuration;',
-        'el.dataset.duration=dur;',
-        'el.dataset.position=(mk.currentPlaybackTime||0);',
-        'el.dataset.isPlaying=mk.isPlaying?"1":"0";',
-        'var sm=mk.shuffleMode;el.dataset.shuffle=(sm&&sm!==0&&sm!=="off")?"1":"0";',
-        'var rm=mk.repeatMode;el.dataset.repeat=(rm===2||rm==="all")?"all":((rm===1||rm==="one")?"one":"off");',
-        'el.dataset.title=(ni&&ni.title)||(ni&&ni.attributes&&ni.attributes.name)||"";',
-        'el.dataset.artist=(ni&&ni.artistName)||(ni&&ni.attributes&&ni.attributes.artistName)||"";',
-        'el.dataset.artwork=(ni&&ni.artwork)?window.MusicKit.formatArtworkURL(ni.artwork,600,600):"";',
-        'el.dataset.ts=Date.now();',
-        'el.dataset.dbg="sm="+sm+",rm="+rm+",dur="+dur;',
-        '}catch(e){}',
-        '},500);',
-        '})();'
-      ].join('');
-      try {
-        // Method 1: Blob URL (bypasses most CSP)
-        var blob = new Blob([code], { type: 'text/javascript' });
-        var url = URL.createObjectURL(blob);
-        var s = document.createElement('script');
-        s.id = 'vdi-am-bridge-script';
-        s.src = url;
-        document.documentElement.appendChild(s);
-        URL.revokeObjectURL(url);
-      } catch(e1) {
-        try {
-          // Method 2: inline script fallback
-          var s2 = document.createElement('script');
-          s2.id = 'vdi-am-bridge-script';
-          s2.textContent = code;
-          document.documentElement.appendChild(s2);
-        } catch(e2) {}
+    // Shuffle detection
+    var shufBtns = deepQuery('button[aria-label*="huffle"]');
+    for (var si = 0; si < shufBtns.length; si++) {
+      var sEl = shufBtns[si];
+      var sLabel = (sEl.getAttribute('aria-label') || '').toLowerCase();
+      // Apple Music: label describes NEXT action.
+      // If label says "turn off shuffle" or "disable shuffle", shuffle is currently ON
+      if (sLabel.includes('off') || sLabel.includes('disable') || sLabel.includes('deactivate')) {
+        shuffleOn = true; break;
+      }
+      // Also check aria-pressed
+      if (sEl.getAttribute('aria-pressed') === 'true' || sEl.getAttribute('aria-checked') === 'true') {
+        shuffleOn = true; break;
       }
     }
 
-    // Read state from bridge element
-    var bData = bridge.dataset || {};
-    var bridgeActive = bData.ts && (Date.now() - parseInt(bData.ts, 10)) < 3000;
-    if (bridgeActive && bData.dbg) {
-      console.log('[VDI-AM-Bridge]', bData.dbg, 'shuffle=' + bData.shuffle, 'repeat=' + bData.repeat, 'dur=' + bData.duration);
-    }
-
-    var uiDur = 0, uiCur = 0;
-    var isPlaying = false;
-    var shuffleOn = false;
-    var repeatMode = 'off';
-    var finalTitle = '', finalArtist = '', art = null;
-
-    if (bridgeActive) {
-      uiDur = parseFloat(bData.duration) || 0;
-      uiCur = parseFloat(bData.position) || 0;
-      isPlaying = bData.isPlaying === '1';
-      shuffleOn = bData.shuffle === '1';
-      repeatMode = bData.repeat || 'off';
-      finalTitle = bData.title || '';
-      finalArtist = bData.artist || '';
-      art = bData.artwork || null;
-    } else {
-      // Bridge not yet active or CSP blocked — fall back to audio element + mediaSession
-      var els = deepQuery('video, audio');
-      var realEl = null;
-      for (var k = 0; k < els.length; k++) {
-        var d = els[k].duration;
-        if (!els[k].paused && els[k].currentTime > 0 && (isNaN(d) || d === Infinity || d > 30)) {
-          realEl = els[k]; break;
-        }
+    // Repeat detection
+    var repBtns = deepQuery('button[aria-label*="epeat"]');
+    for (var ri = 0; ri < repBtns.length; ri++) {
+      var rEl = repBtns[ri];
+      var rLabel = (rEl.getAttribute('aria-label') || '').toLowerCase();
+      // Apple Music cycle: off → all → one → off
+      // Label describes NEXT action:
+      // "Repeat All" → currently OFF (clicking will turn on repeat-all)
+      // "Repeat One" → currently ALL (clicking will switch to repeat-one)  
+      // "Repeat Off" → currently ONE (clicking will turn off repeat)
+      if (rLabel.includes('repeat off') || rLabel.includes('disable repeat') || rLabel.includes('turn off repeat')) {
+        repeatMode = 'one'; break;
+      } else if (rLabel.includes('repeat one')) {
+        repeatMode = 'all'; break;
+      } else if (rLabel.includes('repeat all')) {
+        repeatMode = 'off'; break;
       }
-      if (!realEl && els.length > 0) {
-        for (var j = 0; j < els.length; j++) {
-          var d2 = els[j].duration;
-          if (isNaN(d2) || d2 === Infinity || d2 > 30) { realEl = els[j]; break; }
-        }
-        if (!realEl) realEl = els[0];
-      }
-      if (realEl) {
-        uiCur = realEl.currentTime || 0;
-        isPlaying = !realEl.paused;
-        // Use realEl.duration as rough estimate (may be HLS-padded but better than 0)
-        if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
-      }
-      // Try mediaSession positionState for better duration
-      if (ms && typeof ms.getPositionState === 'function') {
-        try {
-          var ps = ms.getPositionState();
-          if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
-          if (ps && ps.position > 0) uiCur = ps.position;
-        } catch(e) {}
-      }
-      if (ms && ms.metadata) {
-        finalTitle = ms.metadata.title || '';
-        finalArtist = ms.metadata.artist || '';
-        if (ms.metadata.artwork && ms.metadata.artwork.length) {
-          art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
-        }
-      }
-      if (!isPlaying && ms) isPlaying = ms.playbackState === 'playing';
-      if (!finalTitle && document.title) {
-        var parts = document.title.split(' - ');
-        if (parts.length >= 2) {
-          finalTitle = parts[0].trim();
-          if (!finalArtist) finalArtist = parts[1].trim();
+      // Also check aria-pressed for simpler detection
+      if (rEl.getAttribute('aria-pressed') === 'true') {
+        // Button is active, but we don't know which mode — check SVG for "1"
+        var svgText = rEl.innerHTML || '';
+        if (svgText.includes('>1<') || svgText.includes('repeat-one') || svgText.includes('repeatOne')) {
+          repeatMode = 'one';
         } else {
-          finalTitle = document.title.replace(' - Apple Music', '').trim();
+          repeatMode = 'all';
         }
+        break;
       }
     }
 
@@ -611,6 +613,7 @@ VDI.Core = (function() {
       timestamp: Date.now()
     };
   }
+
 
 
   // ─────────────────────────────────────────────────────────────
