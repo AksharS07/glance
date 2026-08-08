@@ -451,7 +451,9 @@ VDI.Core = (function() {
   function getAppleMusicMediaState() {
     var parseTime = function(str) {
       if (!str) return 0;
-      var p = str.trim().split(':').map(Number);
+      // Strip minus sign (Apple Music shows remaining time as -0:38)
+      var s = str.trim().replace(/^-/, '');
+      var p = s.split(':').map(Number);
       return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
     };
 
@@ -503,15 +505,46 @@ VDI.Core = (function() {
     }
 
     // Apple Music pads its HLS video durations, and ms.getPositionState is notoriously buggy on Apple Music Web.
-    // Prefer the visual time strings in the playback controls bar for both duration and position.
+    // Scrape ALL visible time elements and figure out which is position vs duration/remaining.
     var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
-    var durationEl = deepQueryOne('[data-testid="playback-duration"], .lcd-time, [class*="duration"]', playerBar);
-    var positionEl = deepQueryOne('[data-testid="playback-time"], [class*="current"], [class*="position"]', playerBar);
-    if (durationEl && durationEl.getBoundingClientRect().width > 0) {
-      uiDur = parseTime((durationEl.textContent || '').trim());
+    var timeEls = deepQuery('[data-testid="playback-duration"], [data-testid="playback-time"], .lcd-time, [class*="time"], [class*="duration"], [class*="current"], [class*="remaining"], time', playerBar);
+    var scrapedTimes = [];
+    for (var ti = 0; ti < timeEls.length; ti++) {
+      if (timeEls[ti].getBoundingClientRect().width > 0) {
+        var rawText = (timeEls[ti].textContent || '').trim();
+        if (rawText && rawText.match(/\d/)) {
+          var isNeg = rawText.charAt(0) === '-';
+          var tVal = parseTime(rawText);
+          if (tVal > 0) scrapedTimes.push({ val: tVal, neg: isNeg });
+        }
+      }
     }
-    if (positionEl && positionEl.getBoundingClientRect().width > 0) {
-      uiCur = parseTime((positionEl.textContent || '').trim());
+    // If we found time elements, determine position and duration
+    if (scrapedTimes.length >= 2) {
+      // Find one that's negative (remaining) and one that's positive (position)
+      var negTime = null, posTime = null;
+      for (var st = 0; st < scrapedTimes.length; st++) {
+        if (scrapedTimes[st].neg && !negTime) negTime = scrapedTimes[st];
+        else if (!scrapedTimes[st].neg && !posTime) posTime = scrapedTimes[st];
+      }
+      if (posTime && negTime) {
+        // position + remaining = total duration
+        uiCur = posTime.val;
+        uiDur = posTime.val + negTime.val;
+      } else {
+        // Both positive: smaller = position, larger = duration
+        scrapedTimes.sort(function(a, b) { return a.val - b.val; });
+        uiCur = scrapedTimes[0].val;
+        uiDur = scrapedTimes[scrapedTimes.length - 1].val;
+      }
+    } else if (scrapedTimes.length === 1) {
+      if (scrapedTimes[0].neg) {
+        // Only remaining time visible
+        uiDur = (realEl && realEl.currentTime > 0 ? realEl.currentTime : 0) + scrapedTimes[0].val;
+        uiCur = realEl && realEl.currentTime > 0 ? realEl.currentTime : 0;
+      } else {
+        uiCur = scrapedTimes[0].val;
+      }
     }
     if ((!uiCur || uiCur === 0) && realEl && realEl.currentTime > 0) {
       uiCur = realEl.currentTime;
@@ -589,12 +622,18 @@ VDI.Core = (function() {
       var rChecked = rEl.getAttribute('aria-checked');
       var rLabel = (rEl.getAttribute('aria-label') || '').toLowerCase();
       var rSelected = rEl.getAttribute('aria-selected');
+      // IMPORTANT: Apple Music aria-label describes the NEXT action, not current state!
+      // "Repeat One" in label means clicking will switch TO repeat-one, so current = repeat-all
+      // "Repeat Off" / no repeat mention means current = repeat-one (last state before off)
       if (rPressed === 'true' || rChecked === 'true' || rSelected === 'true' ||
           rLabel.includes('selected') || rLabel.includes('on') ||
           rEl.classList.contains('selected') || rEl.classList.contains('active') ||
           rEl.hasAttribute('selected')) {
-        if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
-        else repeatMode = 'all';
+        if (rLabel.includes('off') || rLabel.includes('disable') || rLabel.includes('turn off')) {
+          repeatMode = 'one';
+        } else {
+          repeatMode = 'all';
+        }
         break;
       }
       try {
