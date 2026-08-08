@@ -449,14 +449,6 @@ VDI.Core = (function() {
   // Apple Music Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getAppleMusicMediaState() {
-    var parseTime = function(str) {
-      if (!str) return 0;
-      // Strip minus sign (Apple Music shows remaining time as -0:38)
-      var s = str.trim().replace(/^-/, '');
-      var p = s.split(':').map(Number);
-      return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
-    };
-
     var deepQuery = function(selector, root) {
       var results = [];
       var traverse = function(node) {
@@ -471,191 +463,107 @@ VDI.Core = (function() {
       return results;
     };
 
-
-    
     var ms = navigator.mediaSession;
-    var uiDur = 0;
-    var uiCur = 0;
-    
-    // Apple Music Web uses MusicKit JS which heavily utilizes Shadow DOMs.
-    var els = deepQuery('video, audio');
-    var realEl = null;
 
-    // Find the active element, ignoring short looping background videos
-    for (var k = 0; k < els.length; k++) {
-      var d = els[k].duration;
-      if (!els[k].paused && els[k].currentTime > 0 && (isNaN(d) || d === Infinity || d > 30)) {
-        realEl = els[k];
-        break;
-      }
+    // === MAIN WORLD BRIDGE ===
+    // Inject a <script> into the page's MAIN world to read MusicKit state.
+    // This is the ONLY reliable way to get duration, shuffle, repeat from Apple Music
+    // because MusicKit is only accessible in the MAIN world, not the ISOLATED extension world.
+    var bridge = document.getElementById('vdi-am-bridge');
+    if (!bridge) {
+      bridge = document.createElement('div');
+      bridge.id = 'vdi-am-bridge';
+      bridge.style.display = 'none';
+      document.body.appendChild(bridge);
     }
-    if (!realEl && els.length > 0) {
-      for (var j = 0; j < els.length; j++) {
-        var d2 = els[j].duration;
-        if (isNaN(d2) || d2 === Infinity || d2 > 30) {
-          realEl = els[j];
-          break;
-        }
-      }
-      if (!realEl) realEl = els[0];
-    }
-
-    if (realEl && realEl.currentTime > 0) {
-      uiCur = realEl.currentTime;
-    }
-
-    // Apple Music pads its HLS video durations, and ms.getPositionState is notoriously buggy on Apple Music Web.
-    // Strategy: find ALL small text elements on page whose content matches time patterns (M:SS or -M:SS)
-    // then use position + remaining to compute the true duration.
-    var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
-    var allEls = deepQuery('*', playerBar);
-    var scrapedTimes = [];
-    var timeRegex = /^-?\d{1,2}:\d{2}$/;
-    for (var ti = 0; ti < allEls.length; ti++) {
-      var el = allEls[ti];
-      // Only leaf elements (no children with text) to avoid counting parent containers
-      if (el.children && el.children.length > 2) continue;
-      var rect = el.getBoundingClientRect();
-      if (rect.width <= 0 || rect.height <= 0) continue;
-      var rawText = (el.textContent || '').trim();
-      if (timeRegex.test(rawText)) {
-        var isNeg = rawText.charAt(0) === '-';
-        var tVal = parseTime(rawText);
-        if (tVal > 0) {
-          // Deduplicate: don't add if we already have a time with same value and sign
-          var isDupe = false;
-          for (var di = 0; di < scrapedTimes.length; di++) {
-            if (scrapedTimes[di].val === tVal && scrapedTimes[di].neg === isNeg) { isDupe = true; break; }
-          }
-          if (!isDupe) scrapedTimes.push({ val: tVal, neg: isNeg });
-        }
-      }
-    }
-    // Determine position and duration from scraped times
-    if (scrapedTimes.length >= 2) {
-      var negTime = null, posTime = null;
-      for (var st = 0; st < scrapedTimes.length; st++) {
-        if (scrapedTimes[st].neg && !negTime) negTime = scrapedTimes[st];
-        else if (!scrapedTimes[st].neg && !posTime) posTime = scrapedTimes[st];
-      }
-      if (posTime && negTime) {
-        uiCur = posTime.val;
-        uiDur = posTime.val + negTime.val;
-      } else {
-        scrapedTimes.sort(function(a, b) { return a.val - b.val; });
-        uiCur = scrapedTimes[0].val;
-        uiDur = scrapedTimes[scrapedTimes.length - 1].val;
-      }
-    } else if (scrapedTimes.length === 1) {
-      if (scrapedTimes[0].neg) {
-        uiDur = (realEl && realEl.currentTime > 0 ? realEl.currentTime : 0) + scrapedTimes[0].val;
-        uiCur = realEl && realEl.currentTime > 0 ? realEl.currentTime : 0;
-      } else {
-        uiCur = scrapedTimes[0].val;
-      }
-    }
-    if ((!uiCur || uiCur === 0) && realEl && realEl.currentTime > 0) {
-      uiCur = realEl.currentTime;
-    }
-    // ONLY use realEl.duration if we found absolutely nothing from the UI
-    if ((!uiDur || uiDur === 0) && realEl && isFinite(realEl.duration)) {
-      uiDur = realEl.duration;
-    }
-    if (!uiDur || uiDur === 0) {
-      if (ms && typeof ms.getPositionState === 'function') {
-        try {
-          var pState = ms.getPositionState();
-          if (pState && pState.duration > 0) uiDur = pState.duration;
-        } catch(e) {}
-      }
+    // Inject the bridge script (idempotent - checks for existing script tag)
+    if (!document.getElementById('vdi-am-bridge-script')) {
+      var s = document.createElement('script');
+      s.id = 'vdi-am-bridge-script';
+      s.textContent = '(' + (function() {
+        setInterval(function() {
+          try {
+            var mk = window.MusicKit && window.MusicKit.getInstance();
+            var el = document.getElementById('vdi-am-bridge');
+            if (!mk || !el) return;
+            var ni = mk.nowPlayingItem;
+            el.dataset.duration = (ni && ni.playbackDuration ? ni.playbackDuration / 1000 : 0);
+            el.dataset.position = (mk.currentPlaybackTime || 0);
+            el.dataset.isPlaying = mk.isPlaying ? '1' : '0';
+            el.dataset.shuffle = (mk.shuffleMode === 1) ? '1' : '0';
+            // MusicKit: 0=none, 1=one, 2=all
+            el.dataset.repeat = mk.repeatMode === 2 ? 'all' : (mk.repeatMode === 1 ? 'one' : 'off');
+            el.dataset.title = (ni && ni.title) || '';
+            el.dataset.artist = (ni && ni.artistName) || '';
+            el.dataset.artwork = (ni && ni.artwork) ? window.MusicKit.formatArtworkURL(ni.artwork, 600, 600) : '';
+            el.dataset.ts = Date.now();
+          } catch(e) {}
+        }, 500);
+      }).toString() + ')();';
+      document.documentElement.appendChild(s);
     }
 
-    var isPlaying = realEl ? !realEl.paused : (ms && ms.playbackState === 'playing');
-    var art = null;
-    if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
-      art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
-    }
+    // Read state from bridge element
+    var bData = bridge.dataset || {};
+    var bridgeActive = bData.ts && (Date.now() - parseInt(bData.ts, 10)) < 3000;
 
-    var titleEls = deepQuery('.web-chrome-playback-lcd__song-name-scroll, [data-testid="track-title"], .ticker-item, [class*="song-name"]', playerBar);
-    var artistEls = deepQuery('.web-chrome-playback-lcd__sub-info-scroll, [data-testid="track-artist"], [class*="artist-name"]', playerBar);
-    
-    var domTitle = titleEls.length > 0 ? titleEls[0].textContent.trim() : '';
-    var domArtist = artistEls.length > 0 ? artistEls[0].textContent.trim() : '';
-    
-    var finalTitle = (ms && ms.metadata && ms.metadata.title) || domTitle || '';
-    var finalArtist = (ms && ms.metadata && ms.metadata.artist) || domArtist || '';
-    
-    if (!finalTitle && document.title) {
-      var parts = document.title.split(' - ');
-      if (parts.length >= 2) {
-        finalTitle = parts[0].trim();
-        if (!finalArtist) finalArtist = parts[1].trim();
-      } else {
-        finalTitle = document.title.replace(' - Apple Music', '').trim();
-      }
-    }
-
-    // Apple Music shuffle/repeat detection
-    // Search document.body (not playerBar) because Apple Music places these controls outside the LCD bar
+    var uiDur = 0, uiCur = 0;
+    var isPlaying = false;
     var shuffleOn = false;
     var repeatMode = 'off';
-    var amShufBtn = deepQuery('button[aria-label*="shuffle" i], [class*="shuffle"], [data-testid*="shuffle" i]', document.body);
-    for (var si = 0; si < amShufBtn.length; si++) {
-      var sEl = amShufBtn[si];
-      var sPressed = sEl.getAttribute('aria-pressed');
-      var sChecked = sEl.getAttribute('aria-checked');
-      var sLabel = (sEl.getAttribute('aria-label') || '').toLowerCase();
-      var sSelected = sEl.getAttribute('aria-selected');
-      // Check: aria-pressed, aria-checked, aria-selected, or label indicating active state
-      if (sPressed === 'true' || sChecked === 'true' || sSelected === 'true' ||
-          sLabel.includes('selected') || sLabel.includes('on') ||
-          sEl.classList.contains('selected') || sEl.classList.contains('active') ||
-          sEl.hasAttribute('selected')) {
-        shuffleOn = true; break;
-      }
-      // Also check computed color - Apple Music uses colored icons for active state
-      try {
-        var sColor = window.getComputedStyle(sEl).color;
-        // Apple Music active buttons get a non-grey color (check it's not the default grey/white)
-        if (sColor && !sColor.includes('153') && !sColor.includes('136') && !sColor.includes('170') &&
-            (sColor.includes('255, 45') || sColor.includes('255, 55') || sColor.includes(', 120,') || sColor.includes(', 86,'))) {
-          shuffleOn = true; break;
+    var finalTitle = '', finalArtist = '', art = null;
+
+    if (bridgeActive) {
+      // MusicKit bridge is active - use its data (most reliable)
+      uiDur = parseFloat(bData.duration) || 0;
+      uiCur = parseFloat(bData.position) || 0;
+      isPlaying = bData.isPlaying === '1';
+      shuffleOn = bData.shuffle === '1';
+      repeatMode = bData.repeat || 'off';
+      finalTitle = bData.title || '';
+      finalArtist = bData.artist || '';
+      art = bData.artwork || null;
+    } else {
+      // Bridge not yet active - fall back to mediaSession + audio element
+      var els = deepQuery('video, audio');
+      var realEl = null;
+      for (var k = 0; k < els.length; k++) {
+        var d = els[k].duration;
+        if (!els[k].paused && els[k].currentTime > 0 && (isNaN(d) || d === Infinity || d > 30)) {
+          realEl = els[k]; break;
         }
-      } catch(e) {}
-    }
-    var amRepBtn = deepQuery('button[aria-label*="repeat" i], [class*="repeat"], [data-testid*="repeat" i]', document.body);
-    for (var ri = 0; ri < amRepBtn.length; ri++) {
-      var rEl = amRepBtn[ri];
-      var rPressed = rEl.getAttribute('aria-pressed');
-      var rChecked = rEl.getAttribute('aria-checked');
-      var rLabel = (rEl.getAttribute('aria-label') || '').toLowerCase();
-      var rSelected = rEl.getAttribute('aria-selected');
-      // IMPORTANT: Apple Music aria-label describes the NEXT action, not current state!
-      // "Repeat One" in label means clicking will switch TO repeat-one, so current = repeat-all
-      // "Repeat Off" / no repeat mention means current = repeat-one (last state before off)
-      if (rPressed === 'true' || rChecked === 'true' || rSelected === 'true' ||
-          rLabel.includes('selected') || rLabel.includes('on') ||
-          rEl.classList.contains('selected') || rEl.classList.contains('active') ||
-          rEl.hasAttribute('selected')) {
-        if (rLabel.includes('off') || rLabel.includes('disable') || rLabel.includes('turn off')) {
-          repeatMode = 'one';
+      }
+      if (!realEl && els.length > 0) {
+        for (var j = 0; j < els.length; j++) {
+          var d2 = els[j].duration;
+          if (isNaN(d2) || d2 === Infinity || d2 > 30) { realEl = els[j]; break; }
+        }
+        if (!realEl) realEl = els[0];
+      }
+      if (realEl) {
+        uiCur = realEl.currentTime || 0;
+        isPlaying = !realEl.paused;
+      }
+      if (ms && ms.metadata) {
+        finalTitle = ms.metadata.title || '';
+        finalArtist = ms.metadata.artist || '';
+        if (ms.metadata.artwork && ms.metadata.artwork.length) {
+          art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+        }
+      }
+      if (!isPlaying && ms) isPlaying = ms.playbackState === 'playing';
+      if (!finalTitle && document.title) {
+        var parts = document.title.split(' - ');
+        if (parts.length >= 2) {
+          finalTitle = parts[0].trim();
+          if (!finalArtist) finalArtist = parts[1].trim();
         } else {
-          repeatMode = 'all';
+          finalTitle = document.title.replace(' - Apple Music', '').trim();
         }
-        break;
       }
-      try {
-        var rColor = window.getComputedStyle(rEl).color;
-        if (rColor && !rColor.includes('153') && !rColor.includes('136') && !rColor.includes('170') &&
-            (rColor.includes('255, 45') || rColor.includes('255, 55') || rColor.includes(', 120,') || rColor.includes(', 86,'))) {
-          if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
-          else repeatMode = 'all';
-          break;
-        }
-      } catch(e) {}
     }
 
-      return {
+    return {
       title: finalTitle,
       artist: finalArtist,
       artwork: art,
@@ -663,8 +571,8 @@ VDI.Core = (function() {
       duration: uiDur,
       position: uiCur,
       hasMedia: !!(finalTitle || uiDur > 0),
-      volume: realEl ? realEl.volume : 1,
-      pipOk: false, // PiP is generally blocked or custom on Apple Music
+      volume: 1,
+      pipOk: false,
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
@@ -673,6 +581,8 @@ VDI.Core = (function() {
       timestamp: Date.now()
     };
   }
+
+
 
   // ─────────────────────────────────────────────────────────────
   // Spotify Media State Extractor (Isolated)
