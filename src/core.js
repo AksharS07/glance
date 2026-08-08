@@ -498,33 +498,23 @@ VDI.Core = (function() {
       if (!realEl) realEl = els[0];
     }
 
-    if (realEl) {
-      uiCur = realEl.currentTime >= 0 ? realEl.currentTime : 0;
+    if (realEl && realEl.currentTime > 0) {
+      uiCur = realEl.currentTime;
     }
-    
+
     // Apple Music pads its HLS video durations, and ms.getPositionState is notoriously buggy on Apple Music Web.
-    // The ONLY source of truth is the visual time strings in the playback controls bar.
+    // Prefer the visual time strings in the playback controls bar for both duration and position.
     var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
-    var timeEls = deepQuery('[data-testid="playback-duration"], [data-testid="playback-time"], .lcd-time, [class*="time"], [class*="duration"], [class*="current"], time', playerBar);
-    var times = [];
-    for (var i = 0; i < timeEls.length; i++) {
-      if (timeEls[i].getBoundingClientRect().width > 0) {
-        var tVal = parseTime(timeEls[i].textContent);
-        if (tVal > 0) times.push(tVal);
-      }
+    var durationEl = deepQueryOne('[data-testid="playback-duration"], .lcd-time, [class*="duration"]', playerBar);
+    var positionEl = deepQueryOne('[data-testid="playback-time"], [class*="current"], [class*="position"]', playerBar);
+    if (durationEl && durationEl.getBoundingClientRect().width > 0) {
+      uiDur = parseTime((durationEl.textContent || '').trim());
     }
-    if (times.length > 0) {
-      times.sort(function(a, b) { return a - b; });
-      // Sanity cap: discard values over 60 minutes (likely accumulated bug across songs)
-      var validTimes = times.filter(function(t) { return t <= 3600; });
-      if (validTimes.length > 0) {
-        uiDur = validTimes[validTimes.length - 1]; // Largest valid = duration
-        if (!uiCur || uiCur === 0) {
-          uiCur = validTimes.length >= 2 ? validTimes[0] : (validTimes[0] !== uiDur ? validTimes[0] : 0);
-        }
-      } else if (times.length > 0) {
-        uiDur = times[times.length - 1];
-      }
+    if (positionEl && positionEl.getBoundingClientRect().width > 0) {
+      uiCur = parseTime((positionEl.textContent || '').trim());
+    }
+    if ((!uiCur || uiCur === 0) && realEl && realEl.currentTime > 0) {
+      uiCur = realEl.currentTime;
     }
 
     if ((!uiDur || uiDur === 0) && realEl && isFinite(realEl.duration)) {
@@ -565,25 +555,57 @@ VDI.Core = (function() {
     }
 
     // Apple Music shuffle/repeat detection
+    // Search document.body (not playerBar) because Apple Music places these controls outside the LCD bar
     var shuffleOn = false;
     var repeatMode = 'off';
-    var amShufBtn = deepQuery('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]', playerBar);
+    var amShufBtn = deepQuery('button[aria-label*="shuffle" i], [class*="shuffle"], [data-testid*="shuffle" i]', document.body);
     for (var si = 0; si < amShufBtn.length; si++) {
-      var sLabel = (amShufBtn[si].getAttribute('aria-label') || '').toLowerCase();
-      var sPressed = amShufBtn[si].getAttribute('aria-pressed');
-      if (sPressed === 'true' || sLabel.includes('on') || sLabel.includes('disable') || sLabel.includes('turn off')) {
+      var sEl = amShufBtn[si];
+      var sPressed = sEl.getAttribute('aria-pressed');
+      var sChecked = sEl.getAttribute('aria-checked');
+      var sLabel = (sEl.getAttribute('aria-label') || '').toLowerCase();
+      var sSelected = sEl.getAttribute('aria-selected');
+      // Check: aria-pressed, aria-checked, aria-selected, or label indicating active state
+      if (sPressed === 'true' || sChecked === 'true' || sSelected === 'true' ||
+          sLabel.includes('selected') || sLabel.includes('on') ||
+          sEl.classList.contains('selected') || sEl.classList.contains('active') ||
+          sEl.hasAttribute('selected')) {
         shuffleOn = true; break;
       }
+      // Also check computed color - Apple Music uses colored icons for active state
+      try {
+        var sColor = window.getComputedStyle(sEl).color;
+        // Apple Music active buttons get a non-grey color (check it's not the default grey/white)
+        if (sColor && !sColor.includes('153') && !sColor.includes('136') && !sColor.includes('170') &&
+            (sColor.includes('255, 45') || sColor.includes('255, 55') || sColor.includes(', 120,') || sColor.includes(', 86,'))) {
+          shuffleOn = true; break;
+        }
+      } catch(e) {}
     }
-    var amRepBtn = deepQuery('button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]', playerBar);
+    var amRepBtn = deepQuery('button[aria-label*="repeat" i], [class*="repeat"], [data-testid*="repeat" i]', document.body);
     for (var ri = 0; ri < amRepBtn.length; ri++) {
-      var rLabel = (amRepBtn[ri].getAttribute('aria-label') || '').toLowerCase();
-      var rPressed = amRepBtn[ri].getAttribute('aria-pressed');
-      if (rPressed === 'true' || rLabel.includes('on') || rLabel.includes('disable') || rLabel.includes('turn off')) {
+      var rEl = amRepBtn[ri];
+      var rPressed = rEl.getAttribute('aria-pressed');
+      var rChecked = rEl.getAttribute('aria-checked');
+      var rLabel = (rEl.getAttribute('aria-label') || '').toLowerCase();
+      var rSelected = rEl.getAttribute('aria-selected');
+      if (rPressed === 'true' || rChecked === 'true' || rSelected === 'true' ||
+          rLabel.includes('selected') || rLabel.includes('on') ||
+          rEl.classList.contains('selected') || rEl.classList.contains('active') ||
+          rEl.hasAttribute('selected')) {
         if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
         else repeatMode = 'all';
         break;
       }
+      try {
+        var rColor = window.getComputedStyle(rEl).color;
+        if (rColor && !rColor.includes('153') && !rColor.includes('136') && !rColor.includes('170') &&
+            (rColor.includes('255, 45') || rColor.includes('255, 55') || rColor.includes(', 120,') || rColor.includes(', 86,'))) {
+          if (rLabel.includes('one') || rLabel.includes('1')) repeatMode = 'one';
+          else repeatMode = 'all';
+          break;
+        }
+      } catch(e) {}
     }
 
       return {
@@ -674,9 +696,7 @@ VDI.Core = (function() {
       shufBtn.getAttribute('aria-pressed') === 'true' ||
       shufBtn.getAttribute('aria-pressed') === 'mixed' ||
       shufBtn.getAttribute('aria-checked') === 'true' ||
-      shufBtn.getAttribute('aria-checked') === 'mixed' ||
-      shufBtn.getAttribute('data-active') === 'true' ||
-      (shufBtn.querySelector && !!shufBtn.querySelector('[data-encore-id="icon"]')  && window.getComputedStyle(shufBtn).color.includes('30, 215, 96'))
+      shufBtn.getAttribute('aria-checked') === 'mixed'
     ) : false);
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
@@ -709,6 +729,7 @@ VDI.Core = (function() {
       isYouTubeVideo: false,
       isMusicApp: true,
       shuffleOn: shuffleOn,
+      smartShuffleOn: isSmartShuffle,
       repeatMode: repeatMode,
       timestamp: Date.now()
     };
@@ -956,7 +977,7 @@ VDI.Core = (function() {
           else if (act === 'next') { m.skipToNextItem(); return; }
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
           else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
-          else if (act === 'repeat') { m.repeatMode = (m.repeatMode + 1) % 3; return; }
+          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 1 : (m.repeatMode === 1 ? 2 : 0); return; }
         }
 
         if (act === 'toggle') {

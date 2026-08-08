@@ -278,8 +278,20 @@ VDI.UI = (function() {
 
       if ($('vdi-shuffle')) {
         $('vdi-shuffle').style.display = (state.isYouTubeVideo || !state.isMusicApp) ? 'none' : '';
-        if (state.shuffleOn) $('vdi-shuffle').classList.add('vdi-active');
-        else $('vdi-shuffle').classList.remove('vdi-active');
+        var normalShufSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>';
+        var smartShufSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/><circle cx="6" cy="6" r="1.5" fill="currentColor" opacity="0.9"/><circle cx="18" cy="18" r="1.5" fill="currentColor" opacity="0.9"/><circle cx="12" cy="3" r="1" fill="currentColor" opacity="0.7"/></svg>';
+        $('vdi-shuffle').classList.remove('vdi-active', 'vdi-smart-shuffle');
+        if (state.shuffleOn) {
+          $('vdi-shuffle').classList.add('vdi-active');
+          if (state.smartShuffleOn) {
+            $('vdi-shuffle').classList.add('vdi-smart-shuffle');
+            $('vdi-shuffle').innerHTML = smartShufSvg;
+          } else {
+            $('vdi-shuffle').innerHTML = normalShufSvg;
+          }
+        } else {
+          $('vdi-shuffle').innerHTML = normalShufSvg;
+        }
       }
 
       if ($('vdi-repeat')) {

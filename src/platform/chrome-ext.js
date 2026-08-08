@@ -49,7 +49,7 @@ VDI.Platform.ChromeExt = (function() {
   /* Background Script Side (for background.js) */
 
   function createBackgroundWorker() {
-    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, repeatMode: 'off' };
+    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, smartShuffleOn: false, repeatMode: 'off' };
     var pollInterval = 1000;
     var returnTabId = null;
     var returnWinId = null;
@@ -109,6 +109,7 @@ VDI.Platform.ChromeExt = (function() {
               S.isYouTubeVideo = res.isYouTubeVideo || false;
               S.isMusicApp = res.isMusicApp || false;
               S.shuffleOn = res.shuffleOn || false;
+              S.smartShuffleOn = res.smartShuffleOn || false;
               S.repeatMode = res.repeatMode || 'off';
               if (!res.hasMedia) S.hasMedia = false;
               broadcastState();
@@ -141,6 +142,7 @@ VDI.Platform.ChromeExt = (function() {
           S.isYouTubeVideo = res.isYouTubeVideo || false;
           S.isMusicApp = res.isMusicApp || false;
           S.shuffleOn = res.shuffleOn || false;
+          S.smartShuffleOn = res.smartShuffleOn || false;
           S.repeatMode = res.repeatMode || 'off';
 
           broadcastState();

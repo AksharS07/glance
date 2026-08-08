@@ -171,6 +171,7 @@ VDI.Styles = (function() {
     rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color:var(--vdi-accent,' + accent + ') !important; filter: drop-shadow(0 0 5px var(--vdi-accent,' + accent + '));}');
     rules.push('#vdi-repeat.vdi-repeat-one{filter: drop-shadow(0 0 8px var(--vdi-accent,' + accent + ')) drop-shadow(0 0 12px var(--vdi-accent,' + accent + '));}');
     rules.push('#vdi-repeat.vdi-repeat-one text{fill:var(--vdi-accent,' + accent + ');font-weight:900;}');
+    rules.push('#vdi-shuffle.vdi-smart-shuffle{filter: drop-shadow(0 0 8px var(--vdi-accent,' + accent + ')) drop-shadow(0 0 14px var(--vdi-accent,' + accent + '));}');
     
     rules.push('#vdi-repeat{position:relative;}');
 
