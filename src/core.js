@@ -483,15 +483,20 @@ VDI.Core = (function() {
         'var el=document.getElementById("vdi-am-bridge");',
         'if(!mk||!el)return;',
         'var ni=mk.nowPlayingItem;',
-        'el.dataset.duration=(ni&&ni.playbackDuration?ni.playbackDuration/1000:0);',
+        'var dur=0;',
+        'if(ni&&ni.attributes&&ni.attributes.durationInMillis)dur=ni.attributes.durationInMillis/1000;',
+        'else if(ni&&ni.playbackDuration)dur=ni.playbackDuration/1000;',
+        'else if(ni&&ni.playbackDuration)dur=ni.playbackDuration;',
+        'el.dataset.duration=dur;',
         'el.dataset.position=(mk.currentPlaybackTime||0);',
         'el.dataset.isPlaying=mk.isPlaying?"1":"0";',
-        'el.dataset.shuffle=(mk.shuffleMode===1)?"1":"0";',
-        'el.dataset.repeat=mk.repeatMode===2?"all":(mk.repeatMode===1?"one":"off");',
-        'el.dataset.title=(ni&&ni.title)||"";',
-        'el.dataset.artist=(ni&&ni.artistName)||"";',
+        'var sm=mk.shuffleMode;el.dataset.shuffle=(sm&&sm!==0&&sm!=="off")?"1":"0";',
+        'var rm=mk.repeatMode;el.dataset.repeat=(rm===2||rm==="all")?"all":((rm===1||rm==="one")?"one":"off");',
+        'el.dataset.title=(ni&&ni.title)||(ni&&ni.attributes&&ni.attributes.name)||"";',
+        'el.dataset.artist=(ni&&ni.artistName)||(ni&&ni.attributes&&ni.attributes.artistName)||"";',
         'el.dataset.artwork=(ni&&ni.artwork)?window.MusicKit.formatArtworkURL(ni.artwork,600,600):"";',
         'el.dataset.ts=Date.now();',
+        'el.dataset.dbg="sm="+sm+",rm="+rm+",dur="+dur;',
         '}catch(e){}',
         '},500);',
         '})();'
@@ -519,6 +524,9 @@ VDI.Core = (function() {
     // Read state from bridge element
     var bData = bridge.dataset || {};
     var bridgeActive = bData.ts && (Date.now() - parseInt(bData.ts, 10)) < 3000;
+    if (bridgeActive && bData.dbg) {
+      console.log('[VDI-AM-Bridge]', bData.dbg, 'shuffle=' + bData.shuffle, 'repeat=' + bData.repeat, 'dur=' + bData.duration);
+    }
 
     var uiDur = 0, uiCur = 0;
     var isPlaying = false;
