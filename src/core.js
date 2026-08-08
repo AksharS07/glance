@@ -653,15 +653,20 @@ VDI.Core = (function() {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
     }
 
-    // Spotify shuffle: detect via aria-pressed (primary) or smart shuffle testid
-    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
-    var isSmartShuffle = !!document.querySelector('[data-testid="control-button-smart-shuffle"]');
-    var shuffleOn = isSmartShuffle || (shufBtn ? (
-      shufBtn.getAttribute('aria-pressed') === 'true' ||
-      shufBtn.getAttribute('aria-pressed') === 'mixed' ||
+    // Spotify shuffle: 3 modes — off / on / smart
+    // Smart shuffle: testid changes to 'control-button-smart-shuffle' OR the button has a sparkle icon indicator
+    var shufBtn = document.querySelector('[data-testid="control-button-smart-shuffle"]') ||
+                  document.querySelector('[data-testid="control-button-shuffle"]') ||
+                  document.querySelector('button[aria-label*="shuffle" i]');
+    // Smart shuffle shows a sparkle/star badge on the shuffle button
+    var isSmartShuffle = !!(document.querySelector('[data-testid="control-button-smart-shuffle"]') ||
+      (shufBtn && shufBtn.querySelector('[aria-label*="smart" i], [data-testid*="smart"]')));
+    var shuffleOn = shufBtn ? (
       shufBtn.getAttribute('aria-checked') === 'true' ||
-      shufBtn.getAttribute('aria-checked') === 'mixed'
-    ) : false);
+      shufBtn.getAttribute('aria-checked') === 'mixed' ||
+      shufBtn.getAttribute('aria-pressed') === 'true' ||
+      shufBtn.getAttribute('aria-pressed') === 'mixed'
+    ) : false;
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
     if (repBtn) {

@@ -1288,6 +1288,7 @@ VDI.UI = (function() {
       state.artwork = newState.artwork;
       state.duration = newState.duration;
       state.shuffleOn = newState.shuffleOn || false;
+      state.smartShuffleOn = newState.smartShuffleOn || false;
       state.repeatMode = newState.repeatMode || 'off';
       
       // Use exact clock interpolation instead of dt accumulation
