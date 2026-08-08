@@ -466,9 +466,7 @@ VDI.Core = (function() {
     var ms = navigator.mediaSession;
 
     // === MAIN WORLD BRIDGE ===
-    // Inject a <script> into the page's MAIN world to read MusicKit state.
-    // This is the ONLY reliable way to get duration, shuffle, repeat from Apple Music
-    // because MusicKit is only accessible in the MAIN world, not the ISOLATED extension world.
+    // Inject code into MAIN world via Blob URL to bypass Apple Music's CSP.
     var bridge = document.getElementById('vdi-am-bridge');
     if (!bridge) {
       bridge = document.createElement('div');
@@ -476,31 +474,46 @@ VDI.Core = (function() {
       bridge.style.display = 'none';
       document.body.appendChild(bridge);
     }
-    // Inject the bridge script (idempotent - checks for existing script tag)
     if (!document.getElementById('vdi-am-bridge-script')) {
-      var s = document.createElement('script');
-      s.id = 'vdi-am-bridge-script';
-      s.textContent = '(' + (function() {
-        setInterval(function() {
-          try {
-            var mk = window.MusicKit && window.MusicKit.getInstance();
-            var el = document.getElementById('vdi-am-bridge');
-            if (!mk || !el) return;
-            var ni = mk.nowPlayingItem;
-            el.dataset.duration = (ni && ni.playbackDuration ? ni.playbackDuration / 1000 : 0);
-            el.dataset.position = (mk.currentPlaybackTime || 0);
-            el.dataset.isPlaying = mk.isPlaying ? '1' : '0';
-            el.dataset.shuffle = (mk.shuffleMode === 1) ? '1' : '0';
-            // MusicKit: 0=none, 1=one, 2=all
-            el.dataset.repeat = mk.repeatMode === 2 ? 'all' : (mk.repeatMode === 1 ? 'one' : 'off');
-            el.dataset.title = (ni && ni.title) || '';
-            el.dataset.artist = (ni && ni.artistName) || '';
-            el.dataset.artwork = (ni && ni.artwork) ? window.MusicKit.formatArtworkURL(ni.artwork, 600, 600) : '';
-            el.dataset.ts = Date.now();
-          } catch(e) {}
-        }, 500);
-      }).toString() + ')();';
-      document.documentElement.appendChild(s);
+      var code = [
+        '(function(){',
+        'setInterval(function(){',
+        'try{',
+        'var mk=window.MusicKit&&window.MusicKit.getInstance();',
+        'var el=document.getElementById("vdi-am-bridge");',
+        'if(!mk||!el)return;',
+        'var ni=mk.nowPlayingItem;',
+        'el.dataset.duration=(ni&&ni.playbackDuration?ni.playbackDuration/1000:0);',
+        'el.dataset.position=(mk.currentPlaybackTime||0);',
+        'el.dataset.isPlaying=mk.isPlaying?"1":"0";',
+        'el.dataset.shuffle=(mk.shuffleMode===1)?"1":"0";',
+        'el.dataset.repeat=mk.repeatMode===2?"all":(mk.repeatMode===1?"one":"off");',
+        'el.dataset.title=(ni&&ni.title)||"";',
+        'el.dataset.artist=(ni&&ni.artistName)||"";',
+        'el.dataset.artwork=(ni&&ni.artwork)?window.MusicKit.formatArtworkURL(ni.artwork,600,600):"";',
+        'el.dataset.ts=Date.now();',
+        '}catch(e){}',
+        '},500);',
+        '})();'
+      ].join('');
+      try {
+        // Method 1: Blob URL (bypasses most CSP)
+        var blob = new Blob([code], { type: 'text/javascript' });
+        var url = URL.createObjectURL(blob);
+        var s = document.createElement('script');
+        s.id = 'vdi-am-bridge-script';
+        s.src = url;
+        document.documentElement.appendChild(s);
+        URL.revokeObjectURL(url);
+      } catch(e1) {
+        try {
+          // Method 2: inline script fallback
+          var s2 = document.createElement('script');
+          s2.id = 'vdi-am-bridge-script';
+          s2.textContent = code;
+          document.documentElement.appendChild(s2);
+        } catch(e2) {}
+      }
     }
 
     // Read state from bridge element
@@ -514,7 +527,6 @@ VDI.Core = (function() {
     var finalTitle = '', finalArtist = '', art = null;
 
     if (bridgeActive) {
-      // MusicKit bridge is active - use its data (most reliable)
       uiDur = parseFloat(bData.duration) || 0;
       uiCur = parseFloat(bData.position) || 0;
       isPlaying = bData.isPlaying === '1';
@@ -524,7 +536,7 @@ VDI.Core = (function() {
       finalArtist = bData.artist || '';
       art = bData.artwork || null;
     } else {
-      // Bridge not yet active - fall back to mediaSession + audio element
+      // Bridge not yet active or CSP blocked — fall back to audio element + mediaSession
       var els = deepQuery('video, audio');
       var realEl = null;
       for (var k = 0; k < els.length; k++) {
@@ -543,6 +555,16 @@ VDI.Core = (function() {
       if (realEl) {
         uiCur = realEl.currentTime || 0;
         isPlaying = !realEl.paused;
+        // Use realEl.duration as rough estimate (may be HLS-padded but better than 0)
+        if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
+      }
+      // Try mediaSession positionState for better duration
+      if (ms && typeof ms.getPositionState === 'function') {
+        try {
+          var ps = ms.getPositionState();
+          if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+          if (ps && ps.position > 0) uiCur = ps.position;
+        } catch(e) {}
       }
       if (ms && ms.metadata) {
         finalTitle = ms.metadata.title || '';
@@ -581,7 +603,6 @@ VDI.Core = (function() {
       timestamp: Date.now()
     };
   }
-
 
 
   // ─────────────────────────────────────────────────────────────
@@ -1017,6 +1038,13 @@ VDI.Core = (function() {
               }
             }
           }
+        }
+        } else if (act === 'shuffle') {
+          var sb = deepQueryOne('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]');
+          if (sb) sb.click();
+        } else if (act === 'repeat') {
+          var rb = deepQueryOne('button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
+          if (rb) rb.click();
         }
         return;
       }

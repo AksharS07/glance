@@ -1,1 +1,1593 @@
-var VDI;(VDI=VDI||{}).Core=function(){"use strict";var t='<path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z"/>',e='<path d="M8 19c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2s2 .9 2 2v10c0 1.1-.9 2-2 2zm8 0c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2s2 .9 2 2v10c0 1.1-.9 2-2 2z"/>';function n(t,e){var n=[],i=function(e){if(e){e.shadowRoot&&i(e.shadowRoot);for(var r=e.querySelectorAll(t),a=0;a<r.length;a++)n.push(r[a]);for(var o=e.querySelectorAll("*"),l=0;l<o.length;l++)o[l].shadowRoot&&i(o[l].shadowRoot)}};return i(e||document),n}return{formatTime:function(t){return!t||!isFinite(t)||t<0?"0:00":(t=Math.round(t),Math.floor(t/60)+":"+("0"+t%60).slice(-2))},getPlayIcon:function(n){return n?e:t},extractVibrant:function(t,e){var n=new Image;n.crossOrigin="anonymous",n.onload=function(){try{var t=document.createElement("canvas");t.width=40,t.height=40;var i=t.getContext("2d");i.drawImage(n,0,0,40,40);for(var r=i.getImageData(0,0,40,40).data,a=new Array(36),o=0;o<36;o++)a[o]={sumS:0,maxS:0,r:0,g:0,b:0};for(o=0;o<6400;o+=4){var l=r[o]/255,u=r[o+1]/255,s=r[o+2]/255,c=Math.max(l,u,s),d=Math.min(l,u,s),f=(c+d)/2,p=c-d;if(!(f<.05||f>.95||p<.02)){var m=p/(1-Math.abs(2*f-1)),h=0;h=c===l?(u-s)/p%6:c===u?(s-l)/p+2:(l-u)/p+4,(h=Math.round(60*h))<0&&(h+=360);var b=Math.floor(h/10)%36,g=m*(f>.5?2*(1-f):2*f);a[b].sumS+=g,m>a[b].maxS&&(a[b].maxS=m,a[b].r=l,a[b].g=u,a[b].b=s)}}for(var y=null,v=-1,w=0;w<36;w++)a[w].sumS>v&&(v=a[w].sumS,y=a[w]);if(!y||0===v)return void e(null);var I=Math.max(y.r,y.g,y.b),M=Math.min(y.r,y.g,y.b),k=0,x=0,S=(I+M)/2;if(I!==M){var P=I-M;x=S>.5?P/(2-I-M):P/(I+M),k=I===y.r?(y.g-y.b)/P+(y.g<y.b?6:0):I===y.g?(y.b-y.r)/P+2:(y.r-y.g)/P+4,k=Math.round(60*k)}x=x<.05?0:Math.min(1,1.2*x+.1),S=Math.max(.35,Math.min(.7,S)),e({accent:"hsl("+k+","+Math.round(100*x)+"%,"+Math.round(100*S)+"%)",gradient:"linear-gradient(135deg, hsl("+k+","+Math.round(100*x)+"%,"+Math.round(100*S)+"%), hsl("+(k+35)%360+","+Math.round(90*x)+"%,"+Math.round(100*(S-.15))+"%))",dark:"hsl("+k+", "+Math.round(40*x)+"%, 12%)",glow:"hsla("+k+", "+Math.round(100*x)+"%, "+Math.round(100*S)+"%, 0.45)"})}catch(t){e(null)}},n.onerror=function(){e(null)},n.src=t},fetchLyrics:function(t,e,n,i){var r=t.replace(/\(.*(?:official|music|lyric|video|audio).*\)/i,"").trim(),a=(e||"").replace(/\(.*(?:official|music|lyric|video|audio).*\)/i,"").trim(),o=new Promise(function(t,e){var i="title="+encodeURIComponent(r)+"&artist="+encodeURIComponent(a);n>0&&(i+="&duration="+Math.round(n)),fetch("https://lyricsplus.binimum.org/v2/lyrics/get?"+i).then(function(t){if(!t.ok)throw new Error("LyricsPlus status: "+t.status);return t.json()}).then(function(e){if(!e||e.error||!e.lyrics||0===e.lyrics.length)throw new Error("No lyrics found in LyricsPlus");for(var n=[],i="Line"===e.type||"Word"===e.type||"Syllable"===e.type,r="Word"===e.type||"Syllable"===e.type,a=0;a<e.lyrics.length;a++){var o=e.lyrics[a];if(o.text){var l={time:o.time/1e3,text:o.text,translation:"",words:[]};if(r&&o.syllabus&&o.syllabus.length>0)for(var u=0;u<o.syllabus.length;u++){var s=o.syllabus[u];l.words.push({time:s.time/1e3,duration:s.duration/1e3,text:s.text})}n.push(l)}}if(n.length>0&&n[0].time>=5&&n.unshift({time:0,text:"♪",translation:"",words:[]}),!(n.length>0))throw new Error("Empty parsed lyrics");t({lines:n,synced:i,url:"https://lyricsplus.binimum.org",hasWords:r})}).catch(e)}),l=new Promise(function(t,e){var n="https://lrclib.net/api/search?q="+encodeURIComponent((r+" "+a).trim());!function i(r,a){fetch(r).then(function(t){if(!t.ok)throw new Error("Bad status");return t.json()}).then(function(e){var n=null;if(Array.isArray(e)){for(var i=0;i<e.length;i++)if(e[i].syncedLyrics){n=e[i];break}!n&&e.length>0&&(n=e[0])}else n=e;var r=function(t){if(!t)return null;var e=[],n=!1;if(t.syncedLyrics){n=!0;for(var i=t.syncedLyrics.split("\n"),r=[],a=0;a<i.length;a++){var o=i[a].match(/\[(\d+):(\d+(?:\.\d+)?)\](.*)/);if(o){var l,u=60*parseInt(o[1])+parseFloat(o[2]),s=o[3].trim(),c=[],d=/<(\d+):(\d+(?:\.\d+)?)>([^<]+)/g,f=!1,p=s;if(-1!==s.indexOf("<")&&-1!==s.indexOf(">"))for(;null!==(l=d.exec(s));)f=!0,c.push({time:60*parseInt(l[1])+parseFloat(l[2]),duration:.2,text:l[3].trim()});if(f&&c.length>0){p="";for(var m=0;m<c.length;m++)p+=c[m].text+" ",m<c.length-1&&(c[m].duration=c[m+1].time-c[m].time);p=p.trim(),n=!0}r.push({time:u,text:p,translation:"",words:c})}}for(r.sort(function(t,e){return t.time-e.time}),a=0;a<r.length;a++)if(r[a].text)e.push(r[a]);else{for(var h=-1,b=a+1;b<r.length;b++)if(r[b].text){h=b;break}(h>-1?r[h].time-r[a].time:0)>=5&&e.push({time:r[a].time,text:"♪",translation:"",words:[]})}e.length>0&&e[0].time>=5&&e.unshift({time:0,text:"♪",translation:"",words:[]})}else if(t.plainLyrics){n=!1;var g=t.plainLyrics.split("\n");for(b=0;b<g.length;b++)e.push({time:0,text:g[b].trim(),words:[]})}return 0===e.length?null:{lines:e,synced:n,url:t.id?"https://lrclib.net/track/"+t.id:"https://lrclib.net"}}(n);if(!r)throw new Error("No lyrics in response");t({lines:r.lines,synced:r.synced,url:r.url,hasWords:!1})}).catch(function(t){a?e(t):i("https://api.allorigins.win/raw?url="+encodeURIComponent(n),!0)})}(n,!1)});if("function"==typeof Promise.allSettled)Promise.allSettled([o,l]).then(function(t){var e="fulfilled"===t[0].status?t[0].value:null,n="fulfilled"===t[1].status?t[1].value:null;i(e||n?{lyricsplus:e,lrclib:n}:null)});else{var u=0,s={lyricsplus:null,lrclib:null};function c(){2===++u&&(s.lyricsplus||s.lrclib?i(s):i(null))}o.then(function(t){s.lyricsplus=t,c()}).catch(function(){c()}),l.then(function(t){s.lrclib=t,c()}).catch(function(){c()})}},batchRomanize:function(t,e){if(!t||0===t.length)return e([]);for(var n=[],i=[],r=0,a=0;a<t.length;a++){var o=t[a].text||"";if("♪"!==o&&"♫"!==o&&"&nbsp;"!==o&&o.trim()){var l=encodeURIComponent(o).length;r+l>800&&i.length>0&&(n.push(i),i=[],r=0),i.push({index:a,text:o}),r+=l+3}else i.push({index:a,text:""})}i.length>0&&n.push(i);var u=new Array(t.length),s=0;if(0===n.length)return e(u);n.forEach(function(t){var i=t.map(function(t){return t.text?t.text.replace(/\|/g," "):""}).filter(Boolean);if(0===i.length)return t.forEach(function(t){u[t.index]=""}),void(++s===n.length&&e(u));var r=i.join(" | "),a="https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=rm&q="+encodeURIComponent(r);fetch(a).then(function(t){return t.json()}).then(function(i){var r="";if(i&&i[0])for(var a=0;a<i[0].length;a++)i[0][a][3]?r+=i[0][a][3]:i[0][a][2]&&(r+=i[0][a][2]);var o=r.split(/\s*\|\s*/),l=0;t.forEach(function(t){if(t.text){var e=o[l]||"";u[t.index]=e.trim(),l++}else u[t.index]=""}),++s===n.length&&e(u)}).catch(function(){t.forEach(function(t){u[t.index]=""}),++s===n.length&&e(u)})})},getTabMediaState:function(){for(var t=VDI.Core.deepQuery,e=VDI.Core.deepQueryOne,n=VDI.Core.getAppleMusicMediaState,i=VDI.Core.getSpotifyMediaState,r=["music.apple.com","open.spotify.com","spotify.com","youtube.com","www.youtube.com","music.youtube.com"],a=window.location.hostname,o=!1,l=0;l<r.length;l++)if(a===r[l]||a.endsWith("."+r[l])){o=!0;break}if(!o)return null;if(window.location.hostname.includes("music.apple.com"))return n();if(window.location.hostname.includes("spotify.com"))return i();var u=document.querySelectorAll("video"),s=document.querySelectorAll("audio"),c="music.youtube.com"===window.location.hostname,d=!(c||!document.pictureInPictureEnabled||!u.length||!Array.prototype.slice.call(u).some(function(t){return!t.disablePictureInPicture})),f=null,p=null;try{if(c){var m=document.querySelector(".time-info.ytmusic-player-bar");if(m){var h=m.textContent.trim().split("/");if(2===h.length){var b=function(t){var e=t.trim().split(":").map(Number);return 2===e.length?60*e[0]+e[1]:3===e.length?3600*e[0]+60*e[1]+e[2]:0};p=b(h[0]),f=b(h[1])}}}else if(window.location.hostname.indexOf("youtube.com")>-1){var g=document.querySelector(".ytp-time-duration");g&&(f=g.textContent.trim().split(":").reduce(function(t,e){return 60*t+parseInt(e)},0))}}catch(T){}var y=null;if(null!==f&&f>0&&!c)for(l=0;l<u.length;l++)if(Math.abs(u[l].duration-f)<=2){y=u[l];break}if(!y)for(l=0;l<u.length;l++)if(!u[l].paused&&u[l].currentTime>0){y=u[l];break}y||(y=document.querySelector(".html5-main-video")),!y&&u.length&&(y=u[u.length-1]),!y&&s.length&&(y=s[0]);try{var v=navigator.mediaSession,w=null;v&&v.metadata&&v.metadata.artwork&&v.metadata.artwork.length&&(w=v.metadata.artwork[v.metadata.artwork.length-1].src);var I=null!==p?p:y?y.currentTime:0,M=!1,k="off";if(c){var x=document.querySelector("ytmusic-player-bar");function D(n){if(!n)return!1;if("true"===n.getAttribute("aria-pressed"))return!0;if("true"===n.getAttribute("is-toggled"))return!0;var i=(n.getAttribute("title")||n.getAttribute("aria-label")||"").toLowerCase();if(i.includes("turn off")||i.includes("disable"))return!0;for(var r=t("*",n),a=0;a<r.length;a++){if("true"===r[a].getAttribute("aria-pressed"))return!0;if("true"===r[a].getAttribute("is-toggled"))return!0;var o=(r[a].getAttribute("title")||r[a].getAttribute("aria-label")||"").toLowerCase();if(o.includes("turn off")||o.includes("disable"))return!0}var l=e("yt-icon, svg",n)||n,u=window.getComputedStyle(l).color||"",s=window.getComputedStyle(l).fill||"";return!(!u.includes("255, 255, 255")&&!s.includes("255, 255, 255"))}var S=e('ytmusic-toggle-button-renderer[aria-label*="shuffle" i], ytmusic-toggle-button-renderer[title*="shuffle" i], tp-yt-paper-icon-button[aria-label*="shuffle" i], tp-yt-paper-icon-button[title*="shuffle" i], button[aria-label*="shuffle" i], button[title*="shuffle" i]',x),P=e('ytmusic-toggle-button-renderer[aria-label*="repeat" i], ytmusic-toggle-button-renderer[title*="repeat" i], tp-yt-paper-icon-button[aria-label*="repeat" i], tp-yt-paper-icon-button[title*="repeat" i], button[aria-label*="repeat" i], button[title*="repeat" i]',x);if(S&&D(S)&&(M=!0),P){for(var E=(P.getAttribute("title")||P.getAttribute("aria-label")||"").toLowerCase(),C=t("*",P),A=0;A<C.length;A++)E+=" "+(C[A].getAttribute("title")||C[A].getAttribute("aria-label")||"").toLowerCase();E.includes("one")||E.includes("1")?k="one":(E.includes("all")||D(P))&&(k="all")}}return{title:v&&v.metadata&&v.metadata.title||"",artist:v&&v.metadata&&v.metadata.artist||"",artwork:w,isPlaying:v&&"playing"===v.playbackState||!!y&&!y.paused,duration:null!==f&&f>0?f:y&&isFinite(y.duration)?y.duration:0,position:I,hasMedia:!!(y||v&&v.metadata&&v.metadata.title),volume:y?y.volume:1,pipOk:d,isFullscreen:!!document.fullscreenElement,isYouTubeVideo:location.hostname.includes("youtube.com")&&!location.hostname.includes("music.youtube.com"),isMusicApp:location.hostname.includes("music.youtube")||location.hostname.includes("spotify")||location.hostname.includes("soundcloud")||location.hostname.includes("music.apple"),shuffleOn:M,repeatMode:k,timestamp:Date.now()}}catch(V){return null}},deepQuery:n,deepQueryOne:function(t,e){var i=n(t,e);return i.length>0?i[0]:null},getAppleMusicMediaState:function(){var t=navigator.mediaSession,e=document.getElementById("vdi-am-bridge");if(e||((e=document.createElement("div")).id="vdi-am-bridge",e.style.display="none",document.body.appendChild(e)),!document.getElementById("vdi-am-bridge-script")){var n=document.createElement("script");n.id="vdi-am-bridge-script",n.textContent="("+function(){setInterval(function(){try{var t=window.MusicKit&&window.MusicKit.getInstance(),e=document.getElementById("vdi-am-bridge");if(!t||!e)return;var n=t.nowPlayingItem;e.dataset.duration=n&&n.playbackDuration?n.playbackDuration/1e3:0,e.dataset.position=t.currentPlaybackTime||0,e.dataset.isPlaying=t.isPlaying?"1":"0",e.dataset.shuffle=1===t.shuffleMode?"1":"0",e.dataset.repeat=2===t.repeatMode?"all":1===t.repeatMode?"one":"off",e.dataset.title=n&&n.title||"",e.dataset.artist=n&&n.artistName||"",e.dataset.artwork=n&&n.artwork?window.MusicKit.formatArtworkURL(n.artwork,600,600):"",e.dataset.ts=Date.now()}catch(t){}},500)}.toString()+")();",document.documentElement.appendChild(n)}var i,r,a,o,l=e.dataset||{},u=0,s=0,c=!1,d=!1,f="off",p="",m="",h=null;if(l.ts&&Date.now()-parseInt(l.ts,10)<3e3)u=parseFloat(l.duration)||0,s=parseFloat(l.position)||0,c="1"===l.isPlaying,d="1"===l.shuffle,f=l.repeat||"off",p=l.title||"",m=l.artist||"",h=l.artwork||null;else{for(var b=(i="video, audio",a=[],o=function(t){for(var e=t.querySelectorAll(i),n=0;n<e.length;n++)a.push(e[n]);for(var r=t.querySelectorAll("*"),l=0;l<r.length;l++)r[l].shadowRoot&&o(r[l].shadowRoot)},o(r||document),a),g=null,y=0;y<b.length;y++){var v=b[y].duration;if(!b[y].paused&&b[y].currentTime>0&&(isNaN(v)||v===1/0||v>30)){g=b[y];break}}if(!g&&b.length>0){for(var w=0;w<b.length;w++){var I=b[w].duration;if(isNaN(I)||I===1/0||I>30){g=b[w];break}}g||(g=b[0])}if(g&&(s=g.currentTime||0,c=!g.paused),t&&t.metadata&&(p=t.metadata.title||"",m=t.metadata.artist||"",t.metadata.artwork&&t.metadata.artwork.length&&(h=t.metadata.artwork[t.metadata.artwork.length-1].src)),!c&&t&&(c="playing"===t.playbackState),!p&&document.title){var M=document.title.split(" - ");M.length>=2?(p=M[0].trim(),m||(m=M[1].trim())):p=document.title.replace(" - Apple Music","").trim()}}return{title:p,artist:m,artwork:h,isPlaying:c,duration:u,position:s,hasMedia:!!(p||u>0),volume:1,pipOk:!1,isFullscreen:!!document.fullscreenElement,isYouTubeVideo:!1,isMusicApp:!0,shuffleOn:d,repeatMode:f,timestamp:Date.now()}},getSpotifyMediaState:function(){for(var t=function(t){if(!t)return 0;var e=t.trim().split(":").map(Number);return 2===e.length?60*e[0]+e[1]:3===e.length?3600*e[0]+60*e[1]+e[2]:0},e=document.querySelectorAll('[data-testid="playback-duration"]'),n=document.querySelectorAll('[data-testid="playback-position"]'),i=document.querySelector('[data-testid="control-button-playpause"]'),r=0,a=0;a<e.length;a++)if(e[a].getBoundingClientRect().width>0){var o=t(e[a].textContent);o>r&&(r=o)}for(var l=0,u=0;u<n.length;u++)if(n[u].getBoundingClientRect().width>0){var s=t(n[u].textContent);s>l&&(l=s)}var c=null,d=Array.prototype.slice.call(document.querySelectorAll("video, audio")),f=null;if(r>0)for(var p=0;p<d.length;p++){var m=d[p].duration;if(m>0&&Math.abs(m-r)<=5){f=d[p];break}}if(!f)for(var h=0;h<d.length;h++){var b=d[h].duration;if((!d[h].paused||d[h].currentTime>0)&&(isNaN(b)||b===1/0||b>30)){f=d[h];break}}f&&f.currentTime>=0&&(c=f.currentTime),null!==c&&(l=c);var g=navigator.mediaSession,y=null;g&&g.metadata&&g.metadata.artwork&&g.metadata.artwork.length&&(y=g.metadata.artwork[g.metadata.artwork.length-1].src);var v=document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]'),w=!!document.querySelector('[data-testid="control-button-smart-shuffle"]'),I=w||!!v&&("true"===v.getAttribute("aria-pressed")||"mixed"===v.getAttribute("aria-pressed")||"true"===v.getAttribute("aria-checked")||"mixed"===v.getAttribute("aria-checked")),M="off",k=document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');if(k){var x=k.getAttribute("aria-checked");if("true"===x||"mixed"===x){var S=(k.getAttribute("aria-label")||"").toLowerCase();M=S.includes("disable")||S.includes("turn off")?"one":"all"}}return{title:g&&g.metadata&&g.metadata.title||document.title.replace(" - Spotify","").trim()||"",artist:g&&g.metadata&&g.metadata.artist||"",artwork:y,isPlaying:f?!f.paused:i?(i.getAttribute("aria-label")||"").toLowerCase().includes("pause"):g&&"playing"===g.playbackState,duration:r,position:l,hasMedia:!!(g&&g.metadata&&g.metadata.title||r>0),volume:1,pipOk:!1,isFullscreen:!!document.fullscreenElement,isYouTubeVideo:!1,isMusicApp:!0,shuffleOn:I,smartShuffleOn:w,repeatMode:M,timestamp:Date.now()}},executeMediaAction:function(t,e){var n=VDI.Core.deepQuery,i=VDI.Core.deepQueryOne;if(window.location.hostname.includes("spotify.com")){if("toggle"===t)(E=document.querySelector('[data-testid="control-button-playpause"]'))&&E.click();else if("prev"===t){(T=document.querySelector('[data-testid="control-button-skip-back"]'))&&T.click()}else if("next"===t){(D=document.querySelector('[data-testid="control-button-skip-forward"]'))&&D.click()}else if("shuffle"===t){(V=document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]'))&&V.click()}else if("repeat"===t){(q=document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]'))&&q.click()}else if("seek"===t&&"number"==typeof e){for(var r=document.querySelectorAll('[data-testid="playback-duration"]'),a=0,o=0;o<r.length;o++)if(r[o].getBoundingClientRect().width>0){var l=2===(_=r[o].textContent.trim().split(":").map(Number)).length?60*_[0]+_[1]:3===_.length?3600*_[0]+60*_[1]+_[2]:0;l>a&&(a=l)}if(a>0){for(var u=document.querySelectorAll('[data-testid="progress-bar"], [data-testid="playback-progressbar"], .playback-bar'),s=null,c=0;c<u.length;c++)if(u[c].getBoundingClientRect().width>0){s=u[c];break}if(s){var d=(M=s.getBoundingClientRect()).left+M.width*(e/a),f=M.top+M.height/2,p=document.elementFromPoint(d,f)||s,m={bubbles:!0,cancelable:!0,view:window,clientX:d,clientY:f,button:0,buttons:1};"undefined"!=typeof PointerEvent&&(p.dispatchEvent(new PointerEvent("pointerdown",m)),p.dispatchEvent(new PointerEvent("pointerup",m))),p.dispatchEvent(new MouseEvent("mousedown",m)),p.dispatchEvent(new MouseEvent("mouseup",m)),p.dispatchEvent(new MouseEvent("click",m))}}}}else try{if(window.location.hostname.includes("music.apple.com")){if(window.MusicKit&&window.MusicKit.getInstance()){var h=window.MusicKit.getInstance();if("toggle"===t)return void(h.isPlaying?h.pause():h.play());if("prev"===t)return void h.skipToPreviousItem();if("next"===t)return void h.skipToNextItem();if("seek"===t&&"number"==typeof e)return void h.seekToTime(e);if("shuffle"===t)return void(h.shuffleMode=0===h.shuffleMode?1:0);if("repeat"===t)return void(h.repeatMode=0===h.repeatMode?2:2===h.repeatMode?1:0)}if("toggle"===t)(E=i('button[aria-label*="Play"], button[aria-label*="Pause"], button[aria-label*="play"], button[aria-label*="pause"]'))&&E.click();else if("prev"===t){(T=i('button[aria-label*="Previous"], button[title*="Previous"], button[aria-label*="previous"]'))&&T.click()}else if("next"===t){(D=i('button[aria-label*="Next"], button[title*="Next"], button[aria-label*="next"]'))&&D.click()}else if("seek"===t&&"number"==typeof e){var b=navigator.mediaSession;a=0;if(b&&"function"==typeof b.getPositionState)try{var g=b.getPositionState();g&&g.duration>0&&(a=g.duration)}catch(t){}if(!a||0===a){var y=n('[class*="time"], [class*="duration"], [class*="current"], time',document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd')||document.body),v=[];for(o=0;o<y.length;o++)if(y[o].getBoundingClientRect().width>0){var w=2===(_=y[o].textContent.trim().split(":").map(Number)).length?60*_[0]+_[1]:3===_.length?3600*_[0]+60*_[1]+_[2]:0;w>0&&v.push(w)}v.length>0&&(v.sort(function(t,e){return t-e}),a=v[v.length-1])}if(a>0){u=n('input[type="range"], [role="slider"], [aria-label*="progress"], [aria-label*="time"], [class*="progress"]'),s=null;var I=0;for(c=0;c<u.length;c++){var M;(M=u[c].getBoundingClientRect()).width>I&&M.height>0&&(I=M.width,s=u[c])}if(s){var k=s.getBoundingClientRect();d=k.left+k.width*(e/a),f=k.top+k.height/2,p=document.elementFromPoint(d,f)||s,m={bubbles:!0,cancelable:!0,view:window,clientX:d,clientY:f,button:0,buttons:1};"undefined"!=typeof PointerEvent&&(p.dispatchEvent(new PointerEvent("pointerdown",m)),p.dispatchEvent(new PointerEvent("pointerup",m))),p.dispatchEvent(new MouseEvent("mousedown",m)),p.dispatchEvent(new MouseEvent("mouseup",m)),p.dispatchEvent(new MouseEvent("click",m));var x="input"===s.tagName.toLowerCase()?s:s.querySelector('input[type="range"]');if(x){var S=e/a,P=parseFloat(x.max)||100;try{Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype,"value").set.call(x,S*P)}catch(t){try{x.value=S*P}catch(t){}}x.dispatchEvent(new Event("input",{bubbles:!0})),x.dispatchEvent(new Event("change",{bubbles:!0}))}}}}return}var E,C=n("video, audio"),A=null;for(o=0;o<C.length;o++)if(!C[o].paused&&!C[o].ended){A=C[o];break}if(!A)for(c=0;c<C.length;c++)if(C[c].paused&&C[c].currentTime>0){A=C[c];break}if(!A&&C.length&&(A=C[0]),"toggle"===t)(E=i("#play-pause-button, .ytp-play-button, .play-pause-button"))&&"function"==typeof E.click?E.click():A&&(A.paused?A.play():A.pause());else if("prev"===t){var T;if(A)(T=i("ytmusic-player-bar .previous-button, .ytp-prev-button, .previous-button"))?T.click():A.currentTime=0}else if("next"===t){var D;if(A)(D=i("ytmusic-player-bar .next-button, .ytp-next-button, .next-button"))?D.click():A.currentTime=A.duration}else if("shuffle"===t){var V;(V=i('ytmusic-player-bar .shuffle, ytmusic-player-bar .shuffle-button, [aria-label*="shuffle" i], [title*="shuffle" i]'))&&V.click()}else if("repeat"===t){var q;(q=i('ytmusic-player-bar .repeat, ytmusic-player-bar .repeat-button, [aria-label*="repeat" i], [title*="repeat" i]'))&&q.click()}else if("seek"===t&&"number"==typeof e){var O="music.youtube.com"===window.location.hostname,L=n("video, audio"),N=null,R=null;try{if(O){var _,B=document.querySelector(".time-info.ytmusic-player-bar");if(B)if(2===(_=B.textContent.trim().split("/")).length){var F=function(t){var e=t.trim().split(":").map(Number);return 2===e.length?60*e[0]+e[1]:3===e.length?3600*e[0]+60*e[1]+e[2]:0};R=F(_[0]),N=F(_[1])}}else{var U=document.querySelector(".ytp-time-duration");U&&(N=U.textContent.trim().split(":").reduce(function(t,e){return 60*t+parseInt(e)},0))}}catch(t){}p=null;if(N>0&&!O)for(o=0;o<L.length;o++)if(Math.abs(L[o].duration-N)<=2){p=L[o];break}if(p||(p=document.querySelector(".html5-main-video")),!p&&L.length&&(p=L[L.length-1]),p)if(O&&null!==R&&N>0){var Y=p.currentTime-R;p.currentTime=e+Y}else p.currentTime=e}}catch(t){}},togglePiP:function(t){function e(){if(t)try{chrome&&chrome.runtime&&chrome.runtime.sendMessage&&chrome.runtime.sendMessage({type:"VDI_TELEPORT_BACK",source:t})}catch(t){}}function n(t){if(!document.getElementById("vdi-pip-overlay")){var n=document.createElement("div");n.id="vdi-pip-overlay",n.style.position="fixed",n.style.top="0",n.style.left="0",n.style.width="100vw",n.style.height="100vh",n.style.zIndex="2147483647",n.style.cursor="pointer",n.style.background="rgba(0, 0, 0, 0.8)",n.style.display="flex",n.style.alignItems="center",n.style.justifyContent="center",n.style.backdropFilter="blur(5px)",n.style.transition="opacity 0.2s";var i=document.createElement("div");i.style.background="rgba(255, 255, 255, 0.1)",i.style.color="#fff",i.style.padding="20px 30px",i.style.borderRadius="16px",i.style.fontFamily="system-ui, sans-serif",i.style.fontSize="20px",i.style.fontWeight="600",i.style.boxShadow="0 10px 30px rgba(0,0,0,0.5)",i.style.border="1px solid rgba(255,255,255,0.2)",i.innerHTML='<div style="margin-bottom:8px;font-size:24px;text-align:center;">🎬</div>Click anywhere to enter Picture-in-Picture',n.appendChild(i),n.onclick=function(){n.style.opacity="0",setTimeout(function(){n.remove()},200);try{t.requestPictureInPicture().then(function(){e()}).catch(function(){e()})}catch(t){e()}},(document.documentElement||document.body).appendChild(n)}}try{for(var i=Array.prototype.slice.call(document.querySelectorAll("video")),r=null,a=0;a<i.length;a++)if(!i[a].paused){r=i[a];break}if(!r&&i.length&&(r=i[0]),!r)return!1;if(document.pictureInPictureElement)return document.exitPictureInPicture().then(function(){e()}).catch(function(){e()}),!0;var o=r.requestPictureInPicture();return o&&o.catch&&o.then(function(){e()}).catch(function(t){n(r)}),!0}catch(t){return n(r),!0}}}}(),(VDI=VDI||{}).Platform=VDI.Platform||{},VDI.Platform.ChromeExt=function(){"use strict";return{sendAction:function(t,e){chrome.runtime.sendMessage({type:"VDI_ACTION",act:t,val:e})},jumpToTab:function(){chrome.runtime.sendMessage({type:"VDI_ACTION",act:"jump"})},requestPiP:function(){chrome.runtime.sendMessage({type:"VDI_ACTION",act:"pip"})},requestState:function(t){try{chrome.runtime.sendMessage({type:"VDI_REQUEST_STATE"},function(e){t&&t(e)})}catch(e){t&&t(null)}},onStateUpdate:function(t){chrome.runtime.onMessage.addListener(function(e){"VDI_UPDATE"===e.type&&t(e.state)})},createBackgroundWorker:function(){var t={tabId:null,windowId:null,hasMedia:!1,isPlaying:!1,title:"",artist:"",artwork:"",duration:0,position:0,supportsPiP:!1,isYouTubeVideo:!1,isMusicApp:!1,shuffleOn:!1,smartShuffleOn:!1,repeatMode:"off"},e=null,n=null;function i(t,e,n,i,r){if(t){var a={target:{tabId:t,allFrames:!1},func:e,args:n||[]};r&&(a.world=r),chrome.scripting.executeScript(a,function(t){if(chrome.runtime.lastError||!t)return console.warn("[VDI] execInTab failed:",chrome.runtime.lastError),void(i&&i(null));i&&i(t[0]?t[0].result:null)})}else i&&i(null)}function r(){chrome.tabs.query({},function(e){for(var n=0;n<e.length;n++)chrome.tabs.sendMessage(e[n].id,{type:"VDI_UPDATE",state:t},function(){chrome.runtime.lastError})})}function a(){chrome.tabs.query({audible:!0},function(e){var n=e&&e.length?e[0]:null;n?(t.tabId=n.id,t.windowId=n.windowId,i(n.id,VDI.Core.getTabMediaState,[],function(e){if(!e)return t.hasMedia=!0,void r();t.hasMedia=e.hasMedia||!0,t.isPlaying=e.isPlaying,t.title=e.title||n.title||"",t.artist=e.artist||"",t.artwork=e.artwork||null,t.duration=e.duration||0,t.position=e.position||0,t.supportsPiP=e.pipOk||!1,t.isYouTubeVideo=e.isYouTubeVideo||!1,t.isMusicApp=e.isMusicApp||!1,t.shuffleOn=e.shuffleOn||!1,t.smartShuffleOn=e.smartShuffleOn||!1,t.repeatMode=e.repeatMode||"off",r()})):null!==t.tabId?i(t.tabId,VDI.Core.getTabMediaState,[],function(e){if(!e)return t.hasMedia=!1,void r();t.title=e.title||t.title,t.artist=e.artist||t.artist,t.artwork=e.artwork||t.artwork,t.isPlaying=e.isPlaying,t.duration=e.duration,t.position=e.position,t.supportsPiP=e.pipOk||!1,t.isFullscreen=e.isFullscreen||!1,t.isYouTubeVideo=e.isYouTubeVideo||!1,t.isMusicApp=e.isMusicApp||!1,t.shuffleOn=e.shuffleOn||!1,t.smartShuffleOn=e.smartShuffleOn||!1,t.repeatMode=e.repeatMode||"off",e.hasMedia||(t.hasMedia=!1),r()}):t.hasMedia&&(t.hasMedia=!1,r())})}function o(r,o,l){if("VDI_ACTION"===r.type)if("pip"===r.act){function c(e,n){null!==t.tabId&&e!==t.tabId?chrome.tabs.update(t.tabId,{active:!0},function(){null!==t.windowId?chrome.windows.update(t.windowId,{focused:!0},function(){i(t.tabId,VDI.Core.togglePiP,[{tabId:e,winId:n}],null)}):i(t.tabId,VDI.Core.togglePiP,[{tabId:e,winId:n}],null)}):i(t.tabId,VDI.Core.togglePiP,[null],null)}if(o&&o.tab)c(o.tab.id,o.tab.windowId);else try{chrome.tabs.query({active:!0,currentWindow:!0},function(t){c(t&&t.length?t[0].id:null,t&&t.length?t[0].windowId:null)})}catch(d){c(null,null)}}else if("jump"===r.act)null!==t.tabId&&(chrome.tabs.update(t.tabId,{active:!0}),null!==t.windowId&&chrome.windows.update(t.windowId,{focused:!0}));else if("teleport"===r.act)null===e?chrome.tabs.query({active:!0,currentWindow:!0},function(i){i&&i.length>0&&(e=i[0].id,n=i[0].windowId,null!==t.tabId&&(chrome.tabs.update(t.tabId,{active:!0}),null!==t.windowId&&chrome.windows.update(t.windowId,{focused:!0})))}):(chrome.tabs.update(e,{active:!0}),null!==n&&chrome.windows.update(n,{focused:!0}),e=null,n=null);else if("VDI_TELEPORT_BACK"===r.act)r.val&&r.val.source&&(r.val.source.tabId&&chrome.tabs.update(r.val.source.tabId,{active:!0}),r.val.source.winId&&chrome.windows.update(r.val.source.winId,{focused:!0}));else{var u=void 0!==r.val?[r.act,r.val]:[r.act];chrome.tabs.get(t.tabId,function(e){e&&e.url&&e.url.includes("music.apple.com")?i(t.tabId,function(t,e){try{if(window.MusicKit&&window.MusicKit.getInstance){var n=window.MusicKit.getInstance();"toggle"===t?n.isPlaying?n.pause():n.play():"prev"===t?n.skipToPreviousItem():"next"===t?n.skipToNextItem():"shuffle"===t?n.shuffleMode=0===n.shuffleMode?1:0:"repeat"===t?n.repeatMode=(n.repeatMode+1)%3:"seek"===t&&"number"==typeof e&&n.seekToTime(e)}}catch(t){}},u,null,"MAIN"):i(t.tabId,function(t,e){void 0!==VDI&&VDI.Core&&VDI.Core.executeMediaAction(t,e)},u,null,"ISOLATED")}),s=a,[200,600,1200].forEach(function(t){setTimeout(s,t)})}else if("VDI_REQUEST_STATE"===r.type)l(t);else if("VDI_GET_NOW_PLAYING"===r.type)l(t);else{if("VDI_FETCH_LYRICS"===r.type)return VDI.Core.fetchLyrics(r.title,r.artist,r.duration,function(t){l(t)}),!0;if("VDI_BATCH_ROMANIZE"===r.type)return VDI.Core.batchRomanize(r.lines,function(t){l(t)}),!0}var s}return{start:function(){setInterval(a,1e3),a(),chrome.runtime.onMessage.addListener(o),chrome.tabs.onActivated.addListener(function(){a()}),chrome.windows.onFocusChanged.addListener(function(){a()}),chrome.commands.onCommand.addListener(function(t){chrome.storage.local.get({enableShortcuts:!0},function(e){e.enableShortcuts&&("toggle-playback"===t?o({type:"VDI_ACTION",act:"toggle"}):"next-track"===t?o({type:"VDI_ACTION",act:"next"}):"prev-track"===t&&o({type:"VDI_ACTION",act:"prev"}))})}),chrome.runtime.onInstalled.addListener(function(t){"install"===t.reason?chrome.tabs.create({url:"welcome.html"}):"update"===t.reason&&chrome.tabs.create({url:"patch-notes.html"})})},getState:function(){return t}}}}}(),function(){"use strict";VDI.Platform.ChromeExt.createBackgroundWorker().start()}();
+/**
+ * Dynamic Island - Shared Core Module
+ * Common utilities, color extraction, and lyrics handling
+ */
+
+var VDI = VDI || {};
+
+VDI.Core = (function() {
+  'use strict';
+
+  // ─────────────────────────────────────────────────────────────
+  // Time formatting
+  // ─────────────────────────────────────────────────────────────
+  function formatTime(s) {
+    if (!s || !isFinite(s) || s < 0) return '0:00';
+    s = Math.round(s);
+    return Math.floor(s / 60) + ':' + ('0' + (s % 60)).slice(-2);
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Play/Pause icon SVG paths
+  // ─────────────────────────────────────────────────────────────
+  var ICONS = {
+    play: '<path d="M8 6.82v10.36c0 .79.87 1.27 1.54.84l8.14-5.18c.62-.39.62-1.29 0-1.69L9.54 5.98C8.87 5.55 8 6.03 8 6.82z"/>',
+    pause: '<path d="M8 19c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2s2 .9 2 2v10c0 1.1-.9 2-2 2zm8 0c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2s2 .9 2 2v10c0 1.1-.9 2-2 2z"/>'
+  };
+
+  function getPlayIcon(playing) {
+    return playing ? ICONS.pause : ICONS.play;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Color extraction from album art
+  // ─────────────────────────────────────────────────────────────
+  function extractVibrant(url, cb) {
+    var img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = function() {
+      try {
+        var W = 40, H = 40;
+        var cv = document.createElement('canvas');
+        cv.width = W;
+        cv.height = H;
+        var cx = cv.getContext('2d');
+        cx.drawImage(img, 0, 0, W, H);
+        var d = cx.getImageData(0, 0, W, H).data;
+
+        // 36 buckets for hue ranges (10 degrees each)
+        var buckets = new Array(36);
+        for (var i = 0; i < 36; i++) {
+          buckets[i] = { sumS: 0, maxS: 0, r: 0, g: 0, b: 0 };
+        }
+
+        for (var i = 0; i < W * H * 4; i += 4) {
+          var r = d[i] / 255;
+          var g = d[i + 1] / 255;
+          var b = d[i + 2] / 255;
+          var mx = Math.max(r, g, b);
+          var mn = Math.min(r, g, b);
+          var l = (mx + mn) / 2;
+          var delta = mx - mn;
+
+          // Skip very dark, very light, or grayscale pixels
+          if (l < 0.05 || l > 0.95 || delta < 0.02) continue;
+
+          var sat = delta / (1 - Math.abs(2 * l - 1));
+
+          // Calculate hue
+          var h = 0;
+          if (mx === r) h = ((g - b) / delta) % 6;
+          else if (mx === g) h = (b - r) / delta + 2;
+          else h = (r - g) / delta + 4;
+          h = Math.round(h * 60);
+          if (h < 0) h += 360;
+
+          var bIdx = Math.floor(h / 10) % 36;
+          var score = sat * (l > 0.5 ? (1 - l) * 2 : l * 2);
+          buckets[bIdx].sumS += score;
+
+          if (sat > buckets[bIdx].maxS) {
+            buckets[bIdx].maxS = sat;
+            buckets[bIdx].r = r;
+            buckets[bIdx].g = g;
+            buckets[bIdx].b = b;
+          }
+        }
+
+        // Find the bucket with highest saturation score
+        var best = null;
+        var maxSum = -1;
+        for (var j = 0; j < 36; j++) {
+          if (buckets[j].sumS > maxSum) {
+            maxSum = buckets[j].sumS;
+            best = buckets[j];
+          }
+        }
+
+        if (!best || maxSum === 0) {
+          cb(null);
+          return;
+        }
+
+        // Convert to HSL with boosted saturation
+        var mxA = Math.max(best.r, best.g, best.b);
+        var mnA = Math.min(best.r, best.g, best.b);
+        var hA = 0, sA = 0, lA = (mxA + mnA) / 2;
+
+        if (mxA !== mnA) {
+          var dA = mxA - mnA;
+          sA = lA > 0.5 ? dA / (2 - mxA - mnA) : dA / (mxA + mnA);
+          if (mxA === best.r) hA = (best.g - best.b) / dA + (best.g < best.b ? 6 : 0);
+          else if (mxA === best.g) hA = (best.b - best.r) / dA + 2;
+          else hA = (best.r - best.g) / dA + 4;
+          hA = Math.round(hA * 60);
+        }
+
+        // Boost saturation and constrain lightness
+        // Avoid making dull colors look "dirty" and avoid blowing out saturated colors
+        sA = sA < 0.05 ? 0 : Math.min(1, sA * 1.2 + 0.1);
+        lA = Math.max(0.35, Math.min(0.7, lA));
+
+        cb({
+          accent: 'hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%)',
+          gradient: 'linear-gradient(135deg, hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%), hsl(' + ((hA + 35) % 360) + ',' + Math.round(sA * 90) + '%,' + Math.round((lA - 0.15) * 100) + '%))',
+          dark: 'hsl(' + hA + ', ' + Math.round(sA * 40) + '%, 12%)',
+          glow: 'hsla(' + hA + ', ' + Math.round(sA * 100) + '%, ' + Math.round(lA * 100) + '%, 0.45)'
+        });
+      } catch (e) {
+        cb(null);
+      }
+    };
+    img.onerror = function() {
+      cb(null);
+    };
+    img.src = url;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // DOM Utilities
+  // ─────────────────────────────────────────────────────────────
+  function deepQuery(selector, root) {
+    var results = [];
+    var traverse = function(node) {
+      if (!node) return;
+      if (node.shadowRoot) traverse(node.shadowRoot);
+      var els = node.querySelectorAll(selector);
+      for (var i = 0; i < els.length; i++) results.push(els[i]);
+      var all = node.querySelectorAll('*');
+      for (var j = 0; j < all.length; j++) {
+        if (all[j].shadowRoot) traverse(all[j].shadowRoot);
+      }
+    };
+    traverse(root || document);
+    return results;
+  }
+
+  function deepQueryOne(selector, root) {
+    var els = deepQuery(selector, root);
+    return els.length > 0 ? els[0] : null;
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // High-Res Album Art Fetching (iTunes API)
+  // ─────────────────────────────────────────────────────────────
+  function fetchHighResArt(title, artist, cb) {
+    if (!title) return cb(null);
+    var cleanTitle = title.replace(/\(.*(?:official|music|lyric|video|audio).*\)/i, '').trim();
+    var cleanArtist = (artist || '').replace(/\(.*(?:official|music|lyric|video|audio).*\)/i, '').trim();
+    var term = encodeURIComponent(cleanTitle + ' ' + cleanArtist);
+    fetch('https://itunes.apple.com/search?term=' + term + '&media=music&limit=1')
+      .then(function(res) {
+        if (!res.ok) throw new Error('Bad status');
+        return res.json();
+      })
+      .then(function(data) {
+        if (data.results && data.results.length > 0 && data.results[0].artworkUrl100) {
+          var url = data.results[0].artworkUrl100.replace('100x100bb.jpg', '600x600bb.jpg');
+          cb(url);
+        } else {
+          cb(null);
+        }
+      })
+      .catch(function(e) {
+        cb(null);
+      });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Lyrics fetching from LyricsPlus (Primary) & LRCLib (Fallback)
+  // ─────────────────────────────────────────────────────────────
+  var LYRICS_API = 'https://lrclib.net/api/search';
+  var LYRICS_PLUS_API = 'https://lyricsplus.binimum.org/v2/lyrics/get';
+
+  function fetchLyrics(title, artist, duration, cb) {
+    var cleanTitle = title.replace(/\(.*(?:official|music|lyric|video|audio).*\)/i, '').trim();
+    var cleanArtist = (artist || '').replace(/\(.*(?:official|music|lyric|video|audio).*\)/i, '').trim();
+    
+    var lpPromise = new Promise(function(resolve, reject) {
+      var lpParams = 'title=' + encodeURIComponent(cleanTitle) + '&artist=' + encodeURIComponent(cleanArtist);
+      if (duration > 0) lpParams += '&duration=' + Math.round(duration);
+      
+      fetch(LYRICS_PLUS_API + '?' + lpParams)
+        .then(function(res) {
+          if (!res.ok) throw new Error('LyricsPlus status: ' + res.status);
+          return res.json();
+        })
+        .then(function(data) {
+          if (!data || data.error || !data.lyrics || data.lyrics.length === 0) {
+            throw new Error('No lyrics found in LyricsPlus');
+          }
+          var lines = [];
+          var synced = (data.type === 'Line' || data.type === 'Word' || data.type === 'Syllable');
+          var hasWords = (data.type === 'Word' || data.type === 'Syllable');
+          
+          for (var i = 0; i < data.lyrics.length; i++) {
+            var line = data.lyrics[i];
+            if (!line.text) continue;
+            var l = {
+              time: line.time / 1000.0,
+              text: line.text,
+              translation: '',
+              words: []
+            };
+            if (hasWords && line.syllabus && line.syllabus.length > 0) {
+              for (var j = 0; j < line.syllabus.length; j++) {
+                var syl = line.syllabus[j];
+                l.words.push({
+                  time: syl.time / 1000.0,
+                  duration: syl.duration / 1000.0,
+                  text: syl.text
+                });
+              }
+            }
+            lines.push(l);
+          }
+          if (lines.length > 0 && lines[0].time >= 5) {
+            lines.unshift({ time: 0, text: '♪', translation: '', words: [] });
+          }
+          if (lines.length > 0) {
+            resolve({ lines: lines, synced: synced, url: 'https://lyricsplus.binimum.org', hasWords: hasWords });
+          } else {
+            throw new Error('Empty parsed lyrics');
+          }
+        }).catch(reject);
+    });
+
+    var lrcPromise = new Promise(function(resolve, reject) {
+      var q = cleanTitle + ' ' + cleanArtist;
+      var targetUrl = LYRICS_API + '?q=' + encodeURIComponent(q.trim());
+
+      function parseLRCLib(data) {
+        if (!data) return null;
+        var lines = [];
+        var synced = false;
+        if (data.syncedLyrics) {
+          synced = true;
+          var raw = data.syncedLyrics.split('\n');
+          var rawLines = [];
+          for (var i = 0; i < raw.length; i++) {
+            var m = raw[i].match(/\[(\d+):(\d+(?:\.\d+)?)\](.*)/);
+            if (m) {
+              var lineTime = parseInt(m[1]) * 60 + parseFloat(m[2]);
+              var rawText = m[3].trim();
+              var wordsArray = [];
+              var wordRegex = /<(\d+):(\d+(?:\.\d+)?)>([^<]+)/g;
+              var wMatch, hasEnhanced = false, cleanText = rawText;
+              
+              if (rawText.indexOf('<') !== -1 && rawText.indexOf('>') !== -1) {
+                while ((wMatch = wordRegex.exec(rawText)) !== null) {
+                  hasEnhanced = true;
+                  wordsArray.push({
+                    time: parseInt(wMatch[1]) * 60 + parseFloat(wMatch[2]),
+                    duration: 0.2,
+                    text: wMatch[3].trim()
+                  });
+                }
+              }
+              if (hasEnhanced && wordsArray.length > 0) {
+                cleanText = '';
+                for (var w = 0; w < wordsArray.length; w++) {
+                  cleanText += wordsArray[w].text + ' ';
+                  if (w < wordsArray.length - 1) wordsArray[w].duration = wordsArray[w+1].time - wordsArray[w].time;
+                }
+                cleanText = cleanText.trim();
+                synced = true;
+              }
+              rawLines.push({ time: lineTime, text: cleanText, translation: '', words: wordsArray });
+            }
+          }
+          rawLines.sort(function(a, b) { return a.time - b.time; });
+          for (var i = 0; i < rawLines.length; i++) {
+            var text = rawLines[i].text;
+            if (!text) {
+              var nextIdx = -1;
+              for (var j = i + 1; j < rawLines.length; j++) {
+                if (rawLines[j].text) { nextIdx = j; break; }
+              }
+              var gap = nextIdx > -1 ? rawLines[nextIdx].time - rawLines[i].time : 0;
+              if (gap >= 5) lines.push({ time: rawLines[i].time, text: '♪', translation: '', words: [] });
+              continue;
+            }
+            lines.push(rawLines[i]);
+          }
+          if (lines.length > 0 && lines[0].time >= 5) lines.unshift({ time: 0, text: '♪', translation: '', words: [] });
+        } else if (data.plainLyrics) {
+          synced = false;
+          var plines = data.plainLyrics.split('\n');
+          for (var j = 0; j < plines.length; j++) lines.push({ time: 0, text: plines[j].trim(), words: [] });
+        }
+        if (lines.length === 0) return null;
+        var trackUrl = data.id ? 'https://lrclib.net/track/' + data.id : 'https://lrclib.net';
+        return { lines: lines, synced: synced, url: trackUrl };
+      }
+
+      function doFetch(url, isProxy) {
+        fetch(url)
+          .then(function(res) {
+            if (!res.ok) throw new Error('Bad status');
+            return res.json();
+          })
+          .then(function(responseData) {
+            var data = null;
+            if (Array.isArray(responseData)) {
+              for (var i = 0; i < responseData.length; i++) {
+                if (responseData[i].syncedLyrics) { data = responseData[i]; break; }
+              }
+              if (!data && responseData.length > 0) data = responseData[0];
+            } else {
+              data = responseData;
+            }
+            var result = parseLRCLib(data);
+            if (result) resolve({ lines: result.lines, synced: result.synced, url: result.url, hasWords: false });
+            else throw new Error('No lyrics in response');
+          })
+          .catch(function(err) {
+            if (!isProxy) doFetch('https://api.allorigins.win/raw?url=' + encodeURIComponent(targetUrl), true);
+            else reject(err);
+          });
+      }
+      doFetch(targetUrl, false);
+    });
+
+    if (typeof Promise.allSettled === 'function') {
+      Promise.allSettled([lpPromise, lrcPromise]).then(function(results) {
+        var lpRes = results[0].status === 'fulfilled' ? results[0].value : null;
+        var lrcRes = results[1].status === 'fulfilled' ? results[1].value : null;
+        if (!lpRes && !lrcRes) cb(null);
+        else cb({ lyricsplus: lpRes, lrclib: lrcRes });
+      });
+    } else {
+      // Fallback for extremely old browsers without allSettled
+      var completed = 0;
+      var results = { lyricsplus: null, lrclib: null };
+      function checkDone() {
+        if (++completed === 2) {
+          if (!results.lyricsplus && !results.lrclib) cb(null);
+          else cb(results);
+        }
+      }
+      lpPromise.then(function(res) { results.lyricsplus = res; checkDone(); }).catch(function() { checkDone(); });
+      lrcPromise.then(function(res) { results.lrclib = res; checkDone(); }).catch(function() { checkDone(); });
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Batch Romanization via Google Translate API
+  // ─────────────────────────────────────────────────────────────
+  function batchRomanize(lines, cb) {
+    if (!lines || lines.length === 0) return cb([]);
+    
+    var CHUNK_MAX = 800; // Safe chunk size for URL encoding
+    var chunks = [];
+    var currentChunk = [];
+    var currentLen = 0;
+    
+    for (var i = 0; i < lines.length; i++) {
+      var text = lines[i].text || '';
+      // Skip instrumentals
+      if (text === '♪' || text === '♫' || text === '&nbsp;' || !text.trim()) {
+        currentChunk.push({ index: i, text: '' });
+        continue;
+      }
+      var len = encodeURIComponent(text).length;
+      if (currentLen + len > CHUNK_MAX && currentChunk.length > 0) {
+        chunks.push(currentChunk);
+        currentChunk = [];
+        currentLen = 0;
+      }
+      currentChunk.push({ index: i, text: text });
+      currentLen += len + 3; // +3 for \n
+    }
+    if (currentChunk.length > 0) chunks.push(currentChunk);
+
+    var results = new Array(lines.length);
+    var completed = 0;
+
+    if (chunks.length === 0) return cb(results);
+
+    chunks.forEach(function(chunk) {
+      // Strip existing pipes to avoid delimiter collision
+      var texts = chunk.map(function(c) { return c.text ? c.text.replace(/\|/g, ' ') : ''; }).filter(Boolean);
+      if (texts.length === 0) {
+        chunk.forEach(function(c) { results[c.index] = ''; });
+        completed++;
+        if (completed === chunks.length) cb(results);
+        return;
+      }
+
+      var q = texts.join(' | ');
+      var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=rm&q=' + encodeURIComponent(q);
+      
+      fetch(url)
+        .then(function(res) { return res.json(); })
+        .then(function(data) {
+          var romStr = '';
+          if (data && data[0]) {
+            for (var j = 0; j < data[0].length; j++) {
+              if (data[0][j][3]) { // Romanization is usually at index 3
+                romStr += data[0][j][3];
+              } else if (data[0][j][2]) {
+                romStr += data[0][j][2];
+              }
+            }
+          }
+          var romLines = romStr.split(/\s*\|\s*/);
+          var idx = 0;
+          chunk.forEach(function(c) {
+            if (!c.text) {
+              results[c.index] = '';
+            } else {
+              var rLine = romLines[idx] || '';
+              // Occasionally GT capitalizes the first letter after a pipe, we can leave it
+              results[c.index] = rLine.trim();
+              idx++;
+            }
+          });
+          completed++;
+          if (completed === chunks.length) cb(results);
+        })
+        .catch(function() {
+          chunk.forEach(function(c) { results[c.index] = ''; });
+          completed++;
+          if (completed === chunks.length) cb(results);
+        });
+    });
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Apple Music Media State Extractor (Isolated)
+  // ─────────────────────────────────────────────────────────────
+  function getAppleMusicMediaState() {
+    var deepQuery = function(selector, root) {
+      var results = [];
+      var traverse = function(node) {
+        var els = node.querySelectorAll(selector);
+        for (var i = 0; i < els.length; i++) results.push(els[i]);
+        var all = node.querySelectorAll('*');
+        for (var j = 0; j < all.length; j++) {
+          if (all[j].shadowRoot) traverse(all[j].shadowRoot);
+        }
+      };
+      traverse(root || document);
+      return results;
+    };
+
+    var ms = navigator.mediaSession;
+
+    // === MAIN WORLD BRIDGE ===
+    // Inject code into MAIN world via Blob URL to bypass Apple Music's CSP.
+    var bridge = document.getElementById('vdi-am-bridge');
+    if (!bridge) {
+      bridge = document.createElement('div');
+      bridge.id = 'vdi-am-bridge';
+      bridge.style.display = 'none';
+      document.body.appendChild(bridge);
+    }
+    if (!document.getElementById('vdi-am-bridge-script')) {
+      var code = [
+        '(function(){',
+        'setInterval(function(){',
+        'try{',
+        'var mk=window.MusicKit&&window.MusicKit.getInstance();',
+        'var el=document.getElementById("vdi-am-bridge");',
+        'if(!mk||!el)return;',
+        'var ni=mk.nowPlayingItem;',
+        'el.dataset.duration=(ni&&ni.playbackDuration?ni.playbackDuration/1000:0);',
+        'el.dataset.position=(mk.currentPlaybackTime||0);',
+        'el.dataset.isPlaying=mk.isPlaying?"1":"0";',
+        'el.dataset.shuffle=(mk.shuffleMode===1)?"1":"0";',
+        'el.dataset.repeat=mk.repeatMode===2?"all":(mk.repeatMode===1?"one":"off");',
+        'el.dataset.title=(ni&&ni.title)||"";',
+        'el.dataset.artist=(ni&&ni.artistName)||"";',
+        'el.dataset.artwork=(ni&&ni.artwork)?window.MusicKit.formatArtworkURL(ni.artwork,600,600):"";',
+        'el.dataset.ts=Date.now();',
+        '}catch(e){}',
+        '},500);',
+        '})();'
+      ].join('');
+      try {
+        // Method 1: Blob URL (bypasses most CSP)
+        var blob = new Blob([code], { type: 'text/javascript' });
+        var url = URL.createObjectURL(blob);
+        var s = document.createElement('script');
+        s.id = 'vdi-am-bridge-script';
+        s.src = url;
+        document.documentElement.appendChild(s);
+        URL.revokeObjectURL(url);
+      } catch(e1) {
+        try {
+          // Method 2: inline script fallback
+          var s2 = document.createElement('script');
+          s2.id = 'vdi-am-bridge-script';
+          s2.textContent = code;
+          document.documentElement.appendChild(s2);
+        } catch(e2) {}
+      }
+    }
+
+    // Read state from bridge element
+    var bData = bridge.dataset || {};
+    var bridgeActive = bData.ts && (Date.now() - parseInt(bData.ts, 10)) < 3000;
+
+    var uiDur = 0, uiCur = 0;
+    var isPlaying = false;
+    var shuffleOn = false;
+    var repeatMode = 'off';
+    var finalTitle = '', finalArtist = '', art = null;
+
+    if (bridgeActive) {
+      uiDur = parseFloat(bData.duration) || 0;
+      uiCur = parseFloat(bData.position) || 0;
+      isPlaying = bData.isPlaying === '1';
+      shuffleOn = bData.shuffle === '1';
+      repeatMode = bData.repeat || 'off';
+      finalTitle = bData.title || '';
+      finalArtist = bData.artist || '';
+      art = bData.artwork || null;
+    } else {
+      // Bridge not yet active or CSP blocked — fall back to audio element + mediaSession
+      var els = deepQuery('video, audio');
+      var realEl = null;
+      for (var k = 0; k < els.length; k++) {
+        var d = els[k].duration;
+        if (!els[k].paused && els[k].currentTime > 0 && (isNaN(d) || d === Infinity || d > 30)) {
+          realEl = els[k]; break;
+        }
+      }
+      if (!realEl && els.length > 0) {
+        for (var j = 0; j < els.length; j++) {
+          var d2 = els[j].duration;
+          if (isNaN(d2) || d2 === Infinity || d2 > 30) { realEl = els[j]; break; }
+        }
+        if (!realEl) realEl = els[0];
+      }
+      if (realEl) {
+        uiCur = realEl.currentTime || 0;
+        isPlaying = !realEl.paused;
+        // Use realEl.duration as rough estimate (may be HLS-padded but better than 0)
+        if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
+      }
+      // Try mediaSession positionState for better duration
+      if (ms && typeof ms.getPositionState === 'function') {
+        try {
+          var ps = ms.getPositionState();
+          if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+          if (ps && ps.position > 0) uiCur = ps.position;
+        } catch(e) {}
+      }
+      if (ms && ms.metadata) {
+        finalTitle = ms.metadata.title || '';
+        finalArtist = ms.metadata.artist || '';
+        if (ms.metadata.artwork && ms.metadata.artwork.length) {
+          art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+        }
+      }
+      if (!isPlaying && ms) isPlaying = ms.playbackState === 'playing';
+      if (!finalTitle && document.title) {
+        var parts = document.title.split(' - ');
+        if (parts.length >= 2) {
+          finalTitle = parts[0].trim();
+          if (!finalArtist) finalArtist = parts[1].trim();
+        } else {
+          finalTitle = document.title.replace(' - Apple Music', '').trim();
+        }
+      }
+    }
+
+    return {
+      title: finalTitle,
+      artist: finalArtist,
+      artwork: art,
+      isPlaying: isPlaying,
+      duration: uiDur,
+      position: uiCur,
+      hasMedia: !!(finalTitle || uiDur > 0),
+      volume: 1,
+      pipOk: false,
+      isFullscreen: !!document.fullscreenElement,
+      isYouTubeVideo: false,
+      isMusicApp: true,
+      shuffleOn: shuffleOn,
+      repeatMode: repeatMode,
+      timestamp: Date.now()
+    };
+  }
+
+
+  // ─────────────────────────────────────────────────────────────
+  // Spotify Media State Extractor (Isolated)
+  // ─────────────────────────────────────────────────────────────
+  function getSpotifyMediaState() {
+    var parseTime = function(str) {
+      if (!str) return 0;
+      var p = str.trim().split(':').map(Number);
+      return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+    };
+
+    var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
+    var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+    var playBtn = document.querySelector('[data-testid="control-button-playpause"]');
+    
+    var uiDur = 0;
+    for (var i = 0; i < durEls.length; i++) {
+      if (durEls[i].getBoundingClientRect().width > 0) {
+        var dt = parseTime(durEls[i].textContent);
+        if (dt > uiDur) uiDur = dt;
+      }
+    }
+    
+    var uiCur = 0;
+    for (var j = 0; j < posEls.length; j++) {
+      if (posEls[j].getBoundingClientRect().width > 0) {
+        var ct = parseTime(posEls[j].textContent);
+        if (ct > uiCur) uiCur = ct;
+      }
+    }
+    
+    // Spotify's UI string is often 1-3 seconds delayed due to chunked media buffering.
+    // To sync lyrics perfectly, we MUST extract millisecond precision from the true audio element.
+    var realCur = null;
+    var els = Array.prototype.slice.call(document.querySelectorAll('video, audio'));
+    var realEl = null;
+
+    if (uiDur > 0) {
+      for (var k = 0; k < els.length; k++) {
+        var d = els[k].duration;
+        if (d > 0 && Math.abs(d - uiDur) <= 5) { realEl = els[k]; break; }
+      }
+    }
+    if (!realEl) {
+      for (var m = 0; m < els.length; m++) {
+        var d2 = els[m].duration;
+        // Ignore < 30s elements to completely avoid 8-second looping Canvas videos!
+        if ((!els[m].paused || els[m].currentTime > 0) && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
+      }
+    }
+    if (realEl && realEl.currentTime >= 0) {
+      realCur = realEl.currentTime;
+    }
+    if (realCur !== null) {
+      uiCur = realCur;
+    }
+
+    var ms = navigator.mediaSession;
+    var art = null;
+    if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
+      art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+    }
+
+    // Spotify shuffle: detect via aria-pressed (primary) or smart shuffle testid
+    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
+    var isSmartShuffle = !!document.querySelector('[data-testid="control-button-smart-shuffle"]');
+    var shuffleOn = isSmartShuffle || (shufBtn ? (
+      shufBtn.getAttribute('aria-pressed') === 'true' ||
+      shufBtn.getAttribute('aria-pressed') === 'mixed' ||
+      shufBtn.getAttribute('aria-checked') === 'true' ||
+      shufBtn.getAttribute('aria-checked') === 'mixed'
+    ) : false);
+    var repeatMode = 'off';
+    var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
+    if (repBtn) {
+      var ariaChecked = repBtn.getAttribute('aria-checked');
+      if (ariaChecked === 'true' || ariaChecked === 'mixed') {
+        // IMPORTANT: Spotify aria-label describes the NEXT action, not current state!
+        // "Enable repeat one" means currently in repeat-all mode
+        // "Disable repeat" means currently in repeat-one mode
+        var rLabel = (repBtn.getAttribute('aria-label') || '').toLowerCase();
+        if (rLabel.includes('disable') || rLabel.includes('turn off')) {
+          repeatMode = 'one';
+        } else {
+          repeatMode = 'all';
+        }
+      }
+    }
+
+    return {
+      title: (ms && ms.metadata && ms.metadata.title) || document.title.replace(' - Spotify', '').trim() || '',
+      artist: (ms && ms.metadata && ms.metadata.artist) || '',
+      artwork: art,
+      isPlaying: realEl ? !realEl.paused : (playBtn ? (playBtn.getAttribute('aria-label') || '').toLowerCase().includes('pause') : (ms && ms.playbackState === 'playing')),
+      duration: uiDur,
+      position: uiCur,
+      hasMedia: !!((ms && ms.metadata && ms.metadata.title) || uiDur > 0),
+      volume: 1, 
+      pipOk: false,
+      isFullscreen: !!document.fullscreenElement,
+      isYouTubeVideo: false,
+      isMusicApp: true,
+      shuffleOn: shuffleOn,
+      smartShuffleOn: isSmartShuffle,
+      repeatMode: repeatMode,
+      timestamp: Date.now()
+    };
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Tab media state extraction (injected into content pages)
+  // ─────────────────────────────────────────────────────────────
+  function getTabMediaState() {
+    var deepQuery = VDI.Core.deepQuery;
+    var deepQueryOne = VDI.Core.deepQueryOne;
+    var getAppleMusicMediaState = VDI.Core.getAppleMusicMediaState;
+    var getSpotifyMediaState = VDI.Core.getSpotifyMediaState;
+    // URL LOCKDOWN: Only detect media on supported sites
+    var ALLOWED_HOSTS = ['music.apple.com', 'open.spotify.com', 'spotify.com', 'youtube.com', 'www.youtube.com', 'music.youtube.com'];
+    var host = window.location.hostname;
+    var isAllowed = false;
+    for (var i = 0; i < ALLOWED_HOSTS.length; i++) {
+      if (host === ALLOWED_HOSTS[i] || host.endsWith('.' + ALLOWED_HOSTS[i])) { isAllowed = true; break; }
+    }
+    if (!isAllowed) return null;
+
+    // 100% ISOLATION: Intercept Apple Music immediately
+    if (window.location.hostname.includes('music.apple.com')) {
+      return getAppleMusicMediaState();
+    }
+
+    // 100% ISOLATION: Intercept Spotify immediately
+    if (window.location.hostname.includes('spotify.com')) {
+      return getSpotifyMediaState();
+    }
+
+    var vids = document.querySelectorAll('video');
+    var auds = document.querySelectorAll('audio');
+    var isYTMusic = window.location.hostname === 'music.youtube.com';
+    var pipOk = !!(!isYTMusic && document.pictureInPictureEnabled && vids.length &&
+          Array.prototype.slice.call(vids).some(function(v) { return !v.disablePictureInPicture; }));
+
+    var uiDur = null;
+    var uiCur = null;
+
+    try {
+      if (isYTMusic) {
+        var timeInfo = document.querySelector('.time-info.ytmusic-player-bar');
+        if (timeInfo) {
+          var parts = timeInfo.textContent.trim().split('/');
+          if (parts.length === 2) {
+            var parseTime = function(str) {
+              var p = str.trim().split(':').map(Number);
+              return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+            };
+            uiCur = parseTime(parts[0]);
+            uiDur = parseTime(parts[1]);
+          }
+        }
+      } else if (window.location.hostname.indexOf('youtube.com') > -1) {
+        var td = document.querySelector('.ytp-time-duration');
+        if (td) {
+          uiDur = td.textContent.trim().split(':').reduce(function(a, v) {
+            return (60 * a) + parseInt(v);
+          }, 0);
+        }
+      }
+    } catch (e) {}
+
+    // Find the best video element
+    var el = null;
+
+    // For YouTube (non-Music), match by duration
+    if (uiDur !== null && uiDur > 0 && !isYTMusic) {
+      for (var i = 0; i < vids.length; i++) {
+        if (Math.abs(vids[i].duration - uiDur) <= 2) {
+          el = vids[i];
+          break;
+        }
+      }
+    }
+
+    // Find currently playing video
+    if (!el) {
+      for (var i = 0; i < vids.length; i++) {
+        if (!vids[i].paused && vids[i].currentTime > 0) {
+          el = vids[i];
+          break;
+        }
+      }
+    }
+
+    // Fallback to main video selector
+    if (!el) el = document.querySelector('.html5-main-video');
+    if (!el && vids.length) el = vids[vids.length - 1];
+    if (!el && auds.length) el = auds[0];
+
+    try {
+      var ms = navigator.mediaSession;
+      var art = null;
+      if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
+        art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+      }
+
+      var finalPos = (uiCur !== null) ? uiCur : (el ? el.currentTime : 0);
+
+      var shuffleOn = false;
+      var repeatMode = 'off';
+      if (isYTMusic) {
+        var playerBar = document.querySelector('ytmusic-player-bar');
+        // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
+        function isNodeActive(el) {
+          if (!el) return false;
+          if (el.getAttribute('aria-pressed') === 'true') return true;
+          if (el.getAttribute('is-toggled') === 'true') return true;
+          var title = (el.getAttribute('title') || el.getAttribute('aria-label') || '').toLowerCase();
+          if (title.includes('turn off') || title.includes('disable')) return true;
+          
+          // Check children for aria-pressed
+          var children = deepQuery('*', el);
+          for (var i = 0; i < children.length; i++) {
+             if (children[i].getAttribute('aria-pressed') === 'true') return true;
+             if (children[i].getAttribute('is-toggled') === 'true') return true;
+             var ct = (children[i].getAttribute('title') || children[i].getAttribute('aria-label') || '').toLowerCase();
+             if (ct.includes('turn off') || ct.includes('disable')) return true;
+          }
+          
+          // Check color of SVG/Icon
+          var icon = deepQueryOne('yt-icon, svg', el) || el;
+          var c = window.getComputedStyle(icon).color || '';
+          var f = window.getComputedStyle(icon).fill || '';
+          if (c.includes('255, 255, 255') || f.includes('255, 255, 255')) return true;
+          
+          return false;
+        }
+
+        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="shuffle" i], ytmusic-toggle-button-renderer[title*="shuffle" i], tp-yt-paper-icon-button[aria-label*="shuffle" i], tp-yt-paper-icon-button[title*="shuffle" i], button[aria-label*="shuffle" i], button[title*="shuffle" i]', playerBar);
+        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="repeat" i], ytmusic-toggle-button-renderer[title*="repeat" i], tp-yt-paper-icon-button[aria-label*="repeat" i], tp-yt-paper-icon-button[title*="repeat" i], button[aria-label*="repeat" i], button[title*="repeat" i]', playerBar);
+        
+        if (shuffleEl && isNodeActive(shuffleEl)) {
+           shuffleOn = true;
+        }
+        
+        if (repeatEl) {
+           var rTitle = (repeatEl.getAttribute('title') || repeatEl.getAttribute('aria-label') || '').toLowerCase();
+           var children = deepQuery('*', repeatEl);
+           for (var j = 0; j < children.length; j++) {
+              rTitle += ' ' + (children[j].getAttribute('title') || children[j].getAttribute('aria-label') || '').toLowerCase();
+           }
+           if (rTitle.includes('one') || rTitle.includes('1')) {
+              repeatMode = 'one';
+           } else if (rTitle.includes('all') || isNodeActive(repeatEl)) {
+              repeatMode = 'all';
+           }
+        }
+      }
+
+      return {
+        title: (ms && ms.metadata && ms.metadata.title) || '',
+        artist: (ms && ms.metadata && ms.metadata.artist) || '',
+        artwork: art,
+        isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
+        duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
+        position: finalPos,
+        hasMedia: !!(el || (ms && ms.metadata && ms.metadata.title)),
+        volume: el ? el.volume : 1,
+        pipOk: pipOk,
+        isFullscreen: !!document.fullscreenElement,
+        isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
+        isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
+        shuffleOn: shuffleOn,
+        repeatMode: repeatMode,
+        timestamp: Date.now()
+      };
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Media actions (injected into content pages)
+  // ─────────────────────────────────────────────────────────────
+  function executeMediaAction(act, val) {
+    var deepQuery = VDI.Core.deepQuery;
+    var deepQueryOne = VDI.Core.deepQueryOne;
+    
+    // 100% ISOLATION: Intercept Spotify immediately
+    if (window.location.hostname.includes('spotify.com')) {
+      if (act === 'toggle') {
+        var tb = document.querySelector('[data-testid="control-button-playpause"]');
+        if (tb) tb.click();
+      } else if (act === 'prev') {
+        var pb = document.querySelector('[data-testid="control-button-skip-back"]');
+        if (pb) pb.click();
+      } else if (act === 'next') {
+        var nb = document.querySelector('[data-testid="control-button-skip-forward"]');
+        if (nb) nb.click();
+      } else if (act === 'shuffle') {
+        var sb = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
+        if (sb) sb.click();
+      } else if (act === 'repeat') {
+        var rb = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
+        if (rb) rb.click();
+      } else if (act === 'seek' && typeof val === 'number') {
+        var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
+        var dur = 0;
+        for (var i = 0; i < durEls.length; i++) {
+          if (durEls[i].getBoundingClientRect().width > 0) {
+            var p = durEls[i].textContent.trim().split(':').map(Number);
+            var dt = p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+            if (dt > dur) dur = dt;
+          }
+        }
+        if (dur > 0) {
+          var bars = document.querySelectorAll('[data-testid="progress-bar"], [data-testid="playback-progressbar"], .playback-bar');
+          var bar = null;
+          for (var j = 0; j < bars.length; j++) {
+            if (bars[j].getBoundingClientRect().width > 0) { bar = bars[j]; break; }
+          }
+          if (bar) {
+            var rect = bar.getBoundingClientRect();
+              var cx = rect.left + (rect.width * (val / dur));
+              var cy = rect.top + (rect.height / 2);
+              var target = document.elementFromPoint(cx, cy) || bar;
+              
+              var evOpts = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, button: 0, buttons: 1 };
+              
+              if (typeof PointerEvent !== 'undefined') {
+                target.dispatchEvent(new PointerEvent('pointerdown', evOpts));
+                target.dispatchEvent(new PointerEvent('pointerup', evOpts));
+              }
+              target.dispatchEvent(new MouseEvent('mousedown', evOpts));
+              target.dispatchEvent(new MouseEvent('mouseup', evOpts));
+              target.dispatchEvent(new MouseEvent('click', evOpts));
+            }
+          }
+        }
+      return;
+    }
+    
+    try {
+      // 100% ISOLATION: Intercept Apple Music actions
+      if (window.location.hostname.includes('music.apple.com')) {
+        // Vivaldi Web Panel executes this in the MAIN world natively, so MusicKit is available!
+        if (window.MusicKit && window.MusicKit.getInstance()) {
+          var m = window.MusicKit.getInstance();
+          if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); return; }
+          else if (act === 'prev') { m.skipToPreviousItem(); return; }
+          else if (act === 'next') { m.skipToNextItem(); return; }
+          else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
+          else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
+          // Apple Music native cycle: off(0) → all(2) → one(1) → off(0)
+          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0); return; }
+        }
+
+        if (act === 'toggle') {
+          var tb = deepQueryOne('button[aria-label*="Play"], button[aria-label*="Pause"], button[aria-label*="play"], button[aria-label*="pause"]');
+          if (tb) tb.click();
+        } else if (act === 'prev') {
+          var pb = deepQueryOne('button[aria-label*="Previous"], button[title*="Previous"], button[aria-label*="previous"]');
+          if (pb) pb.click();
+        } else if (act === 'next') {
+          var nb = deepQueryOne('button[aria-label*="Next"], button[title*="Next"], button[aria-label*="next"]');
+          if (nb) nb.click();
+        } else if (act === 'seek' && typeof val === 'number') {
+          var ms = navigator.mediaSession;
+          var dur = 0;
+          if (ms && typeof ms.getPositionState === 'function') {
+            try {
+              var pState = ms.getPositionState();
+              if (pState && pState.duration > 0) dur = pState.duration;
+            } catch(e) {}
+          }
+          // Fallback to our scoped UI duration if ms fails
+          if (!dur || dur === 0) {
+            var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
+            var timeEls = deepQuery('[class*="time"], [class*="duration"], [class*="current"], time', playerBar);
+            var times = [];
+            for (var i = 0; i < timeEls.length; i++) {
+              if (timeEls[i].getBoundingClientRect().width > 0) {
+                var p = timeEls[i].textContent.trim().split(':').map(Number);
+                var tVal = p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+                if (tVal > 0) times.push(tVal);
+              }
+            }
+            if (times.length > 0) {
+              times.sort(function(a, b) { return a - b; });
+              dur = times[times.length - 1]; 
+            }
+          }
+
+          if (dur > 0) {
+            // Find the progress bar (it will be the widest slider on the page)
+            var bars = deepQuery('input[type="range"], [role="slider"], [aria-label*="progress"], [aria-label*="time"], [class*="progress"]');
+            var bar = null;
+            var maxWidth = 0;
+            for (var j = 0; j < bars.length; j++) {
+              var rect = bars[j].getBoundingClientRect();
+              if (rect.width > maxWidth && rect.height > 0) { 
+                maxWidth = rect.width;
+                bar = bars[j]; 
+              }
+            }
+            if (bar) {
+              var br = bar.getBoundingClientRect();
+              var cx = br.left + (br.width * (val / dur));
+              var cy = br.top + (br.height / 2);
+              var target = document.elementFromPoint(cx, cy) || bar;
+              
+              var evOpts = { bubbles: true, cancelable: true, view: window, clientX: cx, clientY: cy, button: 0, buttons: 1 };
+              if (typeof PointerEvent !== 'undefined') {
+                target.dispatchEvent(new PointerEvent('pointerdown', evOpts));
+                target.dispatchEvent(new PointerEvent('pointerup', evOpts));
+              }
+              target.dispatchEvent(new MouseEvent('mousedown', evOpts));
+              target.dispatchEvent(new MouseEvent('mouseup', evOpts));
+              target.dispatchEvent(new MouseEvent('click', evOpts));
+
+              // Force the underlying input to register the state change!
+              var inputEl = bar.tagName.toLowerCase() === 'input' ? bar : bar.querySelector('input[type="range"]');
+              if (inputEl) {
+                var pct = val / dur;
+                var max = parseFloat(inputEl.max) || 100;
+                try {
+                  var nativeInputValueSetter = Object.getOwnPropertyDescriptor(window.HTMLInputElement.prototype, 'value').set;
+                  nativeInputValueSetter.call(inputEl, pct * max);
+                } catch(e) {
+                  try { inputEl.value = pct * max; } catch(e2) {}
+                }
+                inputEl.dispatchEvent(new Event('input', { bubbles: true }));
+                inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+              }
+            }
+          }
+        }
+        } else if (act === 'shuffle') {
+          var sb = deepQueryOne('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]');
+          if (sb) sb.click();
+        } else if (act === 'repeat') {
+          var rb = deepQueryOne('button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
+          if (rb) rb.click();
+        }
+        return;
+      }
+
+      var els = deepQuery('video, audio');
+      var el = null;
+
+      // Find active element
+      for (var i = 0; i < els.length; i++) {
+        if (!els[i].paused && !els[i].ended) {
+          el = els[i];
+          break;
+        }
+      }
+      if (!el) {
+        for (var j = 0; j < els.length; j++) {
+          if (els[j].paused && els[j].currentTime > 0) {
+            el = els[j];
+            break;
+          }
+        }
+      }
+      if (!el && els.length) el = els[0];
+
+      if (act === 'toggle') {
+        var tb = deepQueryOne('#play-pause-button, .ytp-play-button, .play-pause-button');
+        if (tb && typeof tb.click === 'function') {
+          tb.click();
+        } else if (el) {
+          if (el.paused) el.play();
+          else el.pause();
+        }
+      } else if (act === 'prev') {
+        if (el) {
+          var pb = deepQueryOne('ytmusic-player-bar .previous-button, .ytp-prev-button, .previous-button');
+          if (pb) pb.click();
+          else el.currentTime = 0;
+        }
+      } else if (act === 'next') {
+        if (el) {
+          var nb = deepQueryOne('ytmusic-player-bar .next-button, .ytp-next-button, .next-button');
+          if (nb) nb.click();
+          else el.currentTime = el.duration;
+        }
+      } else if (act === 'shuffle') {
+        var sb = deepQueryOne('ytmusic-player-bar .shuffle, ytmusic-player-bar .shuffle-button, [aria-label*="shuffle" i], [title*="shuffle" i]');
+        if (sb) sb.click();
+      } else if (act === 'repeat') {
+        var rb = deepQueryOne('ytmusic-player-bar .repeat, ytmusic-player-bar .repeat-button, [aria-label*="repeat" i], [title*="repeat" i]');
+        if (rb) rb.click();
+      } else if (act === 'seek' && typeof val === 'number') {
+        var isYTM = window.location.hostname === 'music.youtube.com';
+        var v = deepQuery('video, audio');
+        var u = null;
+        var uc = null;
+
+        try {
+          if (isYTM) {
+            var t = document.querySelector('.time-info.ytmusic-player-bar');
+            if (t) {
+              var p = t.textContent.trim().split('/');
+              if (p.length === 2) {
+                var pT = function(s) {
+                  var z = s.trim().split(':').map(Number);
+                  return z.length === 2 ? z[0] * 60 + z[1] : (z.length === 3 ? z[0] * 3600 + z[1] * 60 + z[2] : 0);
+                };
+                uc = pT(p[0]);
+                u = pT(p[1]);
+              }
+            }
+          } else {
+            var td = document.querySelector('.ytp-time-duration');
+            if (td) {
+              u = td.textContent.trim().split(':').reduce(function(a, x) {
+                return (60 * a) + parseInt(x);
+              }, 0);
+            }
+          }
+        } catch (e) {}
+
+        var target = null;
+        if (u > 0 && !isYTM) {
+          for (var i = 0; i < v.length; i++) {
+            if (Math.abs(v[i].duration - u) <= 2) {
+              target = v[i];
+              break;
+            }
+          }
+        }
+        if (!target) target = document.querySelector('.html5-main-video');
+        if (!target && v.length) target = v[v.length - 1];
+
+        if (target) {
+          if (isYTM && uc !== null && u > 0) {
+            var offset = target.currentTime - uc;
+            target.currentTime = val + offset;
+          } else {
+            target.currentTime = val;
+          }
+        }
+      }
+    } catch (e) {}
+  }
+
+  function togglePiP(sourceInfo) {
+    function teleportBack() {
+      if (sourceInfo) {
+        try {
+          if (chrome && chrome.runtime && chrome.runtime.sendMessage) {
+            chrome.runtime.sendMessage({ type: 'VDI_TELEPORT_BACK', source: sourceInfo });
+          }
+        } catch (e) {}
+      }
+    }
+
+    function showPiPOverlay(videoElement) {
+      if (document.getElementById('vdi-pip-overlay')) return;
+      var overlay = document.createElement('div');
+      overlay.id = 'vdi-pip-overlay';
+      overlay.style.position = 'fixed';
+      overlay.style.top = '0';
+      overlay.style.left = '0';
+      overlay.style.width = '100vw';
+      overlay.style.height = '100vh';
+      overlay.style.zIndex = '2147483647'; // Max z-index
+      overlay.style.cursor = 'pointer';
+      overlay.style.background = 'rgba(0, 0, 0, 0.8)';
+      overlay.style.display = 'flex';
+      overlay.style.alignItems = 'center';
+      overlay.style.justifyContent = 'center';
+      overlay.style.backdropFilter = 'blur(5px)';
+      overlay.style.transition = 'opacity 0.2s';
+      
+      var msg = document.createElement('div');
+      msg.style.background = 'rgba(255, 255, 255, 0.1)';
+      msg.style.color = '#fff';
+      msg.style.padding = '20px 30px';
+      msg.style.borderRadius = '16px';
+      msg.style.fontFamily = 'system-ui, sans-serif';
+      msg.style.fontSize = '20px';
+      msg.style.fontWeight = '600';
+      msg.style.boxShadow = '0 10px 30px rgba(0,0,0,0.5)';
+      msg.style.border = '1px solid rgba(255,255,255,0.2)';
+      msg.innerHTML = '<div style="margin-bottom:8px;font-size:24px;text-align:center;">🎬</div>Click anywhere to enter Picture-in-Picture';
+      
+      overlay.appendChild(msg);
+      
+      overlay.onclick = function() {
+        overlay.style.opacity = '0';
+        setTimeout(function() { overlay.remove(); }, 200);
+        try {
+          videoElement.requestPictureInPicture().then(function() {
+            teleportBack();
+          }).catch(function() {
+            teleportBack();
+          });
+        } catch (e) {
+          teleportBack();
+        }
+      };
+      
+      (document.documentElement || document.body).appendChild(overlay);
+    }
+
+    try {
+      var vids = Array.prototype.slice.call(document.querySelectorAll('video'));
+      var v = null;
+      for (var i = 0; i < vids.length; i++) {
+        if (!vids[i].paused) {
+          v = vids[i];
+          break;
+        }
+      }
+      if (!v && vids.length) v = vids[0];
+      if (!v) return false;
+
+      if (document.pictureInPictureElement) {
+        document.exitPictureInPicture().then(function() {
+          teleportBack();
+        }).catch(function() {
+          teleportBack();
+        });
+        return true;
+      }
+
+      // Try direct first (works in Chrome Extension with user gesture)
+      var promise = v.requestPictureInPicture();
+      if (promise && promise.catch) {
+        promise.then(function() {
+          teleportBack();
+        }).catch(function(err) {
+          showPiPOverlay(v);
+        });
+      }
+      return true;
+    } catch (e) {
+      showPiPOverlay(v);
+      return true;
+    }
+  }
+
+  // ─────────────────────────────────────────────────────────────
+  // Public API
+  // ─────────────────────────────────────────────────────────────
+  return {
+    formatTime: formatTime,
+    getPlayIcon: getPlayIcon,
+    extractVibrant: extractVibrant,
+    fetchLyrics: fetchLyrics,
+    batchRomanize: batchRomanize,
+    getTabMediaState: getTabMediaState,
+    deepQuery: deepQuery,
+    deepQueryOne: deepQueryOne,
+    getAppleMusicMediaState: getAppleMusicMediaState,
+    getSpotifyMediaState: getSpotifyMediaState,
+    executeMediaAction: executeMediaAction,
+    togglePiP: togglePiP
+  };
+})();
+
+
+/**
+ * Dynamic Island - Chrome Extension Platform
+ * Content script that communicates with background service worker
+ */
+
+var VDI = VDI || {};
+
+VDI.Platform = VDI.Platform || {};
+
+VDI.Platform.ChromeExt = (function() {
+  'use strict';
+
+  /* Content Script Side */
+
+  function sendAction(action, value) {
+    chrome.runtime.sendMessage({
+      type: 'VDI_ACTION',
+      act: action,
+      val: value
+    });
+  }
+
+  function jumpToTab() {
+    chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'jump' });
+  }
+
+  function requestPiP() {
+    chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'pip' });
+  }
+
+  function requestState(callback) {
+    try {
+      chrome.runtime.sendMessage({ type: 'VDI_REQUEST_STATE' }, function(state) {
+        if (callback) callback(state);
+      });
+    } catch (e) {
+      if (callback) callback(null);
+    }
+  }
+
+  function onStateUpdate(callback) {
+    chrome.runtime.onMessage.addListener(function(msg) {
+      if (msg.type === 'VDI_UPDATE') {
+        callback(msg.state);
+      }
+    });
+  }
+
+  /* Background Script Side (for background.js) */
+
+  function createBackgroundWorker() {
+    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, smartShuffleOn: false, repeatMode: 'off' };
+    var pollInterval = 1000;
+    var returnTabId = null;
+    var returnWinId = null;
+
+    function execInTab(tabId, fn, args, cb, world) {
+      if (!tabId) {
+        if (cb) cb(null);
+        return;
+      }
+      var opts = {
+        target: { tabId: tabId, allFrames: false },
+        func: fn,
+        args: args || []
+      };
+      if (world) opts.world = world;
+
+      chrome.scripting.executeScript(opts, function(res) {
+        if (chrome.runtime.lastError || !res) {
+          console.warn('[VDI] execInTab failed:', chrome.runtime.lastError);
+          if (cb) cb(null);
+          return;
+        }
+        if (cb) cb(res[0] ? res[0].result : null);
+      });
+    }
+
+    function broadcastState() {
+      chrome.tabs.query({}, function(tabs) {
+        for (var i = 0; i < tabs.length; i++) {
+          chrome.tabs.sendMessage(tabs[i].id, { type: 'VDI_UPDATE', state: S }, function() {
+            if (chrome.runtime.lastError) {} // suppress "no listener" errors
+          });
+        }
+      });
+    }
+
+    function poll() {
+      chrome.tabs.query({ audible: true }, function(tabs) {
+        var tab = (tabs && tabs.length) ? tabs[0] : null;
+
+        if (!tab) {
+          if (S.tabId !== null) {
+            execInTab(S.tabId, VDI.Core.getTabMediaState, [], function(res) {
+              if (!res) {
+                S.hasMedia = false;
+                broadcastState();
+                return;
+              }
+              S.title = res.title || S.title;
+              S.artist = res.artist || S.artist;
+              S.artwork = res.artwork || S.artwork;
+              S.isPlaying = res.isPlaying;
+              S.duration = res.duration;
+              S.position = res.position;
+              S.supportsPiP = res.pipOk || false;
+              S.isFullscreen = res.isFullscreen || false;
+              S.isYouTubeVideo = res.isYouTubeVideo || false;
+              S.isMusicApp = res.isMusicApp || false;
+              S.shuffleOn = res.shuffleOn || false;
+              S.smartShuffleOn = res.smartShuffleOn || false;
+              S.repeatMode = res.repeatMode || 'off';
+              if (!res.hasMedia) S.hasMedia = false;
+              broadcastState();
+            });
+          } else if (S.hasMedia) {
+            S.hasMedia = false;
+            broadcastState();
+          }
+          return;
+        }
+
+        S.tabId = tab.id;
+        S.windowId = tab.windowId;
+
+        execInTab(tab.id, VDI.Core.getTabMediaState, [], function(res) {
+          if (!res) {
+            S.hasMedia = true;
+            broadcastState();
+            return;
+          }
+
+          S.hasMedia = res.hasMedia || true;
+          S.isPlaying = res.isPlaying;
+          S.title = res.title || tab.title || '';
+          S.artist = res.artist || '';
+          S.artwork = res.artwork || null;
+          S.duration = res.duration || 0;
+          S.position = res.position || 0;
+          S.supportsPiP = res.pipOk || false;
+          S.isYouTubeVideo = res.isYouTubeVideo || false;
+          S.isMusicApp = res.isMusicApp || false;
+          S.shuffleOn = res.shuffleOn || false;
+          S.smartShuffleOn = res.smartShuffleOn || false;
+          S.repeatMode = res.repeatMode || 'off';
+
+          broadcastState();
+        });
+      });
+    }
+
+    function multiPoll(callback, intervals) {
+      intervals.forEach(function(delay) {
+        setTimeout(callback, delay);
+      });
+    }
+
+    function handleMessage(msg, sender, sendResponse) {
+      if (msg.type === 'VDI_ACTION') {
+        if (msg.act === 'pip') {
+          function triggerPiP(srcTabId, srcWinId) {
+            if (S.tabId !== null && srcTabId !== S.tabId) {
+              chrome.tabs.update(S.tabId, { active: true }, function() {
+                if (S.windowId !== null) {
+                  chrome.windows.update(S.windowId, { focused: true }, function() {
+                    execInTab(S.tabId, VDI.Core.togglePiP, [{tabId: srcTabId, winId: srcWinId}], null);
+                  });
+                } else {
+                  execInTab(S.tabId, VDI.Core.togglePiP, [{tabId: srcTabId, winId: srcWinId}], null);
+                }
+              });
+            } else {
+              execInTab(S.tabId, VDI.Core.togglePiP, [null], null);
+            }
+          }
+
+          if (sender && sender.tab) {
+            triggerPiP(sender.tab.id, sender.tab.windowId);
+          } else {
+            try {
+              chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+                var tid = (tabs && tabs.length) ? tabs[0].id : null;
+                var wid = (tabs && tabs.length) ? tabs[0].windowId : null;
+                triggerPiP(tid, wid);
+              });
+            } catch (e) {
+              triggerPiP(null, null);
+            }
+          }
+          
+        } else if (msg.act === 'jump') {
+          if (S.tabId !== null) {
+            chrome.tabs.update(S.tabId, { active: true });
+            if (S.windowId !== null) {
+              chrome.windows.update(S.windowId, { focused: true });
+            }
+          }
+        } else if (msg.act === 'teleport') {
+          if (returnTabId === null) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+              if (tabs && tabs.length > 0) {
+                returnTabId = tabs[0].id;
+                returnWinId = tabs[0].windowId;
+                if (S.tabId !== null) {
+                  chrome.tabs.update(S.tabId, { active: true });
+                  if (S.windowId !== null) {
+                    chrome.windows.update(S.windowId, { focused: true });
+                  }
+                }
+              }
+            });
+          } else {
+            chrome.tabs.update(returnTabId, { active: true });
+            if (returnWinId !== null) {
+              chrome.windows.update(returnWinId, { focused: true });
+            }
+            returnTabId = null;
+            returnWinId = null;
+          }
+        } else if (msg.act === 'VDI_TELEPORT_BACK') {
+          if (msg.val && msg.val.source) {
+            if (msg.val.source.tabId) chrome.tabs.update(msg.val.source.tabId, { active: true });
+            if (msg.val.source.winId) chrome.windows.update(msg.val.source.winId, { focused: true });
+          }
+        } else {
+          var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
+          chrome.tabs.get(S.tabId, function(tab) {
+            var isAM = tab && tab.url && tab.url.includes('music.apple.com');
+            if (isAM) {
+              // Apple Music: inject self-contained MusicKit call in MAIN world (VDI not available there)
+              execInTab(S.tabId, function(act, val) {
+                try {
+                  if (window.MusicKit && window.MusicKit.getInstance) {
+                    var m = window.MusicKit.getInstance();
+                    if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); }
+                    else if (act === 'prev') { m.skipToPreviousItem(); }
+                    else if (act === 'next') { m.skipToNextItem(); }
+                    else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; }
+                    else if (act === 'repeat') { m.repeatMode = (m.repeatMode + 1) % 3; }
+                    else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
+                  }
+                } catch(e) {}
+              }, args, null, 'MAIN');
+            } else {
+              execInTab(S.tabId, function(act, val) {
+                if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
+              }, args, null, 'ISOLATED');
+            }
+          });
+
+          // Rapid poll after actions
+          multiPoll(poll, [200, 600, 1200]);
+        }
+      } else if (msg.type === 'VDI_REQUEST_STATE') {
+        sendResponse(S);
+      } else if (msg.type === 'VDI_GET_NOW_PLAYING') {
+        sendResponse(S);
+      } else if (msg.type === 'VDI_FETCH_LYRICS') {
+        VDI.Core.fetchLyrics(msg.title, msg.artist, msg.duration, function(result) {
+          sendResponse(result);
+        });
+        return true; // Keep message channel open for async response
+      } else if (msg.type === 'VDI_BATCH_ROMANIZE') {
+        VDI.Core.batchRomanize(msg.lines, function(result) {
+          sendResponse(result);
+        });
+        return true;
+      }
+    }
+
+    function start() {
+      setInterval(poll, pollInterval);
+      poll();
+
+      chrome.runtime.onMessage.addListener(handleMessage);
+      chrome.tabs.onActivated.addListener(function() { poll(); });
+      chrome.windows.onFocusChanged.addListener(function() { poll(); });
+
+      chrome.commands.onCommand.addListener(function(command) {
+        chrome.storage.local.get({ enableShortcuts: true }, function(res) {
+          if (!res.enableShortcuts) return;
+          if (command === 'toggle-playback') handleMessage({type: 'VDI_ACTION', act: 'toggle'});
+          else if (command === 'next-track') handleMessage({type: 'VDI_ACTION', act: 'next'});
+          else if (command === 'prev-track') handleMessage({type: 'VDI_ACTION', act: 'prev'});
+        });
+      });
+
+      chrome.runtime.onInstalled.addListener(function(details) {
+        if (details.reason === "install") {
+          chrome.tabs.create({ url: "welcome.html" });
+        } else if (details.reason === "update") {
+          chrome.tabs.create({ url: "patch-notes.html" });
+        }
+      });
+    }
+
+    return {
+      start: start,
+      getState: function() { return S; }
+    };
+  }
+
+  return {
+    // Content script methods
+    sendAction: sendAction,
+    jumpToTab: jumpToTab,
+    requestPiP: requestPiP,
+    requestState: requestState,
+    onStateUpdate: onStateUpdate,
+
+    // Background script factory
+    createBackgroundWorker: createBackgroundWorker
+  };
+})();
+
+
+
+(function() {
+  'use strict';
+
+  var worker = VDI.Platform.ChromeExt.createBackgroundWorker();
+  worker.start();
+
+})();
