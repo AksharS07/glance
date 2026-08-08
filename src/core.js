@@ -455,143 +455,122 @@ VDI.Core = (function() {
     var shuffleOn = false;
     var repeatMode = 'off';
     var finalTitle = '', finalArtist = '', art = null;
+    var mkFound = false;
 
-    // Apple Music has a known audio element with id="apple-music-player"
-    var realEl = document.getElementById('apple-music-player');
-    if (!realEl) {
-      // Fallback: scan for any audio/video with substantial duration
-      var els = document.querySelectorAll('audio, video');
-      for (var k = 0; k < els.length; k++) {
-        if (!els[k].paused && els[k].currentTime > 0) { realEl = els[k]; break; }
-      }
-      if (!realEl && els.length > 0) realEl = els[0];
-    }
+    // ─── PRIMARY: MusicKit via wrappedJSObject (Firefox/Zen only) ───
+    // Firefox content scripts can access page JS objects via wrappedJSObject.
+    // This bypasses CSP entirely since no script injection is needed.
+    try {
+      var pageWin = window.wrappedJSObject || window;
+      var MK = pageWin.MusicKit;
+      if (MK && typeof MK.getInstance === 'function') {
+        var mk = MK.getInstance();
+        if (mk) {
+          mkFound = true;
+          var ni = mk.nowPlayingItem;
 
-    if (realEl) {
-      uiCur = realEl.currentTime || 0;
-      isPlaying = !realEl.paused;
-      // HLS may pad duration, but use as fallback
-      if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
-    }
+          // Position (seconds)
+          uiCur = mk.currentPlaybackTime || 0;
 
-    // Use mediaSession for better duration and metadata
-    if (ms) {
-      if (typeof ms.getPositionState === 'function') {
-        try {
-          var ps = ms.getPositionState();
-          if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
-          if (ps && ps.position > 0 && (!uiCur || uiCur === 0)) uiCur = ps.position;
-        } catch(e) {}
-      }
-      if (ms.metadata) {
-        finalTitle = ms.metadata.title || '';
-        finalArtist = ms.metadata.artist || '';
-        if (ms.metadata.artwork && ms.metadata.artwork.length) {
-          art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
-        }
-      }
-      if (!isPlaying) isPlaying = ms.playbackState === 'playing';
-    }
+          // Duration: playbackDuration is in MILLISECONDS
+          if (ni && ni.playbackDuration) {
+            uiDur = ni.playbackDuration / 1000;
+          }
 
-    // Parse title attribute from the audio element: "Song Name - Album - Artist"
-    if (!finalTitle && realEl && realEl.title) {
-      var tParts = realEl.title.split(' - ');
-      if (tParts.length >= 1) finalTitle = tParts[0].replace(/\(From ".*?"\)/, '').trim() || tParts[0].trim();
-      if (tParts.length >= 3 && !finalArtist) finalArtist = tParts[tParts.length - 1].trim();
-    }
+          isPlaying = !!mk.isPlaying;
 
-    // Fallback to page title
-    if (!finalTitle && document.title) {
-      var parts = document.title.split(' - ');
-      if (parts.length >= 2) {
-        finalTitle = parts[0].trim();
-        if (!finalArtist) finalArtist = parts[1].trim();
-      } else {
-        finalTitle = document.title.replace(' - Apple Music', '').trim();
-      }
-    }
+          // Shuffle: 0=off, 1=songs
+          shuffleOn = (mk.shuffleMode !== 0 && mk.shuffleMode !== undefined);
 
-    // ─── Remaining time text scan for accurate duration ───
-    // Apple Music shows "-M:SS" as remaining time near the progress bar.
-    // Walk ALL visible text nodes looking for this pattern.
-    if (uiCur > 0) {
-      var timeRx = /^-\d{1,2}:\d{2}$/;
-      var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
-      var tNode;
-      while ((tNode = walker.nextNode())) {
-        var txt = tNode.textContent.trim();
-        if (timeRx.test(txt)) {
-          // Parse remaining time
-          var cleaned = txt.replace(/^-/, '');
-          var tp = cleaned.split(':').map(Number);
-          var remaining = tp.length === 2 ? tp[0] * 60 + tp[1] : 0;
-          if (remaining > 0) {
-            uiDur = uiCur + remaining;
-            break;
+          // Repeat: 0=off, 1=one, 2=all
+          var rm = mk.repeatMode;
+          repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
+
+          // Metadata
+          if (ni) {
+            finalTitle = ni.title || (ni.attributes && ni.attributes.name) || '';
+            finalArtist = ni.artistName || (ni.attributes && ni.attributes.artistName) || '';
+            if (ni.artwork && MK.formatArtworkURL) {
+              try { art = MK.formatArtworkURL(ni.artwork, 600, 600); } catch(e) {}
+            }
           }
         }
       }
+    } catch(e) {
+      // wrappedJSObject not available (Chrome) or MusicKit not loaded yet
     }
 
-    // ─── Shuffle / Repeat detection ───
-    // Use deepQuery to penetrate shadow DOMs for Apple Music's custom elements
-    var deepQuery = function(selector, root) {
-      var results = [];
-      var traverse = function(node) {
-        var els = node.querySelectorAll(selector);
-        for (var i = 0; i < els.length; i++) results.push(els[i]);
-        var all = node.querySelectorAll('*');
-        for (var j = 0; j < all.length; j++) {
-          if (all[j].shadowRoot) traverse(all[j].shadowRoot);
+    // ─── FALLBACK: Audio element + mediaSession (Chrome/Vivaldi) ───
+    if (!mkFound) {
+      var realEl = document.getElementById('apple-music-player');
+      if (!realEl) {
+        var els = document.querySelectorAll('audio, video');
+        for (var k = 0; k < els.length; k++) {
+          if (!els[k].paused && els[k].currentTime > 0) { realEl = els[k]; break; }
         }
-      };
-      traverse(root || document);
-      return results;
-    };
+        if (!realEl && els.length > 0) realEl = els[0];
+      }
 
-    // Shuffle detection
-    var shufBtns = deepQuery('button[aria-label*="huffle"]');
-    for (var si = 0; si < shufBtns.length; si++) {
-      var sEl = shufBtns[si];
-      var sLabel = (sEl.getAttribute('aria-label') || '').toLowerCase();
-      // Apple Music: label describes NEXT action.
-      // If label says "turn off shuffle" or "disable shuffle", shuffle is currently ON
-      if (sLabel.includes('off') || sLabel.includes('disable') || sLabel.includes('deactivate')) {
-        shuffleOn = true; break;
+      if (realEl) {
+        uiCur = realEl.currentTime || 0;
+        isPlaying = !realEl.paused;
+        if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
       }
-      // Also check aria-pressed
-      if (sEl.getAttribute('aria-pressed') === 'true' || sEl.getAttribute('aria-checked') === 'true') {
-        shuffleOn = true; break;
-      }
-    }
 
-    // Repeat detection
-    var repBtns = deepQuery('button[aria-label*="epeat"]');
-    for (var ri = 0; ri < repBtns.length; ri++) {
-      var rEl = repBtns[ri];
-      var rLabel = (rEl.getAttribute('aria-label') || '').toLowerCase();
-      // Apple Music cycle: off → all → one → off
-      // Label describes NEXT action:
-      // "Repeat All" → currently OFF (clicking will turn on repeat-all)
-      // "Repeat One" → currently ALL (clicking will switch to repeat-one)  
-      // "Repeat Off" → currently ONE (clicking will turn off repeat)
-      if (rLabel.includes('repeat off') || rLabel.includes('disable repeat') || rLabel.includes('turn off repeat')) {
-        repeatMode = 'one'; break;
-      } else if (rLabel.includes('repeat one')) {
-        repeatMode = 'all'; break;
-      } else if (rLabel.includes('repeat all')) {
-        repeatMode = 'off'; break;
+      // mediaSession for metadata and better duration
+      if (ms) {
+        if (typeof ms.getPositionState === 'function') {
+          try {
+            var ps = ms.getPositionState();
+            if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+            if (ps && ps.position > 0 && (!uiCur || uiCur === 0)) uiCur = ps.position;
+          } catch(e) {}
+        }
+        if (ms.metadata) {
+          finalTitle = ms.metadata.title || '';
+          finalArtist = ms.metadata.artist || '';
+          if (ms.metadata.artwork && ms.metadata.artwork.length) {
+            art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+          }
+        }
+        if (!isPlaying) isPlaying = ms.playbackState === 'playing';
       }
-      // Also check aria-pressed for simpler detection
-      if (rEl.getAttribute('aria-pressed') === 'true') {
-        // Button is active, but we don't know which mode — check SVG for "1"
-        var svgText = rEl.innerHTML || '';
-        if (svgText.includes('>1<') || svgText.includes('repeat-one') || svgText.includes('repeatOne')) {
-          repeatMode = 'one';
+
+      // Audio element title: "Song Name - Album - Artist"
+      if (!finalTitle && realEl && realEl.title) {
+        var tParts = realEl.title.split(' - ');
+        if (tParts.length >= 1) finalTitle = tParts[0].trim();
+        if (tParts.length >= 3 && !finalArtist) finalArtist = tParts[tParts.length - 1].trim();
+      }
+
+      // Page title fallback
+      if (!finalTitle && document.title) {
+        var parts = document.title.split(' - ');
+        if (parts.length >= 2) {
+          finalTitle = parts[0].trim();
+          if (!finalArtist) finalArtist = parts[1].trim();
         } else {
-          repeatMode = 'all';
+          finalTitle = document.title.replace(' - Apple Music', '').trim();
         }
-        break;
+      }
+
+      // TreeWalker: scan for "-M:SS" remaining time to compute real duration
+      if (uiCur > 0) {
+        var timeRx = /^-\d{1,2}:\d{2}$/;
+        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        var tNode;
+        while ((tNode = walker.nextNode())) {
+          var txt = tNode.textContent.trim();
+          if (timeRx.test(txt)) {
+            var cleaned = txt.replace(/^-/, '');
+            var tp = cleaned.split(':').map(Number);
+            var remaining = tp.length === 2 ? tp[0] * 60 + tp[1] : 0;
+            if (remaining > 0) {
+              uiDur = uiCur + remaining;
+              break;
+            }
+          }
+        }
       }
     }
 
@@ -613,10 +592,6 @@ VDI.Core = (function() {
       timestamp: Date.now()
     };
   }
-
-
-
-  // ─────────────────────────────────────────────────────────────
   // Spotify Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getSpotifyMediaState() {
@@ -958,9 +933,12 @@ VDI.Core = (function() {
     try {
       // 100% ISOLATION: Intercept Apple Music actions
       if (window.location.hostname.includes('music.apple.com')) {
-        // Vivaldi Web Panel executes this in the MAIN world natively, so MusicKit is available!
-        if (window.MusicKit && window.MusicKit.getInstance()) {
-          var m = window.MusicKit.getInstance();
+        // Vivaldi runs in MAIN world (window.MusicKit available).
+        // Firefox/Zen: use wrappedJSObject to access page's MusicKit from ISOLATED world.
+        var pageWin = window.wrappedJSObject || window;
+        var MK = pageWin.MusicKit;
+        if (MK && typeof MK.getInstance === 'function' && MK.getInstance()) {
+          var m = MK.getInstance();
           if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); return; }
           else if (act === 'prev') { m.skipToPreviousItem(); return; }
           else if (act === 'next') { m.skipToNextItem(); return; }

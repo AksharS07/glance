@@ -7,8 +7,6 @@
   <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it from Microsoft Edge"></a>
 </p>
 
-*(Currently V1.3, V1.5 pending review)*
-
 <p align="center">
   <img src="final_large_promo.jpg" alt="Dynamic Island Promo Logo" width="100%">
 </p>
