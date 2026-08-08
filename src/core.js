@@ -505,41 +505,49 @@ VDI.Core = (function() {
     }
 
     // Apple Music pads its HLS video durations, and ms.getPositionState is notoriously buggy on Apple Music Web.
-    // Scrape ALL visible time elements and figure out which is position vs duration/remaining.
+    // Strategy: find ALL small text elements on page whose content matches time patterns (M:SS or -M:SS)
+    // then use position + remaining to compute the true duration.
     var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
-    var timeEls = deepQuery('[data-testid="playback-duration"], [data-testid="playback-time"], .lcd-time, [class*="time"], [class*="duration"], [class*="current"], [class*="remaining"], time', playerBar);
+    var allEls = deepQuery('*', playerBar);
     var scrapedTimes = [];
-    for (var ti = 0; ti < timeEls.length; ti++) {
-      if (timeEls[ti].getBoundingClientRect().width > 0) {
-        var rawText = (timeEls[ti].textContent || '').trim();
-        if (rawText && rawText.match(/\d/)) {
-          var isNeg = rawText.charAt(0) === '-';
-          var tVal = parseTime(rawText);
-          if (tVal > 0) scrapedTimes.push({ val: tVal, neg: isNeg });
+    var timeRegex = /^-?\d{1,2}:\d{2}$/;
+    for (var ti = 0; ti < allEls.length; ti++) {
+      var el = allEls[ti];
+      // Only leaf elements (no children with text) to avoid counting parent containers
+      if (el.children && el.children.length > 2) continue;
+      var rect = el.getBoundingClientRect();
+      if (rect.width <= 0 || rect.height <= 0) continue;
+      var rawText = (el.textContent || '').trim();
+      if (timeRegex.test(rawText)) {
+        var isNeg = rawText.charAt(0) === '-';
+        var tVal = parseTime(rawText);
+        if (tVal > 0) {
+          // Deduplicate: don't add if we already have a time with same value and sign
+          var isDupe = false;
+          for (var di = 0; di < scrapedTimes.length; di++) {
+            if (scrapedTimes[di].val === tVal && scrapedTimes[di].neg === isNeg) { isDupe = true; break; }
+          }
+          if (!isDupe) scrapedTimes.push({ val: tVal, neg: isNeg });
         }
       }
     }
-    // If we found time elements, determine position and duration
+    // Determine position and duration from scraped times
     if (scrapedTimes.length >= 2) {
-      // Find one that's negative (remaining) and one that's positive (position)
       var negTime = null, posTime = null;
       for (var st = 0; st < scrapedTimes.length; st++) {
         if (scrapedTimes[st].neg && !negTime) negTime = scrapedTimes[st];
         else if (!scrapedTimes[st].neg && !posTime) posTime = scrapedTimes[st];
       }
       if (posTime && negTime) {
-        // position + remaining = total duration
         uiCur = posTime.val;
         uiDur = posTime.val + negTime.val;
       } else {
-        // Both positive: smaller = position, larger = duration
         scrapedTimes.sort(function(a, b) { return a.val - b.val; });
         uiCur = scrapedTimes[0].val;
         uiDur = scrapedTimes[scrapedTimes.length - 1].val;
       }
     } else if (scrapedTimes.length === 1) {
       if (scrapedTimes[0].neg) {
-        // Only remaining time visible
         uiDur = (realEl && realEl.currentTime > 0 ? realEl.currentTime : 0) + scrapedTimes[0].val;
         uiCur = realEl && realEl.currentTime > 0 ? realEl.currentTime : 0;
       } else {
@@ -549,7 +557,7 @@ VDI.Core = (function() {
     if ((!uiCur || uiCur === 0) && realEl && realEl.currentTime > 0) {
       uiCur = realEl.currentTime;
     }
-
+    // ONLY use realEl.duration if we found absolutely nothing from the UI
     if ((!uiDur || uiDur === 0) && realEl && isFinite(realEl.duration)) {
       uiDur = realEl.duration;
     }
@@ -1016,7 +1024,8 @@ VDI.Core = (function() {
           else if (act === 'next') { m.skipToNextItem(); return; }
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
           else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
-          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 1 : (m.repeatMode === 1 ? 2 : 0); return; }
+          // Apple Music native cycle: off(0) → all(2) → one(1) → off(0)
+          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0); return; }
         }
 
         if (act === 'toggle') {
