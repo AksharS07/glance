@@ -164,7 +164,7 @@ VDI.Styles = (function() {
         'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
-    rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08);color:#fff;transform:scale(1.1);}');
+    rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08);color:var(--vdi-accent, #fff);transform:scale(1.1);}');
     rules.push('.vdi-btn:active{transform:scale(.92);}');
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
     rules.push('#vdi-shuffle, #vdi-repeat{position:relative;}');
@@ -202,7 +202,7 @@ VDI.Styles = (function() {
         'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
-    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12);color:#fff;transform:scale(1.08);}');
+    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12);color:var(--vdi-accent, #fff);transform:scale(1.08);}');
     rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ');}');
     rules.push('.vdi-icon-btn.loading{pointer-events: none;}');
     rules.push(
@@ -228,7 +228,7 @@ VDI.Styles = (function() {
         'box-shadow: 0 4px 12px rgba(0,0,0,0.15);',
       '}'
     );
-    rules.push('#vdi-play:hover{background:rgba(255,255,255,0.22); transform:scale(1.05);}');
+    rules.push('#vdi-play:hover{background:rgba(255,255,255,0.22); color:var(--vdi-accent, #fff); transform:scale(1.05);}');
     rules.push('#vdi-play svg{width:20px;height:20px;}');
 
     // ═══════════════════════════════════════════════════════════

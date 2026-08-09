@@ -150,10 +150,9 @@ VDI.Core = (function() {
             else if(hDiff<45) { cMult = 0.5 + (hDiff-25)/20 * 2.0; } // 0.5 to 2.5
             else { cMult = 2.5 + Math.pow((hDiff-45)/135, 1.5) * 10.0; } // 2.5 to 12.5
           }
-          // MASSIVE BREAKTHROUGH: Use Chroma (avgC) instead of HSL Saturation!
-          // HSL says pastel blue (Spider-Man reflection) is 100% saturated. Chroma correctly identifies it as weak.
-          // Exponential Chroma: e^(avgC * 10) gives pure colors a 22000x multiplier over weak colors!
-          var score = Math.pow(bkt.n, 0.25) * Math.exp(avgC * 10) * cMult;
+          // Re-balanced math: Math.sqrt(n) * e^(Chroma * 6)
+          // This ensures Spider-Man's red ring still beats the pale blue, but tiny pure logos (Reliance) don't defeat massive golden backgrounds (Osthe).
+          var score = Math.sqrt(bkt.n) * Math.exp(avgC * 6) * cMult;
           if(score>accScore){accScore=score;accBest=bkt;}
         }
 
