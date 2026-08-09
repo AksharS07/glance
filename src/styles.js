@@ -154,18 +154,17 @@ VDI.Styles = (function() {
     rules.push('#vdi-ctrl-main{display:flex;align-items:center;gap:6px;}');
     rules.push('#vdi-ctrl-extra{display:flex;align-items:center;gap:3px;}');
 
-    // Standard button (tinted with accent color for premium feel)
+    // Standard button
     rules.push(
       '.vdi-btn{',
         'width:32px;height:32px;border-radius:50%;border:none;cursor:pointer;',
         'display:flex;align-items:center;justify-content:center;',
         'background:transparent;',
-        'color:var(--vdi-accent, rgba(255,255,255,.75));',
-        'filter:saturate(0.15) brightness(1.2) opacity(0.8);',
-        'transition:filter .2s,transform .15s,background .2s;',
+        'color:rgba(255,255,255,.75);',
+        'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
-    rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08);filter:saturate(0.5) brightness(1.4) opacity(1);transform:scale(1.1);}');
+    rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08);color:#fff;transform:scale(1.1);}');
     rules.push('.vdi-btn:active{transform:scale(.92);}');
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
     rules.push('#vdi-shuffle, #vdi-repeat{position:relative;}');
@@ -199,12 +198,11 @@ VDI.Styles = (function() {
         'width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;',
         'display:flex;align-items:center;justify-content:center;',
         'background:rgba(255,255,255,.04);',
-        'color:var(--vdi-accent, rgba(255,255,255,.6));',
-        'filter:saturate(0.2) brightness(1.2);',
-        'transition:filter .2s,transform .15s,background .2s;',
+        'color:rgba(255,255,255,.55);',
+        'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
-    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.1);filter:saturate(0.6) brightness(1.5) opacity(1);transform:scale(1.08);}');
+    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12);color:#fff;transform:scale(1.08);}');
     rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ');}');
     rules.push('.vdi-icon-btn.loading{pointer-events: none;}');
     rules.push(
@@ -223,13 +221,12 @@ VDI.Styles = (function() {
       '#vdi-play{',
         'width:40px;height:40px;border-radius:50%;',
         'background:transparent;',
-        'color:var(--vdi-accent, rgba(255,255,255,.9));',
+        'color:rgba(255,255,255,.9);',
         'display:flex;align-items:center;justify-content:center;border:none;',
-        'cursor:pointer;transition:transform .15s, background .2s, filter .2s;',
-        'filter: saturate(0.3) brightness(1.3) !important; opacity: 1 !important;', // Slightly more vibrant than secondary buttons
+        'cursor:pointer;transition:transform .15s, background .2s, color .2s;',
       '}'
     );
-    rules.push('#vdi-play:hover{background:rgba(255,255,255,.08); transform:scale(1.08); filter:saturate(0.6) brightness(1.5) !important;}');
+    rules.push('#vdi-play:hover{background:rgba(255,255,255,.08); transform:scale(1.08); color:#fff;}');
     rules.push('#vdi-play svg{width:22px;height:22px;}');
 
     // ═══════════════════════════════════════════════════════════
