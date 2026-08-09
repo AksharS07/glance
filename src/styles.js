@@ -166,12 +166,16 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn:hover{background:rgba(255,255,255,.16);color:#fff;transform:scale(1.1);}');
     rules.push('.vdi-btn:active{transform:scale(.92);}');
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
-    rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.4);}');
+    rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.35);position:relative;}');
     rules.push('#vdi-shuffle:hover, #vdi-repeat:hover{background:rgba(255,255,255,.08);color:rgba(255,255,255,.9);}');
-    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color:var(--vdi-accent,' + accent + ') !important; filter: drop-shadow(0 0 5px var(--vdi-accent,' + accent + '));}');
+    // Active state: accent color + glow + subtle pill background
+    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color:var(--vdi-accent,' + accent + ') !important; filter: drop-shadow(0 0 6px var(--vdi-accent,' + accent + ')); background:rgba(255,255,255,.07); border-radius:6px;}');
+    // Dot indicator below active buttons (like native Spotify/Apple Music)
+    rules.push('#vdi-shuffle.vdi-active::after, #vdi-repeat.vdi-active::after{content:""; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--vdi-accent,' + accent + '); opacity:0.9;}');
     rules.push('#vdi-repeat.vdi-repeat-one{filter: drop-shadow(0 0 8px var(--vdi-accent,' + accent + ')) drop-shadow(0 0 12px var(--vdi-accent,' + accent + '));}');
     rules.push('#vdi-repeat.vdi-repeat-one text{fill:var(--vdi-accent,' + accent + ');font-weight:900;}');
-    rules.push('#vdi-shuffle.vdi-smart-shuffle{filter: drop-shadow(0 0 8px var(--vdi-accent,' + accent + ')) drop-shadow(0 0 14px var(--vdi-accent,' + accent + '));}');
+    // Smart shuffle: brighter/golden glow to distinguish from regular shuffle
+    rules.push('#vdi-shuffle.vdi-smart-shuffle{filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 14px var(--vdi-accent,' + accent + ')) !important; color:#fff !important;}');
     
     rules.push('#vdi-repeat{position:relative;}');
 
