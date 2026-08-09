@@ -226,9 +226,10 @@ VDI.Styles = (function() {
         'color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.45);',
         'display:flex;align-items:center;justify-content:center;border:none;',
         'cursor:pointer;transition:background .7s ease, transform .15s;',
+        'filter: none !important; opacity: 1 !important;', // Override .vdi-btn
       '}'
     );
-    rules.push('#vdi-play:hover{transform:scale(1.08);filter:brightness(1.1);}');
+    rules.push('#vdi-play:hover{transform:scale(1.08);filter:brightness(1.15) !important;}');
     rules.push('#vdi-play svg{width:18px;height:18px;}');
 
     // ═══════════════════════════════════════════════════════════
