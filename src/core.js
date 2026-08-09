@@ -120,24 +120,25 @@ VDI.Core = (function() {
           var r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255;
           var mx=Math.max(r,g,b),mn=Math.min(r,g,b);
           var l=(mx+mn)/2,delta=mx-mn;
-          if(l<0.07||l>0.93||delta<0.12) continue;
+          // Looser thresholds so thin, dark-anti-aliased lines (like Spider-Man's red ring) aren't discarded
+          if(l<0.03||l>0.97||delta<0.08) continue;
           var sat=delta/(1-Math.abs(2*l-1));
-          if(sat<0.35) continue;
+          if(sat<0.25) continue;
           var h=0;
           if(mx===r) h=((g-b)/delta)%6;
           else if(mx===g) h=(b-r)/delta+2;
           else h=(r-g)/delta+4;
           h=Math.round(h*60); if(h<0)h+=360;
           var bIdx=Math.floor(h/10)%36;
-          acc[bIdx].n++; acc[bIdx].ss+=sat;
-          if(sat>acc[bIdx].maxS){acc[bIdx].maxS=sat;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
+          acc[bIdx].n++; acc[bIdx].ss+=delta; // Accumulate CHROMA (delta), not HSL saturation
+          if(delta>acc[bIdx].maxS){acc[bIdx].maxS=delta;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
         }
 
         // Score with hyper-aggressive contrast multiplier against dominant hue
         var accBest=null,accScore=-1;
         for(var j=0;j<36;j++){
           var bkt=acc[j]; if(!bkt.n) continue;
-          var avgS=bkt.ss/bkt.n;
+          var avgC=bkt.ss/bkt.n; // Average Chroma
           var bHue=j*10+5; // center of this bucket
           var cMult=1.0;
           if(domHue>=0){
@@ -149,10 +150,10 @@ VDI.Core = (function() {
             else if(hDiff<45) { cMult = 0.5 + (hDiff-25)/20 * 2.0; } // 0.5 to 2.5
             else { cMult = 2.5 + Math.pow((hDiff-45)/135, 1.5) * 10.0; } // 2.5 to 12.5
           }
-          // Use fourth-root of n (n^0.25) to severely diminish the advantage of huge areas.
-          // Combine with exponential saturation (e^(avgS*8)) so purity > size.
-          // This guarantees the tiny pure red ring beats the massive pale blue reflections.
-          var score = Math.pow(bkt.n, 0.25) * Math.exp(avgS * 8) * cMult;
+          // MASSIVE BREAKTHROUGH: Use Chroma (avgC) instead of HSL Saturation!
+          // HSL says pastel blue (Spider-Man reflection) is 100% saturated. Chroma correctly identifies it as weak.
+          // Exponential Chroma: e^(avgC * 10) gives pure colors a 22000x multiplier over weak colors!
+          var score = Math.pow(bkt.n, 0.25) * Math.exp(avgC * 10) * cMult;
           if(score>accScore){accScore=score;accBest=bkt;}
         }
 
