@@ -218,19 +218,19 @@ VDI.Styles = (function() {
     rules.push('@keyframes vdi-bounce{ 0%{transform:translateY(0);} 100%{transform:translateY(-3px);} }');
     rules.push('.vdi-icon-btn svg{width:15px;height:15px;pointer-events:none;}');
 
-    // Play button (special styling)
+    // Play button (special styling - transparent and cohesive with other buttons but larger/more prominent)
     rules.push(
       '#vdi-play{',
         'width:40px;height:40px;border-radius:50%;',
-        'background:var(--vdi-grad,' + gradient + ');',
-        'color:#fff;box-shadow:0 4px 14px rgba(0,0,0,.45);',
+        'background:transparent;',
+        'color:var(--vdi-accent, rgba(255,255,255,.9));',
         'display:flex;align-items:center;justify-content:center;border:none;',
-        'cursor:pointer;transition:background .7s ease, transform .15s;',
-        'filter: none !important; opacity: 1 !important;', // Override .vdi-btn
+        'cursor:pointer;transition:transform .15s, background .2s, filter .2s;',
+        'filter: saturate(0.3) brightness(1.3) !important; opacity: 1 !important;', // Slightly more vibrant than secondary buttons
       '}'
     );
-    rules.push('#vdi-play:hover{transform:scale(1.08);filter:brightness(1.15) !important;}');
-    rules.push('#vdi-play svg{width:18px;height:18px;}');
+    rules.push('#vdi-play:hover{background:rgba(255,255,255,.08); transform:scale(1.08); filter:saturate(0.6) brightness(1.5) !important;}');
+    rules.push('#vdi-play svg{width:22px;height:22px;}');
 
     // ═══════════════════════════════════════════════════════════
     // Lyrics Panel
