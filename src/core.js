@@ -134,26 +134,21 @@ VDI.Core = (function() {
           if(delta>acc[bIdx].maxS){acc[bIdx].maxS=delta;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
         }
 
-        // Score with hyper-aggressive contrast multiplier against dominant hue
+        // Dynamic Island Color Extraction
+        // We do NOT use a contrast multiplier (cMult) because the Island background is always dark.
+        // Forcing a contrasting color causes tiny logos (like Blue text in Jawan) to artificially win over the main theme.
         var accBest=null,accScore=-1;
         for(var j=0;j<36;j++){
-          var bkt=acc[j]; if(!bkt.n) continue;
+          var bkt=acc[j]; 
+          // Noise filter: Must be at least 25 pixels
+          if(bkt.n < 25) continue;
+          
           var avgC=bkt.ss/bkt.n; // Average Chroma
-          var bHue=j*10+5; // center of this bucket
-          var cMult=1.0;
-          if(domHue>=0){
-            var hDiff=Math.abs(bHue-domHue);
-            if(hDiff>180) hDiff=360-hDiff; // 0-180
-            // Hyper-penalize the dominant hue (99% reduction) so it doesn't double-dip as accent.
-            // Aggressively boost contrasting hues (up to 12x) so small logos (Monica gold) win.
-            if(hDiff<25) { cMult = 0.01; }
-            else if(hDiff<45) { cMult = 0.5 + (hDiff-25)/20 * 2.0; } // 0.5 to 2.5
-            else { cMult = 2.5 + Math.pow((hDiff-45)/135, 1.5) * 10.0; } // 2.5 to 12.5
-          }
-          // The Golden Ratio for color extraction: Math.sqrt(n) * Math.pow(Chroma, 6)
-          // 1. Math.pow(Chroma, 6) strongly punishes pale colors, letting Spider-Man's pure red ring beat massive blue reflections.
-          // 2. Math.sqrt(n) gives just enough weight to area so that microscopic pure logos (Osthe's blue logo) don't defeat huge vibrant backgrounds.
-          var score = Math.sqrt(bkt.n) * Math.pow(avgC, 6) * cMult;
+          
+          // The pure Golden Ratio: Area * Purity
+          // Allows pure tiny elements (Spider-Man red ring) to beat pale reflections,
+          // but ensures massive vibrant themes (Jawan Red) easily beat tiny pure text.
+          var score = Math.sqrt(bkt.n) * Math.pow(avgC, 4);
           if(score>accScore){accScore=score;accBest=bkt;}
         }
 

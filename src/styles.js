@@ -102,15 +102,9 @@ VDI.Styles = (function() {
     );
     rules.push('#vdi.vdi-expanded #vdi-exp{opacity:1;transform:translate(-50%,-50%) scale(1);pointer-events:all;}');
 
-    rules.push(
-      '#vdi-teleport-btn{',
-        'position:absolute;top:14px;right:46px;width:20px;height:20px;z-index:50;',
-        'background:none;border:none;border-radius:50%;padding:3px;cursor:pointer;',
-        'color:rgba(255,255,255,0.45);opacity:1;transition:color 0.2s,transform 0.15s;display:flex;flex-shrink:0;',
-      '}',
-      '#vdi-teleport-btn:hover{color:rgba(255,255,255,0.9);transform:scale(1.15);}',
-      '#vdi-teleport-btn svg{width:100%;height:100%;pointer-events:none;}'
-    );
+    rules.push('#vdi-teleport-btn{position:absolute;top:10px;right:40px;width:24px;height:24px;background:rgba(255,255,255,.08);border:none;border-radius:50%;display:flex;align-items:center;justify-content:center;cursor:pointer;z-index:10;color:rgba(255,255,255,.7);}');
+    rules.push('#vdi-teleport-btn svg{width:12px;height:12px;}');
+    rules.push('#vdi-teleport-btn:hover{background:rgba(255,255,255,.15);color:var(--vdi-accent, #fff);}');
 
     // Album Art
     rules.push(
@@ -202,6 +196,8 @@ VDI.Styles = (function() {
         'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
+    rules.push('#vdi-settings-btn:hover{background:rgba(255,255,255,.15);}');
+    rules.push('#vdi-settings-btn:hover svg{fill:var(--vdi-accent, #fff);}');
     rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12);color:var(--vdi-accent, #fff);transform:scale(1.08);}');
     rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ');}');
     rules.push('.vdi-icon-btn.loading{pointer-events: none;}');
