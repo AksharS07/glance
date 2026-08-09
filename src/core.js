@@ -133,20 +133,24 @@ VDI.Core = (function() {
           if(sat>acc[bIdx].maxS){acc[bIdx].maxS=sat;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
         }
 
-        // Score with contrast multiplier against dominant hue
+        // Score with hyper-aggressive contrast multiplier against dominant hue
         var accBest=null,accScore=-1;
         for(var j=0;j<36;j++){
           var bkt=acc[j]; if(!bkt.n) continue;
           var avgS=bkt.ss/bkt.n;
           var bHue=j*10+5; // center of this bucket
-          // Contrast multiplier: 0.05 if same as dominant, up to 4× if opposite
           var cMult=1.0;
           if(domHue>=0){
             var hDiff=Math.abs(bHue-domHue);
             if(hDiff>180) hDiff=360-hDiff; // 0-180
-            cMult = hDiff<25 ? 0.05 : (1.0+Math.pow(hDiff/90,1.5));
+            // Hyper-penalize the dominant hue (99% reduction) so it doesn't double-dip as accent.
+            // Aggressively boost contrasting hues (up to 12x) so small logos (Monica gold) win.
+            if(hDiff<25) { cMult = 0.01; }
+            else if(hDiff<45) { cMult = 0.5 + (hDiff-25)/20 * 2.0; } // 0.5 to 2.5
+            else { cMult = 2.5 + Math.pow((hDiff-45)/135, 1.5) * 10.0; } // 2.5 to 12.5
           }
-          var score=bkt.n*avgS*avgS*cMult;
+          // n * sat^4 ensures highly saturated small areas beat large pale areas (Spider-Man red vs blue glare)
+          var score=bkt.n * Math.pow(avgS, 4) * cMult;
           if(score>accScore){accScore=score;accBest=bkt;}
         }
 
@@ -723,34 +727,41 @@ VDI.Core = (function() {
     }
 
     // Spotify shuffle: 3 modes — off / on / smart
-    // aria-label encodes the NEXT action (not current state):
-    //   "Enable Shuffle..."       → currently OFF
-    //   "Enable Smart Shuffle..."  → currently ON (regular shuffle)  [playlist context]
-    //   "Disable Shuffle..."       → currently ON (regular shuffle)  [album/single context]
-    //   "Disable Smart Shuffle..." → currently SMART shuffle ON
-    var shufBtn = document.querySelector('button[aria-label*="shuffle" i]') ||
-                  document.querySelector('button[aria-label*="Shuffle" i]');
+    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
     var shuffleOn = false;
     var isSmartShuffle = false;
     if (shufBtn) {
-      var shufLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
-      shuffleOn = shufLabel.includes('disable') || shufLabel.includes('enable smart');
-      isSmartShuffle = shufLabel.includes('disable') && shufLabel.includes('smart');
+      var sChecked = shufBtn.getAttribute('aria-checked');
+      var sLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
+      
+      if (sChecked === 'true' || sChecked === 'mixed') {
+        shuffleOn = true;
+        isSmartShuffle = (sChecked === 'mixed') || sLabel.includes('smart');
+      } else if (!sChecked) {
+        // Fallback to label parsing if aria-checked is missing
+        shuffleOn = sLabel.includes('disable') || sLabel.includes('enable smart');
+        isSmartShuffle = sLabel.includes('disable') && sLabel.includes('smart');
+      }
     }
+    
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
     if (repBtn) {
       var ariaChecked = repBtn.getAttribute('aria-checked');
+      var rLabel = (repBtn.getAttribute('aria-label') || '').toLowerCase();
+      
       if (ariaChecked === 'true' || ariaChecked === 'mixed') {
-        // IMPORTANT: Spotify aria-label describes the NEXT action, not current state!
-        // "Enable repeat one" means currently in repeat-all mode
-        // "Disable repeat" means currently in repeat-one mode
-        var rLabel = (repBtn.getAttribute('aria-label') || '').toLowerCase();
-        if (rLabel.includes('disable') || rLabel.includes('turn off')) {
+        if (ariaChecked === 'mixed' || rLabel.includes('disable') || rLabel.includes('turn off')) {
           repeatMode = 'one';
         } else {
           repeatMode = 'all';
         }
+      } else if (!ariaChecked) {
+         if (rLabel.includes('disable') || rLabel.includes('turn off')) {
+            repeatMode = 'one';
+         } else if (rLabel.includes('enable repeat one')) {
+            repeatMode = 'all'; // Spotify next-action logic
+         }
       }
     }
 
