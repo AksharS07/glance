@@ -169,8 +169,8 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
     rules.push('#vdi-shuffle, #vdi-repeat{position:relative;}');
 
-    // ── Base active: fully vibrant (removes the muted filter) ──
-    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{filter:saturate(1) brightness(1) drop-shadow(0 0 4px var(--vdi-accent,' + accent + ')) !important;}');
+    // ── Base active: fully vibrant (inherits accent color) ──
+    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color: var(--vdi-accent, ' + accent + ') !important; filter: drop-shadow(0 0 6px var(--vdi-accent,' + accent + ')) !important;}');
 
     // ── Spotify: dot below active button ──
     rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-active::after, .vdi-platform-spotify #vdi-repeat.vdi-active::after{content:""; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--vdi-accent,' + accent + '); opacity:1;}');
@@ -186,7 +186,7 @@ VDI.Styles = (function() {
     rules.push('#vdi-repeat.vdi-repeat-one text{fill:var(--vdi-accent,' + accent + ');font-weight:900;}');
 
     // ── Smart shuffle (Spotify only): white icon + double glow to distinguish from regular ──
-    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle{color:#fff !important; filter: saturate(0) brightness(1.2) drop-shadow(0 0 8px #fff) drop-shadow(0 0 12px var(--vdi-accent,' + accent + ')) !important;}');
+    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle{color:#fff !important; filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 12px var(--vdi-accent,' + accent + ')) !important;}');
     rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle::after{background:#fff !important;}');
 
     
