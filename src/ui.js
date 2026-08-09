@@ -196,6 +196,9 @@ VDI.UI = (function() {
       var glow = c ? c.glow : 'rgba(99,102,241,.2)';
 
       island.style.setProperty('--vdi-accent', accent);
+      // Apply platform class for platform-specific indicator styling
+      island.className = island.className.replace(/\bvdi-platform-\S+/g, '').trim();
+      if (state.platform) island.classList.add('vdi-platform-' + state.platform);
       island.style.setProperty('--vdi-grad', grad);
       island.style.setProperty('--vdi-dark', dark);
       island.style.setProperty('--vdi-glow', glow);
@@ -1291,6 +1294,7 @@ VDI.UI = (function() {
       state.shuffleOn = newState.shuffleOn || false;
       state.smartShuffleOn = newState.smartShuffleOn || false;
       state.repeatMode = newState.repeatMode || 'off';
+      state.platform = newState.platform || 'other';
       
       // Use exact clock interpolation instead of dt accumulation
       if (!state.isSeeking) {

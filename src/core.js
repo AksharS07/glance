@@ -37,35 +37,31 @@ VDI.Core = (function() {
     img.crossOrigin = 'anonymous';
     img.onload = function() {
       try {
-        var W = 40, H = 40;
+        var W = 60, H = 60;
         var cv = document.createElement('canvas');
-        cv.width = W;
-        cv.height = H;
+        cv.width = W; cv.height = H;
         var cx = cv.getContext('2d');
         cx.drawImage(img, 0, 0, W, H);
         var d = cx.getImageData(0, 0, W, H).data;
 
-        // 36 buckets for hue ranges (10 degrees each)
-        var buckets = new Array(36);
+        // 36 hue buckets (10° each) — track count, saturation sum, and best pixel
+        var buckets = [];
         for (var i = 0; i < 36; i++) {
-          buckets[i] = { sumS: 0, maxS: 0, r: 0, g: 0, b: 0 };
+          buckets[i] = { count: 0, sumS: 0, maxS: 0, bestR: 0, bestG: 0, bestB: 0 };
         }
 
+        var totalPixels = 0;
         for (var i = 0; i < W * H * 4; i += 4) {
-          var r = d[i] / 255;
-          var g = d[i + 1] / 255;
-          var b = d[i + 2] / 255;
-          var mx = Math.max(r, g, b);
-          var mn = Math.min(r, g, b);
+          var r = d[i] / 255, g = d[i+1] / 255, b = d[i+2] / 255;
+          var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
           var l = (mx + mn) / 2;
           var delta = mx - mn;
 
-          // Skip very dark, very light, or grayscale pixels
-          if (l < 0.05 || l > 0.95 || delta < 0.02) continue;
-
+          // Skip near-black, near-white, and near-gray — only vivid pixels qualify
+          if (l < 0.08 || l > 0.92 || delta < 0.08) continue;
           var sat = delta / (1 - Math.abs(2 * l - 1));
+          if (sat < 0.25) continue; // pre-filter weak colors
 
-          // Calculate hue
           var h = 0;
           if (mx === r) h = ((g - b) / delta) % 6;
           else if (mx === g) h = (b - r) / delta + 2;
@@ -74,64 +70,58 @@ VDI.Core = (function() {
           if (h < 0) h += 360;
 
           var bIdx = Math.floor(h / 10) % 36;
-          var score = sat * (l > 0.5 ? (1 - l) * 2 : l * 2);
-          buckets[bIdx].sumS += score;
-
-          if (sat > buckets[bIdx].maxS) {
-            buckets[bIdx].maxS = sat;
-            buckets[bIdx].r = r;
-            buckets[bIdx].g = g;
-            buckets[bIdx].b = b;
+          var bkt = buckets[bIdx];
+          bkt.count++;
+          bkt.sumS += sat;
+          if (sat > bkt.maxS) {
+            bkt.maxS = sat;
+            bkt.bestR = r; bkt.bestG = g; bkt.bestB = b;
           }
+          totalPixels++;
         }
 
-        // Find the bucket with highest saturation score
-        var best = null;
-        var maxSum = -1;
+        if (totalPixels === 0) { cb(null); return; }
+
+        // Score = count × avgSat² — rewards both FREQUENCY and VIBRANCY
+        var best = null, bestScore = -1;
         for (var j = 0; j < 36; j++) {
-          if (buckets[j].sumS > maxSum) {
-            maxSum = buckets[j].sumS;
-            best = buckets[j];
-          }
+          var bkt = buckets[j];
+          if (bkt.count === 0) continue;
+          var avgSat = bkt.sumS / bkt.count;
+          var score = bkt.count * avgSat * avgSat;
+          if (score > bestScore) { bestScore = score; best = bkt; }
         }
 
-        if (!best || maxSum === 0) {
-          cb(null);
-          return;
-        }
+        if (!best) { cb(null); return; }
 
-        // Convert to HSL with boosted saturation
-        var mxA = Math.max(best.r, best.g, best.b);
-        var mnA = Math.min(best.r, best.g, best.b);
+        // Use most saturated pixel from winning bucket for precise hue
+        var br = best.bestR, bg = best.bestG, bb = best.bestB;
+        var mxA = Math.max(br, bg, bb), mnA = Math.min(br, bg, bb);
         var hA = 0, sA = 0, lA = (mxA + mnA) / 2;
 
         if (mxA !== mnA) {
           var dA = mxA - mnA;
           sA = lA > 0.5 ? dA / (2 - mxA - mnA) : dA / (mxA + mnA);
-          if (mxA === best.r) hA = (best.g - best.b) / dA + (best.g < best.b ? 6 : 0);
-          else if (mxA === best.g) hA = (best.b - best.r) / dA + 2;
-          else hA = (best.r - best.g) / dA + 4;
+          if (mxA === br) hA = (bg - bb) / dA + (bg < bb ? 6 : 0);
+          else if (mxA === bg) hA = (bb - br) / dA + 2;
+          else hA = (br - bg) / dA + 4;
           hA = Math.round(hA * 60);
+          if (hA < 0) hA += 360;
         }
 
-        // Boost saturation and constrain lightness
-        // Avoid making dull colors look "dirty" and avoid blowing out saturated colors
-        sA = sA < 0.05 ? 0 : Math.min(1, sA * 1.2 + 0.1);
-        lA = Math.max(0.35, Math.min(0.7, lA));
+        // Force-vivid output: always ≥70% saturation, bright usable lightness
+        sA = Math.max(0.70, Math.min(1.0, sA * 1.3));
+        lA = Math.max(0.45, Math.min(0.62, lA));
 
         cb({
           accent: 'hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%)',
-          gradient: 'linear-gradient(135deg, hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%), hsl(' + ((hA + 35) % 360) + ',' + Math.round(sA * 90) + '%,' + Math.round((lA - 0.15) * 100) + '%))',
-          dark: 'hsl(' + hA + ', ' + Math.round(sA * 40) + '%, 12%)',
-          glow: 'hsla(' + hA + ', ' + Math.round(sA * 100) + '%, ' + Math.round(lA * 100) + '%, 0.45)'
+          gradient: 'linear-gradient(135deg, hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%), hsl(' + ((hA + 35) % 360) + ',' + Math.round(sA * 85) + '%,' + Math.round((lA - 0.12) * 100) + '%))',
+          dark: 'hsl(' + hA + ', ' + Math.round(sA * 40) + '%, 10%)',
+          glow: 'hsla(' + hA + ', ' + Math.round(sA * 100) + '%, ' + Math.round(lA * 100) + '%, 0.5)'
         });
-      } catch (e) {
-        cb(null);
-      }
+      } catch(e) { cb(null); }
     };
-    img.onerror = function() {
-      cb(null);
-    };
+    img.onerror = function() { cb(null); };
     img.src = url;
   }
 
@@ -601,6 +591,7 @@ VDI.Core = (function() {
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
+      platform: 'apple',
       shuffleOn: shuffleOn,
       repeatMode: repeatMode,
       timestamp: Date.now()
@@ -712,6 +703,7 @@ VDI.Core = (function() {
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
+      platform: 'spotify',
       shuffleOn: shuffleOn,
       smartShuffleOn: isSmartShuffle,
       repeatMode: repeatMode,
@@ -880,6 +872,7 @@ VDI.Core = (function() {
         isFullscreen: !!document.fullscreenElement,
         isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
         isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
+        platform: isYTMusic ? 'ytmusic' : (location.hostname.includes('youtube.com') ? 'youtube' : 'other'),
         shuffleOn: shuffleOn,
         repeatMode: repeatMode,
         timestamp: Date.now()
