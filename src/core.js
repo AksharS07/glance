@@ -668,18 +668,19 @@ VDI.Core = (function() {
     }
 
     // Spotify shuffle: 3 modes — off / on / smart
-    // Spotify encodes state in aria-label ONLY: "Disable Shuffle..." = ON, "Enable Shuffle..." = OFF
-    // data-testid, aria-checked, aria-pressed are all null on Spotify's shuffle button
-    var shufBtn = document.querySelector('button[aria-label*="shuffle" i]');
-    var smartShufBtn = document.querySelector('button[aria-label*="smart shuffle" i]');
-    var isSmartShuffle = !!smartShufBtn;
-    if (!shufBtn) shufBtn = smartShufBtn;
+    // aria-label encodes the NEXT action (not current state):
+    //   "Enable Shuffle..."       → currently OFF
+    //   "Enable Smart Shuffle..."  → currently ON (regular shuffle)  [playlist context]
+    //   "Disable Shuffle..."       → currently ON (regular shuffle)  [album/single context]
+    //   "Disable Smart Shuffle..." → currently SMART shuffle ON
+    var shufBtn = document.querySelector('button[aria-label*="shuffle" i]') ||
+                  document.querySelector('button[aria-label*="Shuffle" i]');
     var shuffleOn = false;
+    var isSmartShuffle = false;
     if (shufBtn) {
       var shufLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
-      // "Disable Shuffle" = shuffle is currently ON (clicking will disable it)
-      // "Enable Shuffle" or plain "Shuffle" = shuffle is currently OFF
-      shuffleOn = shufLabel.includes('disable') || shufLabel.includes('turn off');
+      shuffleOn = shufLabel.includes('disable') || shufLabel.includes('enable smart');
+      isSmartShuffle = shufLabel.includes('disable') && shufLabel.includes('smart');
     }
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
