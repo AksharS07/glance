@@ -654,19 +654,24 @@ VDI.Core = (function() {
     }
 
     // Spotify shuffle: 3 modes — off / on / smart
-    // Smart shuffle: testid changes to 'control-button-smart-shuffle' OR the button has a sparkle icon indicator
-    var shufBtn = document.querySelector('[data-testid="control-button-smart-shuffle"]') ||
+    // Try smart shuffle testid first, then regular shuffle
+    var smartShufBtn = document.querySelector('[data-testid="control-button-smart-shuffle"]');
+    var shufBtn = smartShufBtn ||
                   document.querySelector('[data-testid="control-button-shuffle"]') ||
                   document.querySelector('button[aria-label*="shuffle" i]');
-    // Smart shuffle shows a sparkle/star badge on the shuffle button
-    var isSmartShuffle = !!(document.querySelector('[data-testid="control-button-smart-shuffle"]') ||
-      (shufBtn && shufBtn.querySelector('[aria-label*="smart" i], [data-testid*="smart"]')));
-    var shuffleOn = shufBtn ? (
-      shufBtn.getAttribute('aria-checked') === 'true' ||
-      shufBtn.getAttribute('aria-checked') === 'mixed' ||
-      shufBtn.getAttribute('aria-pressed') === 'true' ||
-      shufBtn.getAttribute('aria-pressed') === 'mixed'
-    ) : false;
+    var isSmartShuffle = !!smartShufBtn;
+    // Spotify uses aria-checked on shuffle button (not aria-pressed)
+    var shuffleOn = false;
+    if (shufBtn) {
+      var ac = shufBtn.getAttribute('aria-checked');
+      var ap = shufBtn.getAttribute('aria-pressed');
+      shuffleOn = (ac === 'true' || ac === 'mixed' || ap === 'true' || ap === 'mixed');
+      // Also check for active class as fallback
+      if (!shuffleOn) {
+        var btnClass = shufBtn.className || '';
+        shuffleOn = btnClass.includes('active') || btnClass.includes('enabled');
+      }
+    }
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
     if (repBtn) {
@@ -949,8 +954,8 @@ VDI.Core = (function() {
           else if (act === 'next') { m.skipToNextItem(); return; }
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
           else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
-          // Apple Music native cycle: off(0) → all(2) → one(1) → off(0)
-          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0); return; }
+          // Actual MusicKit cycle via wrappedJSObject: off(0) → one(1) → all(2) → off(0)
+          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 1 : (m.repeatMode === 1 ? 2 : 0); return; }
         }
 
         if (act === 'toggle') {
