@@ -150,9 +150,10 @@ VDI.Core = (function() {
             else if(hDiff<45) { cMult = 0.5 + (hDiff-25)/20 * 2.0; } // 0.5 to 2.5
             else { cMult = 2.5 + Math.pow((hDiff-45)/135, 1.5) * 10.0; } // 2.5 to 12.5
           }
-          // Re-balanced math: Math.sqrt(n) * e^(Chroma * 6)
-          // This ensures Spider-Man's red ring still beats the pale blue, but tiny pure logos (Reliance) don't defeat massive golden backgrounds (Osthe).
-          var score = Math.sqrt(bkt.n) * Math.exp(avgC * 6) * cMult;
+          // The Golden Ratio for color extraction: Math.sqrt(n) * Math.pow(Chroma, 6)
+          // 1. Math.pow(Chroma, 6) strongly punishes pale colors, letting Spider-Man's pure red ring beat massive blue reflections.
+          // 2. Math.sqrt(n) gives just enough weight to area so that microscopic pure logos (Osthe's blue logo) don't defeat huge vibrant backgrounds.
+          var score = Math.sqrt(bkt.n) * Math.pow(avgC, 6) * cMult;
           if(score>accScore){accScore=score;accBest=bkt;}
         }
 
