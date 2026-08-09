@@ -149,10 +149,10 @@ VDI.Core = (function() {
             else if(hDiff<45) { cMult = 0.5 + (hDiff-25)/20 * 2.0; } // 0.5 to 2.5
             else { cMult = 2.5 + Math.pow((hDiff-45)/135, 1.5) * 10.0; } // 2.5 to 12.5
           }
-          // Exponential saturation: e^(avgS * 8) heavily favors pure colors. 
-          // sat=1.0 is ~3000x multiplier. sat=0.5 is ~54x multiplier.
-          // This ensures a tiny sliver of pure red beats a massive expanse of pale blue (Spider-Man).
-          var score=bkt.n * Math.exp(avgS * 8) * cMult;
+          // Use fourth-root of n (n^0.25) to severely diminish the advantage of huge areas.
+          // Combine with exponential saturation (e^(avgS*8)) so purity > size.
+          // This guarantees the tiny pure red ring beats the massive pale blue reflections.
+          var score = Math.pow(bkt.n, 0.25) * Math.exp(avgS * 8) * cMult;
           if(score>accScore){accScore=score;accBest=bkt;}
         }
 
