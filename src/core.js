@@ -483,8 +483,22 @@ VDI.Core = (function() {
           shuffleOn = (mk.shuffleMode !== 0 && mk.shuffleMode !== undefined);
 
           // Repeat: 0=off, 1=one, 2=all
+          // NOTE: wrappedJSObject setter is ignored by MusicKit, so we read only.
+          // DOM class 'mode--X' on .button--repeat is the ground truth.
           var rm = mk.repeatMode;
           repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
+
+          // ── DOM override for repeat: .button--repeat has class mode--0/1/2 ──
+          // This is more reliable than wrappedJSObject on Firefox/Zen
+          try {
+            var repDomBtn = VDI.Core.deepQueryOne('.button--repeat');
+            if (repDomBtn) {
+              var rc = repDomBtn.className || '';
+              if (rc.includes('mode--2')) repeatMode = 'all';
+              else if (rc.includes('mode--1')) repeatMode = 'one';
+              else repeatMode = 'off';
+            }
+          } catch(e) {}
 
           // Metadata
           if (ni) {
@@ -654,23 +668,18 @@ VDI.Core = (function() {
     }
 
     // Spotify shuffle: 3 modes — off / on / smart
-    // Try smart shuffle testid first, then regular shuffle
-    var smartShufBtn = document.querySelector('[data-testid="control-button-smart-shuffle"]');
-    var shufBtn = smartShufBtn ||
-                  document.querySelector('[data-testid="control-button-shuffle"]') ||
-                  document.querySelector('button[aria-label*="shuffle" i]');
+    // Spotify encodes state in aria-label ONLY: "Disable Shuffle..." = ON, "Enable Shuffle..." = OFF
+    // data-testid, aria-checked, aria-pressed are all null on Spotify's shuffle button
+    var shufBtn = document.querySelector('button[aria-label*="shuffle" i]');
+    var smartShufBtn = document.querySelector('button[aria-label*="smart shuffle" i]');
     var isSmartShuffle = !!smartShufBtn;
-    // Spotify uses aria-checked on shuffle button (not aria-pressed)
+    if (!shufBtn) shufBtn = smartShufBtn;
     var shuffleOn = false;
     if (shufBtn) {
-      var ac = shufBtn.getAttribute('aria-checked');
-      var ap = shufBtn.getAttribute('aria-pressed');
-      shuffleOn = (ac === 'true' || ac === 'mixed' || ap === 'true' || ap === 'mixed');
-      // Also check for active class as fallback
-      if (!shuffleOn) {
-        var btnClass = shufBtn.className || '';
-        shuffleOn = btnClass.includes('active') || btnClass.includes('enabled');
-      }
+      var shufLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
+      // "Disable Shuffle" = shuffle is currently ON (clicking will disable it)
+      // "Enable Shuffle" or plain "Shuffle" = shuffle is currently OFF
+      shuffleOn = shufLabel.includes('disable') || shufLabel.includes('turn off');
     }
     var repeatMode = 'off';
     var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
@@ -954,8 +963,15 @@ VDI.Core = (function() {
           else if (act === 'next') { m.skipToNextItem(); return; }
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
           else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
-          // Actual MusicKit cycle via wrappedJSObject: off(0) → one(1) → all(2) → off(0)
-          else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 1 : (m.repeatMode === 1 ? 2 : 0); return; }
+          else if (act === 'repeat') {
+            // wrappedJSObject setter is silently ignored by MusicKit.
+            // Click the native .button--repeat DOM button through shadow DOM instead.
+            var repBtn = VDI.Core.deepQueryOne('.button--repeat');
+            if (repBtn) { repBtn.click(); return; }
+            // Fallback: try setting repeatMode directly (Vivaldi main world)
+            m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0);
+            return;
+          }
         }
 
         if (act === 'toggle') {
