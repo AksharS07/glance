@@ -37,93 +37,155 @@ VDI.Core = (function() {
     img.crossOrigin = 'anonymous';
     img.onload = function() {
       try {
-        var W = 60, H = 60;
+        var W = 64, H = 64;
         var cv = document.createElement('canvas');
         cv.width = W; cv.height = H;
         var cx = cv.getContext('2d');
         cx.drawImage(img, 0, 0, W, H);
         var d = cx.getImageData(0, 0, W, H).data;
+        var total = W * H;
 
-        // 36 hue buckets (10° each) — track count, saturation sum, and best pixel
-        var buckets = [];
-        for (var i = 0; i < 36; i++) {
-          buckets[i] = { count: 0, sumS: 0, maxS: 0, bestR: 0, bestG: 0, bestB: 0 };
-        }
+        // ── PASS 1: Dominant color (album "mood" — what the image IS) ──
+        // Coarse 12 hue buckets (30° each). Includes all non-extreme pixels.
+        // Also separately tracks near-grey/dark/light for neutral images.
+        var dom = [];
+        for (var i = 0; i < 12; i++) dom[i] = { n: 0, sr: 0, sg: 0, sb: 0 };
+        var darkN = 0, darkR = 0, darkG = 0, darkB = 0;
+        var greyN = 0, lightN = 0, lightR = 0, lightG = 0, lightB = 0;
 
-        var totalPixels = 0;
-        for (var i = 0; i < W * H * 4; i += 4) {
-          var r = d[i] / 255, g = d[i+1] / 255, b = d[i+2] / 255;
-          var mx = Math.max(r, g, b), mn = Math.min(r, g, b);
-          var l = (mx + mn) / 2;
-          var delta = mx - mn;
+        for (var i = 0; i < total * 4; i += 4) {
+          var r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
+          var mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+          var l = (mx+mn)/2, delta = mx-mn;
 
-          // Skip near-black, near-white, and near-gray — only vivid pixels qualify
-          if (l < 0.08 || l > 0.92 || delta < 0.08) continue;
-          var sat = delta / (1 - Math.abs(2 * l - 1));
-          if (sat < 0.25) continue; // pre-filter weak colors
+          if (l < 0.04) { darkN++; darkR+=r; darkG+=g; darkB+=b; continue; }
+          if (l > 0.93) { lightN++; lightR+=r; lightG+=g; lightB+=b; continue; }
+          if (delta < 0.10) { greyN++; continue; } // near-grey, no strong hue
 
           var h = 0;
-          if (mx === r) h = ((g - b) / delta) % 6;
-          else if (mx === g) h = (b - r) / delta + 2;
-          else h = (r - g) / delta + 4;
-          h = Math.round(h * 60);
-          if (h < 0) h += 360;
-
-          var bIdx = Math.floor(h / 10) % 36;
-          var bkt = buckets[bIdx];
-          bkt.count++;
-          bkt.sumS += sat;
-          if (sat > bkt.maxS) {
-            bkt.maxS = sat;
-            bkt.bestR = r; bkt.bestG = g; bkt.bestB = b;
-          }
-          totalPixels++;
+          if (mx===r) h=((g-b)/delta)%6;
+          else if (mx===g) h=(b-r)/delta+2;
+          else h=(r-g)/delta+4;
+          h=Math.round(h*60); if(h<0)h+=360;
+          var bIdx=Math.floor(h/30)%12;
+          dom[bIdx].n++; dom[bIdx].sr+=r; dom[bIdx].sg+=g; dom[bIdx].sb+=b;
         }
 
-        if (totalPixels === 0) { cb(null); return; }
+        // Best dominant chromatic bucket
+        var domBest=null, domMax=-1;
+        for(var j=0;j<12;j++) { if(dom[j].n>domMax){domMax=dom[j].n;domBest=dom[j];} }
 
-        // Score = count × avgSat² — rewards both FREQUENCY and VIBRANCY
-        var best = null, bestScore = -1;
-        for (var j = 0; j < 36; j++) {
-          var bkt = buckets[j];
-          if (bkt.count === 0) continue;
-          var avgSat = bkt.sumS / bkt.count;
-          var score = bkt.count * avgSat * avgSat;
-          if (score > bestScore) { bestScore = score; best = bkt; }
+        // Is the image mostly neutral (grey/dark/light)?
+        var neutralN = darkN + greyN + lightN;
+        var chromaticN = total - neutralN;
+        var isNeutral = (neutralN > total * 0.55);
+
+        // Background base color (raw avg RGB of dominant region)
+        var bgR, bgG, bgB;
+        if (isNeutral || !domBest || domBest.n === 0) {
+          // Use weighted average of dark+grey pixels for a neutral dark bg
+          var nn = darkN + greyN + 1;
+          bgR = (darkN > 0 ? darkR/darkN : 0.15) * (darkN/nn) + 0.12*(greyN/nn);
+          bgG = (darkN > 0 ? darkG/darkN : 0.15) * (darkN/nn) + 0.12*(greyN/nn);
+          bgB = (darkN > 0 ? darkB/darkN : 0.15) * (darkN/nn) + 0.12*(greyN/nn);
+          // Clamp to a neutral dark
+          bgR = Math.max(0.05, Math.min(0.25, bgR));
+          bgG = Math.max(0.05, Math.min(0.25, bgG));
+          bgB = Math.max(0.05, Math.min(0.25, bgB));
+        } else {
+          bgR = domBest.sr/domBest.n;
+          bgG = domBest.sg/domBest.n;
+          bgB = domBest.sb/domBest.n;
         }
 
-        if (!best) { cb(null); return; }
+        // Convert bg to HSL and make it very dark (for island background overlay)
+        var mxBg=Math.max(bgR,bgG,bgB), mnBg=Math.min(bgR,bgG,bgB);
+        var hBg=0,sBg=0,lBg=(mxBg+mnBg)/2;
+        if(mxBg!==mnBg){
+          var dBg=mxBg-mnBg;
+          sBg=lBg>0.5?dBg/(2-mxBg-mnBg):dBg/(mxBg+mnBg);
+          if(mxBg===bgR) hBg=(bgG-bgB)/dBg+(bgG<bgB?6:0);
+          else if(mxBg===bgG) hBg=(bgB-bgR)/dBg+2;
+          else hBg=(bgR-bgG)/dBg+4;
+          hBg=Math.round(hBg*60); if(hBg<0)hBg+=360;
+        }
+        lBg = Math.max(0.07, Math.min(0.18, lBg * 0.5 + 0.03)); // Force very dark
+        sBg = Math.min(0.6, sBg * 0.7); // desaturate for subtlety
 
-        // Use most saturated pixel from winning bucket for precise hue
-        var br = best.bestR, bg = best.bestG, bb = best.bestB;
-        var mxA = Math.max(br, bg, bb), mnA = Math.min(br, bg, bb);
-        var hA = 0, sA = 0, lA = (mxA + mnA) / 2;
+        // ── PASS 2: Accent color (the vibrant "pop" — for buttons, toggles) ──
+        // Only high-saturation pixels qualify. Picks the most frequent vibrant hue.
+        var acc = [];
+        for(var i=0;i<36;i++) acc[i]={n:0,ss:0,maxS:0,br:0,bg:0,bb:0};
+        var accTotal=0;
 
-        if (mxA !== mnA) {
-          var dA = mxA - mnA;
-          sA = lA > 0.5 ? dA / (2 - mxA - mnA) : dA / (mxA + mnA);
-          if (mxA === br) hA = (bg - bb) / dA + (bg < bb ? 6 : 0);
-          else if (mxA === bg) hA = (bb - br) / dA + 2;
-          else hA = (br - bg) / dA + 4;
-          hA = Math.round(hA * 60);
-          if (hA < 0) hA += 360;
+        for(var i=0;i<total*4;i+=4){
+          var r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255;
+          var mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+          var l=(mx+mn)/2,delta=mx-mn;
+          if(l<0.07||l>0.93||delta<0.15) continue;
+          var sat=delta/(1-Math.abs(2*l-1));
+          if(sat<0.45) continue; // only vibrant pixels
+
+          var h=0;
+          if(mx===r) h=((g-b)/delta)%6;
+          else if(mx===g) h=(b-r)/delta+2;
+          else h=(r-g)/delta+4;
+          h=Math.round(h*60); if(h<0)h+=360;
+
+          var bIdx=Math.floor(h/10)%36;
+          acc[bIdx].n++; acc[bIdx].ss+=sat;
+          if(sat>acc[bIdx].maxS){acc[bIdx].maxS=sat;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
+          accTotal++;
         }
 
-        // Force-vivid output: always ≥70% saturation, bright usable lightness
-        sA = Math.max(0.70, Math.min(1.0, sA * 1.3));
-        lA = Math.max(0.45, Math.min(0.62, lA));
+        // Score accent: frequency × avgSat² (dominant AND vivid)
+        var accBest=null, accScore=-1;
+        for(var j=0;j<36;j++){
+          var bkt=acc[j]; if(!bkt.n) continue;
+          var avgS=bkt.ss/bkt.n;
+          var score=bkt.n*avgS*avgS;
+          if(score>accScore){accScore=score;accBest=bkt;}
+        }
+
+        // Fallback: if no vibrant pixels at all, use dominant chromatic color
+        if(!accBest && domBest && domBest.n>0){
+          var fr=domBest.sr/domBest.n, fg=domBest.sg/domBest.n, fb=domBest.sb/domBest.n;
+          accBest={br:fr,bg:fg,bb:fb};
+        }
+        if(!accBest){cb(null);return;}
+
+        // Convert accent to HSL
+        var ar=accBest.br,ag=accBest.bg,ab=accBest.bb;
+        var mxA=Math.max(ar,ag,ab),mnA=Math.min(ar,ag,ab);
+        var hA=0,sA=0,lA=(mxA+mnA)/2;
+        if(mxA!==mnA){
+          var dA=mxA-mnA;
+          sA=lA>0.5?dA/(2-mxA-mnA):dA/(mxA+mnA);
+          if(mxA===ar) hA=(ag-ab)/dA+(ag<ab?6:0);
+          else if(mxA===ag) hA=(ab-ar)/dA+2;
+          else hA=(ar-ag)/dA+4;
+          hA=Math.round(hA*60); if(hA<0)hA+=360;
+        }
+        // Force-vivid accent: always bright and saturated
+        sA=Math.max(0.80,Math.min(1.0,sA*1.2));
+        lA=Math.max(0.48,Math.min(0.64,lA));
 
         cb({
-          accent: 'hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%)',
-          gradient: 'linear-gradient(135deg, hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%), hsl(' + ((hA + 35) % 360) + ',' + Math.round(sA * 85) + '%,' + Math.round((lA - 0.12) * 100) + '%))',
-          dark: 'hsl(' + hA + ', ' + Math.round(sA * 40) + '%, 10%)',
-          glow: 'hsla(' + hA + ', ' + Math.round(sA * 100) + '%, ' + Math.round(lA * 100) + '%, 0.5)'
+          // accent: vibrant "pop" color for interactive elements (buttons, progress, glows)
+          accent: 'hsl('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%)',
+          // gradient: accent → shifted shade (for progress bar / headers)
+          gradient: 'linear-gradient(135deg,hsl('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%),hsl('+((hA+40)%360)+','+Math.round(sA*85)+'%,'+Math.round((lA-0.1)*100)+'%))',
+          // dark: dominant color forced very dark (for island bg overlay, backdrop blur tint)
+          dark: 'hsl('+hBg+','+Math.round(sBg*100)+'%,'+Math.round(lBg*100)+'%)',
+          // glow: accent at low opacity for shadow/glow effects
+          glow: 'hsla('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%,0.45)'
         });
-      } catch(e) { cb(null); }
+      } catch(e){cb(null);}
     };
-    img.onerror = function() { cb(null); };
-    img.src = url;
+    img.onerror=function(){cb(null);};
+    img.src=url;
   }
+
 
   // ─────────────────────────────────────────────────────────────
   // DOM Utilities

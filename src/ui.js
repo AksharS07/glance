@@ -196,9 +196,6 @@ VDI.UI = (function() {
       var glow = c ? c.glow : 'rgba(99,102,241,.2)';
 
       island.style.setProperty('--vdi-accent', accent);
-      // Apply platform class for platform-specific indicator styling
-      island.className = island.className.replace(/\bvdi-platform-\S+/g, '').trim();
-      if (state.platform) island.classList.add('vdi-platform-' + state.platform);
       island.style.setProperty('--vdi-grad', grad);
       island.style.setProperty('--vdi-dark', dark);
       island.style.setProperty('--vdi-glow', glow);
@@ -265,6 +262,11 @@ VDI.UI = (function() {
       island.style.display = '';
       if (lyrPanel) lyrPanel.style.display = '';
       island.classList.add('vdi-visible');
+
+      // Apply platform class every render (not just on artwork change)
+      var platform = state.platform || (onSpotify ? 'spotify' : (onAppleMusic ? 'apple' : (onYTM ? 'ytmusic' : (onYT ? 'youtube' : 'other'))));
+      island.className = island.className.replace(/\bvdi-platform-\S+/g, '').trim();
+      island.classList.add('vdi-platform-' + platform);
 
       var shouldShowLyrics = settings.enableLyrics && !state.isYouTubeVideo;
       if ($('vdi-lyr-btn')) $('vdi-lyr-btn').style.display = shouldShowLyrics ? '' : 'none';
