@@ -96,11 +96,11 @@ VDI.Core = (function() {
         } else if (darkN > 0) {
           bgR=darkR/darkN*0.6; bgG=darkG/darkN*0.6; bgB=darkB/darkN*0.6;
         }
-        // AMOLED MODE: Island background is always pure near-black.
+        // AMOLED MODE: Island background is always pure black.
         // The album color "personality" is expressed through the accent color on buttons/progress bar
         // and a subtle colored glow underneath the island — NOT by tinting the background.
         // This feels much more like the real Apple Dynamic Island on OLED screens.
-        var hBg = 0, sBg = 0, lBg = 0.07; // pure near-black, no hue
+        var hBg = 0, sBg = 0, lBg = 0.0; // PURE BLACK
 
         // ── PASS 2: Accent color — the vibrant "pop" (buttons, toggles) ──
         // Key: DEVALUE hues close to dominant so contrasting highlights win.
