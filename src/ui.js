@@ -357,15 +357,10 @@ VDI.UI = (function() {
                 if (highResUrl) {
                   state.artwork = highResUrl;
                   state.lastArtwork = highResUrl;
-                  // Swap to high res, color extractor will pick it up
                   var tempImg = new Image();
                   tempImg.onload = function() {
                     img.src = highResUrl;
-                    VDI.Core.extractVibrant(tempImg, settings.amoledBlack, function(rgb) {
-                      if (rgb) {
-                        $('vdi').style.background = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
-                      }
-                    });
+                    VDI.Core.extractVibrant(tempImg, settings.amoledBlack, applyTheme);
                   };
                   tempImg.crossOrigin = 'Anonymous';
                   tempImg.src = highResUrl;
