@@ -165,8 +165,9 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08);color:var(--vdi-accent, #fff);transform:scale(1.1);}');
     rules.push('.vdi-btn:active{transform:scale(.92);}');
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
-    rules.push('#vdi-shuffle, #vdi-repeat{position:relative;}');
-
+    rules.push('.vdi-platform-apple #vdi-shuffle svg, .vdi-platform-apple #vdi-repeat svg { width: 22px; height: 19px; }');
+    rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.35);position:relative;transition:color 0.2s,background 0.2s;}');
+    
     // ── Base active: flat vibrant color (inherits accent color) ──
     rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color: var(--vdi-accent, ' + accent + ') !important;}');
 
