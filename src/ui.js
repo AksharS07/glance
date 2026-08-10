@@ -1130,7 +1130,7 @@ VDI.UI = (function() {
           scBtn.addEventListener('click', function(e) {
             e.stopPropagation();
             if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
-              chrome.runtime.sendMessage({ action: 'openShortcuts' });
+              chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'openShortcuts' });
             }
           });
         }
