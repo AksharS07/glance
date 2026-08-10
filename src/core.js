@@ -32,17 +32,18 @@ VDI.Core = (function() {
   // ─────────────────────────────────────────────────────────────
   // Color extraction from album art
   // ─────────────────────────────────────────────────────────────
-  function extractVibrant(url, cb) {
+  function extractVibrant(url, amoledBlack, cb) {
+    if (!url || url.indexOf('data:') === 0) return cb(null);
     var img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = 'Anonymous';
     img.onload = function() {
       try {
         var W = 128, H = 128;
-        var cv = document.createElement('canvas');
-        cv.width = W; cv.height = H;
-        var cx = cv.getContext('2d');
-        cx.drawImage(img, 0, 0, W, H);
-        var d = cx.getImageData(0, 0, W, H).data;
+        var cvs=document.createElement('canvas');
+        var ctx=cvs.getContext('2d',{willReadFrequently:true});
+        cvs.width = W; cvs.height = H;
+        ctx.drawImage(img, 0, 0, W, H);
+        var d = ctx.getImageData(0, 0, W, H).data;
         var total = W * H;
 
         // ── PASS 1: Dominant color — the album's overall "mood" ──
@@ -96,11 +97,26 @@ VDI.Core = (function() {
         } else if (darkN > 0) {
           bgR=darkR/darkN*0.6; bgG=darkG/darkN*0.6; bgB=darkB/darkN*0.6;
         }
-        // AMOLED MODE: Island background is always pure black.
-        // The album color "personality" is expressed through the accent color on buttons/progress bar
-        // and a subtle colored glow underneath the island — NOT by tinting the background.
-        // This feels much more like the real Apple Dynamic Island on OLED screens.
-        var hBg = 0, sBg = 0, lBg = 0.0; // PURE BLACK
+        // AMOLED MODE vs TINTED MODE
+        // If AMOLED Black is enabled, use pure black (lBg = 0.0)
+        // If disabled, use a very dark tint of the dominant background (lBg ~ 0.07-0.12)
+        var hBg = 0, sBg = 0, lBg = 0.0;
+        
+        if (!amoledBlack) {
+          // Convert bg to HSL, force very dark
+          var mxBg=Math.max(bgR,bgG,bgB),mnBg=Math.min(bgR,bgG,bgB);
+          lBg=(mxBg+mnBg)/2;
+          if(mxBg!==mnBg){
+            var dBg=mxBg-mnBg;
+            sBg=lBg>0.5?dBg/(2-mxBg-mnBg):dBg/(mxBg+mnBg);
+            if(mxBg===bgR) hBg=(bgG-bgB)/dBg+(bgG<bgB?6:0);
+            else if(mxBg===bgG) hBg=(bgB-bgR)/dBg+2;
+            else hBg=(bgR-bgG)/dBg+4;
+            hBg=Math.round(hBg*60); if(hBg<0)hBg+=360;
+          }
+          lBg=Math.max(0.06,Math.min(0.16,lBg*0.4+0.03));
+          sBg=Math.min(0.5,sBg*0.55);
+        }
 
         // ── PASS 2: Accent color — the vibrant "pop" (buttons, toggles) ──
         // Key: DEVALUE hues close to dominant so contrasting highlights win.

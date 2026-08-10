@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <title>Dynamic Island Settings</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="header">
+    <img class="logo" src="icon128.png" alt="Logo">
+    <div class="header-text">
+      <h2 class="title">Dynamic Island</h2>
+      <span class="version">v1.5</span>
+    </div>
+  </div>
+
+  <div id="popup-onboarding" class="section card" style="background: rgba(99,102,241,0.15); border: 1px solid rgba(99,102,241,0.3); display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+      <h3 style="margin: 0; color: #fff; font-size: 13px;">✨ New Features</h3>
+      <button id="dismiss-popup-onboarding" style="background: none; border: none; color: rgba(255,255,255,0.5); cursor: pointer; padding: 0;">✕</button>
+    </div>
+    <p style="margin: 0; font-size: 12px; color: rgba(255,255,255,0.7); line-height: 1.4;">
+      <strong>Free Placement:</strong> Drag the island anywhere.<br>
+      <strong>Hide Island:</strong> Hover and click X to dismiss it.<br>
+      <strong>Lyrics Engine:</strong> Swap providers in the lyrics menu!
+    </p>
+  </div>
+
+  <div class="section card">
+    <h3>General</h3>
+    <div class="setting-row">
+      <label for="hideYouTube">Hide on YouTube</label>
+      <label class="switch">
+        <input type="checkbox" id="hideYouTube">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <label for="hideYouTubeMusic">Hide on YT Music</label>
+      <label class="switch">
+        <input type="checkbox" id="hideYouTubeMusic">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <label for="hideSpotify">Hide on Spotify</label>
+      <label class="switch">
+        <input type="checkbox" id="hideSpotify">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row">
+      <label for="hideAppleMusic">Hide on Apple Music</label>
+      <label class="switch">
+        <input type="checkbox" id="hideAppleMusic">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="section card">
+    <h3>Features</h3>
+    <div class="setting-row">
+      <label for="enableLyrics">Enable Lyrics Engine</label>
+      <label class="switch">
+        <input type="checkbox" id="enableLyrics">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+  <div class="section card">
+    <h3>Position Presets</h3>
+    <div class="setting-row">
+      <label for="freePlacement">Free Placement (Drag anywhere)</label>
+      <label class="switch">
+        <input type="checkbox" id="freePlacement">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="setting-row" style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
+      <label for="presetPlacement">Preset Placement Mode</label>
+      <label class="switch">
+        <input type="checkbox" id="presetPlacement">
+        <span class="slider"></span>
+      </label>
+    </div>
+    <div class="preset-grid">
+      <button class="preset-btn" id="preset-top" title="Top Center">
+        <div class="preset-icon"><div class="dot top"></div></div>
+        Top
+      </button>
+      <button class="preset-btn" id="preset-bottom" title="Bottom Center">
+        <div class="preset-icon"><div class="dot bottom"></div></div>
+        Bottom
+      </button>
+      <button class="preset-btn" id="preset-left" title="Left Center">
+        <div class="preset-icon"><div class="dot left"></div></div>
+        Left
+      </button>
+      <button class="preset-btn" id="preset-right" title="Right Center">
+        <div class="preset-icon"><div class="dot right"></div></div>
+        Right
+      </button>
+    </div>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

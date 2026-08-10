@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Dynamic Island V1.5 - What's New</title>
+  <link rel="icon" href="icon128.png" type="image/png">
+  <style>
+    body {
+      background-color: #0d0d0d;
+      color: #ffffff;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+    }
+    .container {
+      max-width: 600px;
+      padding: 40px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 24px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      margin-top: 0;
+      margin-bottom: 8px;
+      background: linear-gradient(135deg, #fff, #a78bfa);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .subtitle {
+      font-size: 16px;
+      color: rgba(255, 255, 255, 0.5);
+      margin-bottom: 32px;
+    }
+    .feature {
+      display: flex;
+      gap: 14px;
+      margin-bottom: 24px;
+      align-items: flex-start;
+    }
+    .feature-icon {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-top: 2px;
+    }
+    .feature-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+    .icon-settings { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.2); }
+    .icon-settings svg { fill: #a78bfa; }
+    .icon-move { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.2); }
+    .icon-move svg { fill: #60a5fa; }
+    .icon-hide { background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.2); }
+    .icon-hide svg { fill: #fbbf24; }
+    .icon-lyrics { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.2); }
+    .icon-lyrics svg { fill: #34d399; }
+    .feature-content h3 {
+      font-size: 16px;
+      font-weight: 600;
+      margin: 0 0 4px 0;
+    }
+    .feature-content p {
+      margin: 0;
+      font-size: 14px;
+      line-height: 1.5;
+      color: rgba(255, 255, 255, 0.55);
+    }
+    .btn {
+      display: inline-block;
+      margin-top: 24px;
+      padding: 12px 24px;
+      background: #fff;
+      color: #000;
+      text-decoration: none;
+      font-weight: 600;
+      border-radius: 12px;
+      transition: opacity 0.2s;
+    }
+    .btn:hover {
+      opacity: 0.8;
+    }
+    .icon-spotify {
+      background: rgba(29, 185, 84, 0.1) !important;
+    }
+    .icon-spotify svg {
+      fill: #1DB954 !important;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Dynamic Island V1.5</h1>
+    <div class="subtitle">The Apple Music Update has arrived!</div>
+
+    <div class="feature">
+      <div class="feature-icon icon-settings" style="background: rgba(250, 96, 114, 0.12); border: 1px solid rgba(250, 96, 114, 0.2);">
+        <svg viewBox="0 0 24 24" style="fill: #fa6072;"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </div>
+      <div class="feature-content">
+        <h3>Apple Music Support</h3>
+        <p>The island now fully supports Apple Music! Control playback seamlessly and enjoy perfectly synced live lyrics without ever switching tabs.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon icon-move">
+        <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
+      </div>
+      <div class="feature-content">
+        <h3>Performance & Security Upgrade</h3>
+        <p>Re-engineered the core engine for improved cross-platform compatibility, ensuring the Island never freezes or lags your media tabs.</p>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="feature-icon icon-spotify">
+        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+      </div>
+      <div class="feature-content">
+        <h3>Seamless Lyrics Sync</h3>
+        <p>Upgraded the lyrics tracking engine to completely ignore background looping videos on streaming sites, ensuring your lyrics never desync again.</p>
+      </div>
+    </div>
+
+    <a href="#" id="close-btn" class="btn">Awesome, let's go!</a>
+  </div>
+  <script src="patch-notes.js"></script>
+</body>
+</html>

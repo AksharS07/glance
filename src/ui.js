@@ -82,6 +82,7 @@ VDI.UI = (function() {
       '<div class="vdi-stg-header">General</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YouTube</span><span class="vdi-stg-sub">Hides the island completely while on YouTube</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideyt"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YT Music</span><span class="vdi-stg-sub">Hides the island completely while on YT Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideytm"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode</span><span class="vdi-stg-sub">Use pure pitch black background for the island instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Spotify</span><span class="vdi-stg-sub">Hides the island completely while on Spotify</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hidespotify"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Apple Music</span><span class="vdi-stg-sub">Hides the island completely on Apple Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideapplemusic"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
@@ -181,7 +182,7 @@ VDI.UI = (function() {
     var idleDelay = opts.idleDelay || 9000;
     var collapseDelay = opts.collapseDelay || 500;
     var isDragging = false;
-    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false };
+    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false, amoledBlack: true };
 
     // Helper
     function $(id) { return document.getElementById(id); }
@@ -359,7 +360,7 @@ VDI.UI = (function() {
                   var tempImg = new Image();
                   tempImg.onload = function() {
                     img.src = highResUrl;
-                    VDI.Core.extractVibrant(tempImg, function(rgb) {
+                    VDI.Core.extractVibrant(tempImg, settings.amoledBlack, function(rgb) {
                       if (rgb) {
                         $('vdi').style.background = 'rgb(' + rgb[0] + ',' + rgb[1] + ',' + rgb[2] + ')';
                       }
@@ -374,7 +375,7 @@ VDI.UI = (function() {
             loadImg(state.artwork);
           }
           
-          VDI.Core.extractVibrant(state.artwork, applyTheme);
+          VDI.Core.extractVibrant(state.artwork, settings.amoledBlack, applyTheme);
         }
       } else if (!state.artwork && state.lastArtwork) {
         state.lastArtwork = null;
@@ -1039,6 +1040,7 @@ VDI.UI = (function() {
           // Sync UI state
           $('vdi-stg-hideyt').checked = settings.hideYouTube;
           $('vdi-stg-hideytm').checked = settings.hideYouTubeMusic;
+          $('vdi-stg-amoled').checked = settings.amoledBlack;
           $('vdi-stg-hidespotify').checked = settings.hideSpotify;
           $('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
           $('vdi-stg-enlyrics').checked = settings.enableLyrics;
@@ -1106,6 +1108,13 @@ VDI.UI = (function() {
 
         bindStg('vdi-stg-hideyt', 'hideYouTube');
         bindStg('vdi-stg-hideytm', 'hideYouTubeMusic');
+        bindStg('vdi-stg-amoled', 'amoledBlack');
+        // Immediately force a theme re-extraction when amoled changes
+        $('vdi-stg-amoled').addEventListener('change', function() {
+          if (state.artwork) {
+            VDI.Core.extractVibrant(state.artwork, settings.amoledBlack, applyTheme);
+          }
+        });
         bindStg('vdi-stg-hidespotify', 'hideSpotify');
         bindStg('vdi-stg-hideapplemusic', 'hideAppleMusic');
         bindStg('vdi-stg-enlyrics', 'enableLyrics');
@@ -1393,10 +1402,11 @@ VDI.UI = (function() {
         updateSettingsPanelPosition();
       });
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'freePlacement', 'vdi_cfg_seenTooltip3'], function(res) {
+        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3'], function(res) {
           applyPos(res.vdi_loc_x, res.vdi_loc_y, res.vdi_transform);
           if (res.hideYouTube !== undefined) settings.hideYouTube = res.hideYouTube;
           if (res.hideYouTubeMusic !== undefined) settings.hideYouTubeMusic = res.hideYouTubeMusic;
+          if (res.amoledBlack !== undefined) settings.amoledBlack = res.amoledBlack;
           if (res.hideSpotify !== undefined) settings.hideSpotify = res.hideSpotify;
           if (res.hideAppleMusic !== undefined) settings.hideAppleMusic = res.hideAppleMusic;
           if (res.enableLyrics !== undefined) settings.enableLyrics = res.enableLyrics;
@@ -1405,6 +1415,7 @@ VDI.UI = (function() {
 
           $('vdi-stg-hideyt').checked = settings.hideYouTube;
           $('vdi-stg-hideytm').checked = settings.hideYouTubeMusic;
+          $('vdi-stg-amoled').checked = settings.amoledBlack;
           $('vdi-stg-hidespotify').checked = settings.hideSpotify;
           $('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
           $('vdi-stg-enlyrics').checked = settings.enableLyrics;
@@ -1415,6 +1426,12 @@ VDI.UI = (function() {
           if (namespace === 'local') {
             if (changes.hideYouTube) settings.hideYouTube = changes.hideYouTube.newValue;
             if (changes.hideYouTubeMusic) settings.hideYouTubeMusic = changes.hideYouTubeMusic.newValue;
+            if (changes.amoledBlack) {
+              settings.amoledBlack = changes.amoledBlack.newValue;
+              if (state.artwork) {
+                VDI.Core.extractVibrant(state.artwork, settings.amoledBlack, applyTheme);
+              }
+            }
             if (changes.hideSpotify) settings.hideSpotify = changes.hideSpotify.newValue;
             if (changes.hideAppleMusic) settings.hideAppleMusic = changes.hideAppleMusic.newValue;
             if (changes.enableLyrics) settings.enableLyrics = changes.enableLyrics.newValue;
@@ -1435,6 +1452,7 @@ VDI.UI = (function() {
         };
         settings.hideYouTube = getBool('hideYouTube', settings.hideYouTube);
         settings.hideYouTubeMusic = getBool('hideYouTubeMusic', settings.hideYouTubeMusic);
+        settings.amoledBlack = getBool('amoledBlack', settings.amoledBlack);
         settings.hideSpotify = getBool('hideSpotify', settings.hideSpotify);
         settings.enableLyrics = getBool('enableLyrics', settings.enableLyrics);
         settings.freePlacement = getBool('freePlacement', settings.freePlacement);
