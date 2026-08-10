@@ -163,6 +163,7 @@ VDI.Core = (function() {
         // Fallback: no vibrant pixels at all → neutral white/silver accent
         if(!accBest){
           cb({
+            isAmoled: amoledBlack,
             accent:'hsl(0,0%,88%)',
             gradient:'linear-gradient(135deg,#e0e0e0,#bbb)',
             dark:'hsl('+hBg+','+Math.round(sBg*100)+'%,'+Math.round(lBg*100)+'%)',
@@ -186,6 +187,7 @@ VDI.Core = (function() {
         lA=Math.max(0.48,Math.min(0.65,lA));
 
         cb({
+          isAmoled: amoledBlack,
           accent:'hsl('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%)',
           gradient:'linear-gradient(135deg,hsl('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%),hsl('+((hA+40)%360)+','+Math.round(sA*85)+'%,'+Math.round((lA-0.1)*100)+'%))',
           dark:'hsl('+hBg+','+Math.round(sBg*100)+'%,'+Math.round(lBg*100)+'%)',
@@ -733,21 +735,13 @@ VDI.Core = (function() {
     }
 
     // Spotify shuffle: 3 modes — off / on / smart
-    var shufBtn = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
+    var shufPath = document.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
+    var shufBtn = shufPath ? shufPath.closest('button') : document.querySelector('button[aria-label*="shuffle" i]');
     var shuffleOn = false;
     var isSmartShuffle = false;
     if (shufBtn) {
-      var sChecked = shufBtn.getAttribute('aria-checked');
-      var sLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
-      
-      if (sChecked === 'true' || sChecked === 'mixed') {
-        shuffleOn = true;
-        isSmartShuffle = (sChecked === 'mixed') || sLabel.includes('smart');
-      } else if (!sChecked) {
-        // Fallback to label parsing if aria-checked is missing
-        shuffleOn = sLabel.includes('disable') || sLabel.includes('enable smart');
-        isSmartShuffle = sLabel.includes('disable') && sLabel.includes('smart');
-      }
+      shuffleOn = shufBtn.className.includes('encore-internal-color-text-bright-accent');
+      isSmartShuffle = !!shufBtn.querySelector('path[d^="M12.69"]');
     }
     
     var repeatMode = 'off';
@@ -982,7 +976,8 @@ VDI.Core = (function() {
         var nb = document.querySelector('[data-testid="control-button-skip-forward"]');
         if (nb) nb.click();
       } else if (act === 'shuffle') {
-        var sb = document.querySelector('[data-testid="control-button-shuffle"], [data-testid="control-button-smart-shuffle"], button[aria-label*="shuffle" i]');
+        var sp = document.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
+        var sb = sp ? sp.closest('button') : document.querySelector('button[aria-label*="shuffle" i]');
         if (sb) sb.click();
       } else if (act === 'repeat') {
         var rb = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');

@@ -82,10 +82,10 @@ VDI.UI = (function() {
       '<div class="vdi-stg-header">General</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YouTube</span><span class="vdi-stg-sub">Hides the island completely while on YouTube</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideyt"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YT Music</span><span class="vdi-stg-sub">Hides the island completely while on YT Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideytm"><span class="vdi-slider"></span></label></div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode</span><span class="vdi-stg-sub">Use pure pitch black background for the island instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Spotify</span><span class="vdi-stg-sub">Hides the island completely while on Spotify</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hidespotify"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Apple Music</span><span class="vdi-stg-sub">Hides the island completely on Apple Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideapplemusic"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the island instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Enable Lyrics Engine</span><span class="vdi-stg-sub">Fetch and display time-synced lyrics</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-enlyrics"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Free Placement</span><span class="vdi-stg-sub">Allow dragging anywhere on the screen</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-freeplace"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Keyboard Shortcuts</span><span class="vdi-stg-sub">Manage global hotkeys for media controls</span></div><button id="vdi-stg-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;">Edit</button></div>' +
@@ -104,7 +104,7 @@ VDI.UI = (function() {
     var tt = document.createElement('div');
     tt.id = 'vdi-stg-tooltip';
     tt.innerHTML = 
-      '<span>You can now customize the island from the settings menu!</span>' +
+      '<span>Customize the island here!</span>' +
       '<button id="vdi-stg-tooltip-btn">Got it</button>';
     return tt;
   }
@@ -179,10 +179,11 @@ VDI.UI = (function() {
 
     var idleTimer = null;
     var colTimer = null;
+    var ttTimer = null;
+    var isDragging = false;
     var tickInterval = opts.tickInterval || 1000;
     var idleDelay = opts.idleDelay || 9000;
     var collapseDelay = opts.collapseDelay || 500;
-    var isDragging = false;
     var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false, amoledBlack: false };
 
     // Helper
@@ -192,9 +193,21 @@ VDI.UI = (function() {
 
     // Theme application
     function applyTheme(c) {
+      if (c) {
+        // If the color was extracted with an outdated amoledBlack setting, ignore it and re-extract!
+        if (c.isAmoled !== undefined && c.isAmoled !== settings.amoledBlack) {
+          if (state && state.artwork) {
+            VDI.Core.extractVibrant(state.artwork, settings.amoledBlack, applyTheme);
+          }
+          return;
+        }
+        state.lastExtractedColor = c;
+      }
+      c = c || state.lastExtractedColor;
+
       var accent = c ? c.accent : DEFAULTS.accent;
       var grad = c ? c.gradient : DEFAULTS.gradient;
-      var dark = c ? c.dark : DEFAULTS.dark;
+      var dark = c ? c.dark : (settings.amoledBlack ? '#000000' : DEFAULTS.dark);
       var glow = c ? c.glow : 'rgba(99,102,241,.2)';
 
       island.style.setProperty('--vdi-accent', accent);
@@ -287,18 +300,21 @@ VDI.UI = (function() {
         $('vdi-shuffle').style.display = (state.isYouTubeVideo || !state.isMusicApp) ? 'none' : '';
         var normalShufSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>';
         // Smart shuffle: prominent 4-point star sparkle overlay (clearly distinct from regular shuffle)
-        var smartShufSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/><path d="M19 2l.5 1.5L21 4l-1.5.5L19 6l-.5-1.5L17 4l1.5-.5z" fill="currentColor"/><circle cx="5.5" cy="18.5" r="1" fill="currentColor" opacity="0.8"/></svg>';
+        var smartShufSvg = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/><path class="vdi-sparkle" d="M19 2l.5 1.5L21 4l-1.5.5L19 6l-.5-1.5L17 4l1.5-.5z" fill="currentColor"/><circle class="vdi-sparkle" cx="5.5" cy="18.5" r="1" fill="currentColor" opacity="0.8"/></svg>';
         $('vdi-shuffle').classList.remove('vdi-active', 'vdi-smart-shuffle');
         if (state.shuffleOn) {
           $('vdi-shuffle').classList.add('vdi-active');
           if (state.smartShuffleOn) {
             $('vdi-shuffle').classList.add('vdi-smart-shuffle');
             $('vdi-shuffle').innerHTML = smartShufSvg;
+            $('vdi-shuffle').title = 'Smart Shuffle On';
           } else {
             $('vdi-shuffle').innerHTML = normalShufSvg;
+            $('vdi-shuffle').title = 'Shuffle On';
           }
         } else {
           $('vdi-shuffle').innerHTML = normalShufSvg;
+          $('vdi-shuffle').title = 'Shuffle Off';
         }
       }
 
@@ -310,11 +326,14 @@ VDI.UI = (function() {
         if (state.repeatMode === 'all') {
           $('vdi-repeat').classList.add('vdi-active');
           $('vdi-repeat').innerHTML = repeatSvg;
+          $('vdi-repeat').title = 'Repeat All';
         } else if (state.repeatMode === 'one') {
           $('vdi-repeat').classList.add('vdi-active', 'vdi-repeat-one');
           $('vdi-repeat').innerHTML = repeatOneSvg;
+          $('vdi-repeat').title = 'Repeat One';
         } else {
           $('vdi-repeat').innerHTML = repeatSvg;
+          $('vdi-repeat').title = 'Repeat Off';
         }
       }
 
@@ -418,9 +437,8 @@ VDI.UI = (function() {
       var stgTooltip = $('vdi-stg-tooltip');
       if (!stgTooltip) return;
       var r = island.getBoundingClientRect();
-      // Gear icon is at top:10px, height:24px. So bottom of gear is r.top + 34.
-      stgTooltip.style.top = (r.top + 42) + 'px';
-      stgTooltip.style.left = (r.left + 4) + 'px';
+      stgTooltip.style.top = (r.top + 4) + 'px';
+      stgTooltip.style.left = (r.left - 146) + 'px';
     }
 
     function updateSettingsPanelPosition() {
@@ -805,11 +823,23 @@ VDI.UI = (function() {
       island.classList.add('vdi-expanded');
 
       if (!settings.seenTooltip && $('vdi-stg-tooltip')) {
-        $('vdi-stg-tooltip').style.display = 'flex';
-        updateTooltipPosition();
-        setTimeout(function() {
-          $('vdi-stg-tooltip').classList.add('show');
-        }, 50);
+        clearTimeout(ttTimer);
+        ttTimer = setTimeout(function() {
+          if (!settings.seenTooltip && island.classList.contains('vdi-expanded')) {
+            settings.seenTooltip = true;
+            if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+              chrome.storage.local.set({ 'vdi_cfg_seenTooltip3': true });
+            } else {
+              localStorage.setItem('vdi_cfg_seenTooltip3', 'true');
+            }
+            $('vdi-stg-tooltip').style.display = 'flex';
+            updateTooltipPosition();
+            if ($('vdi-settings-btn')) $('vdi-settings-btn').style.opacity = '1';
+            setTimeout(function() {
+              $('vdi-stg-tooltip').classList.add('show');
+            }, 50);
+          }
+        }, 1200);
       }
 
       resetIdle();
@@ -818,6 +848,7 @@ VDI.UI = (function() {
     function handleMouseLeave() {
       if (isDragging) return;
       clearTimeout(colTimer);
+      clearTimeout(ttTimer);
       colTimer = setTimeout(function() {
         island.classList.remove('vdi-expanded');
         var sp = $('vdi-settings-panel');
@@ -826,6 +857,7 @@ VDI.UI = (function() {
           $('vdi-stg-tooltip').classList.remove('show');
           setTimeout(function() {
             if ($('vdi-stg-tooltip')) $('vdi-stg-tooltip').style.display = 'none';
+            if ($('vdi-settings-btn')) $('vdi-settings-btn').style.opacity = '';
           }, 300);
         }
         if (state.lyricsOn) {
@@ -1079,6 +1111,7 @@ VDI.UI = (function() {
             $('vdi-stg-tooltip').classList.remove('show');
             setTimeout(function() {
               if ($('vdi-stg-tooltip')) $('vdi-stg-tooltip').style.display = 'none';
+              if ($('vdi-settings-btn')) $('vdi-settings-btn').style.opacity = '';
             }, 300);
             
             if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -1416,7 +1449,14 @@ VDI.UI = (function() {
           applyPos(res.vdi_loc_x, res.vdi_loc_y, res.vdi_transform);
           if (res.hideYouTube !== undefined) settings.hideYouTube = res.hideYouTube;
           if (res.hideYouTubeMusic !== undefined) settings.hideYouTubeMusic = res.hideYouTubeMusic;
-          if (res.amoledBlack !== undefined) settings.amoledBlack = res.amoledBlack;
+          
+          if (res.amoledBlack !== undefined && res.amoledBlack !== settings.amoledBlack) {
+            settings.amoledBlack = res.amoledBlack;
+            if (state && state.artwork) {
+              VDI.Core.extractVibrant(state.artwork, settings.amoledBlack, applyTheme);
+            }
+          }
+
           if (res.hideSpotify !== undefined) settings.hideSpotify = res.hideSpotify;
           if (res.hideAppleMusic !== undefined) settings.hideAppleMusic = res.hideAppleMusic;
           if (res.enableLyrics !== undefined) settings.enableLyrics = res.enableLyrics;
@@ -1430,6 +1470,12 @@ VDI.UI = (function() {
           $('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
           $('vdi-stg-enlyrics').checked = settings.enableLyrics;
           $('vdi-stg-freeplace').checked = settings.freePlacement;
+
+          // Start loop after settings load to prevent visual glitches
+          bindEvents();
+          startTick();
+          setupFullscreen();
+          resetIdle();
         });
 
         chrome.storage.onChanged.addListener(function(changes, namespace) {
@@ -1467,12 +1513,12 @@ VDI.UI = (function() {
         settings.enableLyrics = getBool('enableLyrics', settings.enableLyrics);
         settings.freePlacement = getBool('freePlacement', settings.freePlacement);
         settings.seenTooltip = getBool('seenTooltip3', settings.seenTooltip);
+        
+        bindEvents();
+        startTick();
+        setupFullscreen();
+        resetIdle();
       }
-      
-      bindEvents();
-      startTick();
-      setupFullscreen();
-      resetIdle();
     }
 
     return {

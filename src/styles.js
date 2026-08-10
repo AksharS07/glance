@@ -36,8 +36,8 @@ VDI.Styles = (function() {
         'opacity:0;pointer-events:none;',
         'font-family:-apple-system,Inter,Segoe UI,sans-serif;',
         '-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;text-rendering:optimizeLegibility;letter-spacing:normal;line-height:normal;',
-        'transition:width .55s cubic-bezier(0.34, 1.56, 0.64, 1),height .55s cubic-bezier(0.34, 1.56, 0.64, 1),',
-          'border-radius .55s cubic-bezier(0.34, 1.56, 0.64, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease;',
+        'transition:width .6s cubic-bezier(0.2, 0.8, 0.2, 1),height .6s cubic-bezier(0.2, 0.8, 0.2, 1),',
+          'border-radius .6s cubic-bezier(0.2, 0.8, 0.2, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease;',
       '}'
     );
 
@@ -148,6 +148,10 @@ VDI.Styles = (function() {
     rules.push('#vdi-ctrl-main{display:flex;align-items:center;gap:6px;}');
     rules.push('#vdi-ctrl-extra{display:flex;align-items:center;gap:3px;}');
 
+    // Hard reset for island buttons to prevent host CSS bleed (fixes Devpost padding/margin bugs)
+    rules.push('.vdi-btn, .vdi-icon-btn, #vdi-play, #vdi-settings-btn, #vdi-close-btn, #vdi-teleport-btn, #vdi-romanize-btn { box-sizing: border-box !important; padding: 0 !important; margin: 0 !important; flex-shrink: 0 !important; min-width: 0 !important; min-height: 0 !important; }');
+    rules.push('.vdi-btn svg, .vdi-icon-btn svg, #vdi-play svg, #vdi-settings-btn svg, #vdi-romanize-btn svg { flex-shrink: 0 !important; margin: 0 !important; padding: 0 !important; }');
+
     // Standard button
     rules.push(
       '.vdi-btn{',
@@ -165,6 +169,9 @@ VDI.Styles = (function() {
 
     // ── Base active: fully vibrant (inherits accent color) ──
     rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color: var(--vdi-accent, ' + accent + ') !important; filter: drop-shadow(0 0 6px var(--vdi-accent,' + accent + ')) !important;}');
+    rules.push('@keyframes vdi-pulse-smart{0%{filter:drop-shadow(0 0 3px #1ed760);} 100%{filter:drop-shadow(0 0 9px #1ed760);}}');
+    rules.push('#vdi-shuffle.vdi-smart-shuffle{color: #1ed760 !important; animation: vdi-pulse-smart 1.2s infinite alternate;}');
+    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle::after{background: #1ed760 !important;}');
 
     // ── Spotify: dot below active button ──
     rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-active::after, .vdi-platform-spotify #vdi-repeat.vdi-active::after{content:""; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--vdi-accent,' + accent + '); opacity:1;}');
@@ -189,10 +196,10 @@ VDI.Styles = (function() {
     // Icon button (smaller, square-ish)
     rules.push(
       '.vdi-icon-btn{',
-        'width:28px;height:28px;border-radius:8px;border:none;cursor:pointer;',
+        'width:28px !important;height:28px !important;border-radius:8px !important;border:none !important;cursor:pointer;',
         'display:flex;align-items:center;justify-content:center;',
-        'background:rgba(255,255,255,.04);',
-        'color:rgba(255,255,255,.55);',
+        'background:rgba(255,255,255,.04) !important;',
+        'color:rgba(255,255,255,.55) !important;',
         'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
@@ -215,17 +222,17 @@ VDI.Styles = (function() {
     // Play button (premium frosted glass aesthetic - distinct but cohesive)
     rules.push(
       '#vdi-play{',
-        'width:44px;height:44px;border-radius:50%;',
-        'background:rgba(255,255,255,0.12);',
-        'color:#fff;',
-        'display:flex;align-items:center;justify-content:center;border:none;',
+        'width:44px !important;height:44px !important;border-radius:50% !important;',
+        'background:rgba(255,255,255,0.12) !important;',
+        'color:#fff !important;',
+        'display:flex;align-items:center;justify-content:center;border:none !important;',
         'cursor:pointer;transition:transform .15s cubic-bezier(0.4, 0, 0.2, 1), background .2s;',
         'backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);',
-        'box-shadow: 0 4px 12px rgba(0,0,0,0.15);',
+        'box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;',
       '}'
     );
-    rules.push('#vdi-play:hover{background:rgba(255,255,255,0.22); color:var(--vdi-accent, #fff); transform:scale(1.05);}');
-    rules.push('#vdi-play svg{width:20px;height:20px;}');
+    rules.push('#vdi-play:hover{background:rgba(255,255,255,0.22) !important; color:var(--vdi-accent, #fff) !important; transform:scale(1.05);}');
+    rules.push('#vdi-play svg{width:20px;height:20px;fill:currentColor !important;}');
 
     // ═══════════════════════════════════════════════════════════
     // Lyrics Panel
@@ -362,14 +369,14 @@ VDI.Styles = (function() {
       '#vdi-settings-btn:hover{background:rgba(255,255,255,0.25);transform:rotate(45deg);}',
       '#vdi-settings-btn svg{width:14px;height:14px;fill:rgba(255,255,255,0.8);}',
 
-      '#vdi-stg-tooltip{position:fixed; width:180px; background:rgba(20,20,30,0.9); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px; display:none; flex-direction:column; gap:8px; z-index:2147483647; box-shadow:0 10px 20px rgba(0,0,0,0.5); opacity:0; pointer-events:none; transition:opacity 0.3s, transform 0.3s; transform:translateY(-10px); font-family:system-ui,sans-serif;}',
+      '#vdi-stg-tooltip{position:fixed; width:150px; box-sizing: border-box !important; background:rgba(20,20,30,0.9); backdrop-filter:blur(10px); border:1px solid rgba(255,255,255,0.1); border-radius:12px; padding:12px; display:none; flex-direction:column; gap:8px; z-index:2147483647; box-shadow:0 10px 20px rgba(0,0,0,0.5); opacity:0; pointer-events:none; transition:opacity 0.3s, transform 0.3s; transform:translateY(-10px); font-family:system-ui,sans-serif;}',
       '#vdi-stg-tooltip.show{opacity:1; pointer-events:all; transform:translateY(0);}',
-      '#vdi-stg-tooltip:before{content:""; position:absolute; top:-6px; left:16px; border-left:6px solid transparent; border-right:6px solid transparent; border-bottom:6px solid rgba(20,20,30,0.9);}',
+      '#vdi-stg-tooltip:before{content:""; position:absolute; top:12px; right:-6px; border-top:6px solid transparent; border-bottom:6px solid transparent; border-left:6px solid rgba(20,20,30,0.9);}',
       '#vdi-stg-tooltip span{font-size:12px; color:rgba(255,255,255,0.9); font-weight:500; line-height:1.4;}',
       '#vdi-stg-tooltip-btn{background:var(--vdi-accent, #6366f1); border:none; color:#fff; padding:6px 12px; border-radius:8px; font-size:11px; font-weight:600; cursor:pointer; font-family:inherit;}',
       '#vdi-stg-tooltip-btn:hover{filter:brightness(1.2);}',
       '#vdi-settings-panel{',
-        'position:fixed;width:280px;padding:16px;',
+        'position:fixed;width:300px !important;padding:16px !important;box-sizing:border-box !important;',
         'background:rgba(20,20,30,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);',
         'border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.5);',
         'display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);',
@@ -378,6 +385,7 @@ VDI.Styles = (function() {
       '#vdi-settings-panel.show{opacity:1;pointer-events:all;}',
       '.vdi-stg-row{display:flex;justify-content:space-between;align-items:center; margin-bottom:12px;}',
       '.vdi-stg-label{color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;}',
+      '.vdi-new-tag{background:#ff4757;color:#fff;font-size:8px;padding:2px 4px;border-radius:4px;font-weight:bold;margin-left:6px;letter-spacing:0.5px;vertical-align:middle;}',
       '.vdi-stg-sub{font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;}',
       '.vdi-switch{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;}',
       '.vdi-switch input{opacity:0;width:0;height:0;}',
