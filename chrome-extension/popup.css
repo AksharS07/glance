@@ -309,7 +309,7 @@ input:checked + .slider:before {
   text-overflow: ellipsis;
 }
 .np-btn {
-  background: rgba(255,255,255,0.1);
+  background: var(--accent-color, rgba(255,255,255,0.1));
   border: none;
   color: white;
   width: 28px;
@@ -396,7 +396,7 @@ input:checked + .slider:before {
 }
 .save-btn {
   width: 100%;
-  background: #6366f1;
+  background: var(--accent-color, #6366f1);
   color: white;
   border: none;
   border-radius: 6px;
@@ -406,5 +406,6 @@ input:checked + .slider:before {
   cursor: pointer;
 }
 .save-btn:hover {
-  background: #4f46e5;
+  background: var(--accent-color, #4f46e5);
+  opacity: 0.9;
 }

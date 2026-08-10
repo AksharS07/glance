@@ -183,7 +183,7 @@ VDI.UI = (function() {
     var idleDelay = opts.idleDelay || 9000;
     var collapseDelay = opts.collapseDelay || 500;
     var isDragging = false;
-    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false, amoledBlack: true };
+    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false, amoledBlack: false };
 
     // Helper
     function $(id) { return document.getElementById(id); }
