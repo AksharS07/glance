@@ -167,30 +167,15 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn svg{width:16px;height:16px;pointer-events:none;}');
     rules.push('#vdi-shuffle, #vdi-repeat{position:relative;}');
 
-    // ── Base active: fully vibrant (inherits accent color) ──
-    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color: var(--vdi-accent, ' + accent + ') !important; filter: drop-shadow(0 0 6px var(--vdi-accent,' + accent + ')) !important;}');
-    rules.push('@keyframes vdi-pulse-smart{0%{filter:drop-shadow(0 0 3px #1ed760);} 100%{filter:drop-shadow(0 0 9px #1ed760);}}');
-    rules.push('#vdi-shuffle.vdi-smart-shuffle{color: #1ed760 !important; animation: vdi-pulse-smart 1.2s infinite alternate;}');
-    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle::after{background: #1ed760 !important;}');
+    // ── Base active: flat vibrant color (inherits accent color) ──
+    rules.push('#vdi-shuffle.vdi-active, #vdi-repeat.vdi-active{color: var(--vdi-accent, ' + accent + ') !important;}');
+
 
     // ── Spotify: dot below active button ──
-    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-active::after, .vdi-platform-spotify #vdi-repeat.vdi-active::after{content:""; position:absolute; bottom:1px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--vdi-accent,' + accent + '); opacity:1;}');
-
-    // ── Apple Music: filled light pill (iOS button language) ──
-    rules.push('.vdi-platform-apple #vdi-shuffle.vdi-active, .vdi-platform-apple #vdi-repeat.vdi-active{background:rgba(255,255,255,.18);border-radius:8px;filter:drop-shadow(0 0 6px var(--vdi-accent,' + accent + '));}');
-
-    // ── YT Music: dark bubble/circle background (native YT language) ──
-    rules.push('.vdi-platform-ytmusic #vdi-shuffle.vdi-active, .vdi-platform-ytmusic #vdi-repeat.vdi-active{background:rgba(255,255,255,.12);border-radius:50%;width:28px;height:28px;display:flex;align-items:center;justify-content:center;filter:drop-shadow(0 0 5px var(--vdi-accent,' + accent + '));}');
-
-    // ── Repeat one: stronger glow on all platforms ──
-    rules.push('#vdi-repeat.vdi-repeat-one{filter: drop-shadow(0 0 8px var(--vdi-accent,' + accent + ')) drop-shadow(0 0 12px var(--vdi-accent,' + accent + ')) !important;}');
-    rules.push('#vdi-repeat.vdi-repeat-one text{fill:var(--vdi-accent,' + accent + ');font-weight:900;}');
-
-    // ── Smart shuffle (Spotify only): white icon + double glow to distinguish from regular ──
-    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle{color:#fff !important; filter: drop-shadow(0 0 8px #fff) drop-shadow(0 0 12px var(--vdi-accent,' + accent + ')) !important;}');
-    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-smart-shuffle::after{background:#fff !important;}');
+    rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-active::after, .vdi-platform-spotify #vdi-repeat.vdi-active::after{content:""; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--vdi-accent,' + accent + '); opacity:1;}');
 
     
+
     rules.push('#vdi-repeat{position:relative;}');
 
     // Icon button (smaller, square-ish)
