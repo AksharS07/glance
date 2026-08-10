@@ -139,8 +139,17 @@ document.addEventListener('DOMContentLoaded', function() {
       const art = document.getElementById('np-art');
       if (state.artwork) {
         art.src = state.artwork;
+        
+        chrome.storage.local.get({ amoledBlack: false }, function(stg) {
+          chrome.runtime.sendMessage({ type: 'VDI_EXTRACT_COLOR', url: state.artwork, amoled: stg.amoledBlack }, function(colors) {
+            if (colors && colors.accent) {
+              document.documentElement.style.setProperty('--accent-color', colors.accent);
+            }
+          });
+        });
       } else {
         art.src = '';
+        document.documentElement.style.removeProperty('--accent-color');
       }
       
       const btn = document.getElementById('np-playpause');
@@ -224,6 +233,14 @@ document.addEventListener('DOMContentLoaded', function() {
       });
     } catch(err) {
       showError();
+    }
+  });
+
+  // Popup Shortcuts Edit Button
+  document.getElementById('vdi-popup-shortcuts-btn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+      chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'openShortcuts' });
     }
   });
 });

@@ -273,6 +273,11 @@ VDI.Platform.ChromeExt = (function() {
           sendResponse(result);
         });
         return true; // Keep message channel open for async response
+      } else if (msg.type === 'VDI_EXTRACT_COLOR') {
+        VDI.Core.extractVibrant(msg.url, msg.amoled, function(res) {
+          sendResponse(res);
+        });
+        return true;
       } else if (msg.type === 'VDI_BATCH_ROMANIZE') {
         VDI.Core.batchRomanize(msg.lines, function(result) {
           sendResponse(result);

@@ -122,7 +122,7 @@ body {
 }
 
 input:checked + .slider {
-  background-color: #6366f1; /* Brand Indigo */
+  background-color: var(--accent-color, #6366f1); /* Brand Indigo */
 }
 
 input:checked + .slider:before {

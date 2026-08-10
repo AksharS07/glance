@@ -81,11 +81,11 @@
   <div class="section card">
     <h3>Features</h3>
     <div class="setting-row">
-      <label for="enableShortcuts">Keyboard Shortcuts (Alt+Space/Left/Right)</label>
-      <label class="switch">
-        <input type="checkbox" id="enableShortcuts" checked>
-        <span class="slider"></span>
-      </label>
+      <div style="display:flex;flex-direction:column;">
+        <label style="margin-bottom:2px;">Keyboard Shortcuts</label>
+        <span style="font-size: 11px; color: rgba(255,255,255,0.5);">Manage global hotkeys</span>
+      </div>
+      <button id="vdi-popup-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;">Edit</button>
     </div>
     <div class="setting-row" style="margin-bottom: 0;">
       <label for="enableLyrics">Enable Lyrics Engine</label>
