@@ -96,19 +96,11 @@ VDI.Core = (function() {
         } else if (darkN > 0) {
           bgR=darkR/darkN*0.6; bgG=darkG/darkN*0.6; bgB=darkB/darkN*0.6;
         }
-        // Convert bg to HSL, force very dark
-        var mxBg=Math.max(bgR,bgG,bgB),mnBg=Math.min(bgR,bgG,bgB);
-        var hBg=0,sBg=0,lBg=(mxBg+mnBg)/2;
-        if(mxBg!==mnBg){
-          var dBg=mxBg-mnBg;
-          sBg=lBg>0.5?dBg/(2-mxBg-mnBg):dBg/(mxBg+mnBg);
-          if(mxBg===bgR) hBg=(bgG-bgB)/dBg+(bgG<bgB?6:0);
-          else if(mxBg===bgG) hBg=(bgB-bgR)/dBg+2;
-          else hBg=(bgR-bgG)/dBg+4;
-          hBg=Math.round(hBg*60); if(hBg<0)hBg+=360;
-        }
-        lBg=Math.max(0.06,Math.min(0.16,lBg*0.4+0.03));
-        sBg=Math.min(0.5,sBg*0.55);
+        // AMOLED MODE: Island background is always pure near-black.
+        // The album color "personality" is expressed through the accent color on buttons/progress bar
+        // and a subtle colored glow underneath the island — NOT by tinting the background.
+        // This feels much more like the real Apple Dynamic Island on OLED screens.
+        var hBg = 0, sBg = 0, lBg = 0.07; // pure near-black, no hue
 
         // ── PASS 2: Accent color — the vibrant "pop" (buttons, toggles) ──
         // Key: DEVALUE hues close to dominant so contrasting highlights win.
