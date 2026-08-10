@@ -379,7 +379,7 @@ VDI.Styles = (function() {
       '.vdi-stg-row{display:flex;justify-content:space-between;align-items:center; margin-bottom:12px;}',
       '.vdi-stg-label{color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;}',
       '.vdi-stg-sub{font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;}',
-      '.vdi-switch{position:relative;display:inline-block;width:36px;height:20px;}',
+      '.vdi-switch{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;}',
       '.vdi-switch input{opacity:0;width:0;height:0;}',
       '.vdi-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:rgba(255,255,255,0.1);transition:.3s;border-radius:20px;border:1px solid rgba(255,255,255,0.1);}',
       '.vdi-slider:before{position:absolute;content:"";height:14px;width:14px;left:2px;bottom:2px;background-color:rgba(255,255,255,0.6);transition:.3s;border-radius:50%;}',
