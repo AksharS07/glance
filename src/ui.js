@@ -790,6 +790,10 @@ VDI.UI = (function() {
       idleTimer = setTimeout(function() {
         if (!state.hasMedia) return;
         if (state.lyricsOn) return; // Never collapse if lyrics are open
+        
+        var sp = $('vdi-settings-panel');
+        if (sp && sp.classList.contains('show')) return; // Never collapse if settings are open
+        
         state.isIdle = true;
         island.classList.add('vdi-idle');
       }, idleDelay);
