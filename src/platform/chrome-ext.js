@@ -223,6 +223,18 @@ VDI.Platform.ChromeExt = (function() {
             if (msg.val.source.tabId) chrome.tabs.update(msg.val.source.tabId, { active: true });
             if (msg.val.source.winId) chrome.windows.update(msg.val.source.winId, { focused: true });
           }
+        } else if (msg.act === 'openShortcuts') {
+          var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+          if (isFirefox && typeof browser !== 'undefined' && browser.commands && browser.commands.openShortcutSettings) {
+            browser.commands.openShortcutSettings();
+          } else {
+            var isEdge = navigator.userAgent.includes("Edg/");
+            var isBrave = navigator.brave !== undefined;
+            var url = "chrome://extensions/shortcuts";
+            if (isEdge) url = "edge://extensions/shortcuts";
+            if (isBrave) url = "brave://extensions/shortcuts";
+            chrome.tabs.create({ url: url });
+          }
         } else {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
           chrome.tabs.get(S.tabId, function(tab) {

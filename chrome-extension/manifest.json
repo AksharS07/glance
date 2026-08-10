@@ -14,16 +14,19 @@
   },
   "commands": {
     "toggle-playback": {
-      "suggested_key": { "default": "Alt+Space" },
-      "description": "Play/Pause"
+      "suggested_key": { "default": "MediaPlayPause" },
+      "description": "Play/Pause",
+      "global": true
     },
     "next-track": {
-      "suggested_key": { "default": "Alt+Right" },
-      "description": "Next Track"
+      "suggested_key": { "default": "MediaNextTrack" },
+      "description": "Next Track",
+      "global": true
     },
     "prev-track": {
-      "suggested_key": { "default": "Alt+Left" },
-      "description": "Previous Track"
+      "suggested_key": { "default": "MediaPrevTrack" },
+      "description": "Previous Track",
+      "global": true
     }
   },
   "permissions": [
@@ -35,8 +38,7 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js",
-    "scripts": ["background.js"]
+    "service_worker": "background.js"
   },
   "browser_specific_settings": {
     "gecko": {

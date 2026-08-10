@@ -88,6 +88,7 @@ VDI.UI = (function() {
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Enable Lyrics Engine</span><span class="vdi-stg-sub">Fetch and display time-synced lyrics</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-enlyrics"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Free Placement</span><span class="vdi-stg-sub">Allow dragging anywhere on the screen</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-freeplace"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Keyboard Shortcuts</span><span class="vdi-stg-sub">Manage global hotkeys for media controls</span></div><button id="vdi-stg-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;">Edit</button></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Presets</div>' +
       '<div class="vdi-stg-row" style="justify-content:space-between; margin-top:4px;">' +
         '<button class="vdi-preset-btn" id="vdi-stg-pos-t" title="Snap to Top Center">Top</button>' +
@@ -1123,6 +1124,16 @@ VDI.UI = (function() {
         bindStg('vdi-stg-hideapplemusic', 'hideAppleMusic');
         bindStg('vdi-stg-enlyrics', 'enableLyrics');
         bindStg('vdi-stg-freeplace', 'freePlacement');
+
+        var scBtn = $('vdi-stg-shortcuts-btn');
+        if (scBtn) {
+          scBtn.addEventListener('click', function(e) {
+            e.stopPropagation();
+            if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
+              chrome.runtime.sendMessage({ action: 'openShortcuts' });
+            }
+          });
+        }
 
         var updatePos = function(left, top, transform) {
           island.style.left = left;
