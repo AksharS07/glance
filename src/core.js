@@ -552,17 +552,18 @@ VDI.Core = (function() {
           // NOTE: wrappedJSObject setter is ignored by MusicKit, so we read only.
           // DOM class 'mode--X' on .button--repeat is the ground truth.
           var rm = mk.repeatMode;
-          repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
+          repeatMode = (rm === 1) ? 'all' : ((rm === 2) ? 'one' : 'off');
 
           // ── DOM override for repeat: .button--repeat has class mode--0/1/2 ──
           // This is more reliable than wrappedJSObject on Firefox/Zen
           try {
-            var repDomBtn = VDI.Core.deepQueryOne('.button--repeat');
+            var repDomBtn = VDI.Core.deepQueryOne('.button--repeat, amp-playback-controls-repeat');
             if (repDomBtn) {
               var rc = repDomBtn.className || '';
-              if (rc.includes('mode--1')) repeatMode = 'all';
-              else if (rc.includes('mode--2')) repeatMode = 'one';
-              else repeatMode = 'off';
+              var rl = (repDomBtn.getAttribute('aria-label') || repDomBtn.getAttribute('title') || '').toLowerCase();
+              if (rl.includes('one') || rc.includes('mode--2')) repeatMode = 'one';
+              else if (rl.includes('all') || rc.includes('mode--1')) repeatMode = 'all';
+              else if (rc.includes('mode--0')) repeatMode = 'off';
             }
           } catch(e) {}
 
