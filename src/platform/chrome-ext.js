@@ -114,7 +114,7 @@ VDI.Platform.ChromeExt = (function() {
               S.platform = res.platform || 'other';
               if (!res.hasMedia) S.hasMedia = false;
               broadcastState();
-            });
+            }, 'MAIN');
           } else if (S.hasMedia) {
             S.hasMedia = false;
             broadcastState();
@@ -148,7 +148,7 @@ VDI.Platform.ChromeExt = (function() {
           S.platform = res.platform || 'other';
 
           broadcastState();
-        });
+        }, 'MAIN');
       });
     }
 
