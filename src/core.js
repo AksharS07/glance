@@ -552,7 +552,7 @@ VDI.Core = (function() {
           // NOTE: wrappedJSObject setter is ignored by MusicKit, so we read only.
           // DOM class 'mode--X' on .button--repeat is the ground truth.
           var rm = mk.repeatMode;
-          repeatMode = (rm === 1) ? 'all' : ((rm === 2) ? 'one' : 'off');
+          repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
 
           // ── DOM override for repeat: .button--repeat has class mode--0/1/2 ──
           // This is more reliable than wrappedJSObject on Firefox/Zen
@@ -1042,10 +1042,10 @@ VDI.Core = (function() {
           else if (act === 'repeat') {
             // wrappedJSObject setter is silently ignored by MusicKit.
             // Click the native .button--repeat DOM button through shadow DOM instead.
-            var repBtn = VDI.Core.deepQueryOne('.button--repeat');
+            var repBtn = VDI.Core.deepQueryOne('.button--repeat, button[aria-label*="repeat" i], amp-playback-controls-repeat');
             if (repBtn) { repBtn.click(); return; }
             // Fallback: try setting repeatMode directly (Vivaldi main world)
-            m.repeatMode = m.repeatMode === 0 ? 1 : (m.repeatMode === 1 ? 2 : 0);
+            m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0);
             return;
           }
         }
