@@ -175,7 +175,6 @@ VDI.Styles = (function() {
 
     // ── Spotify: dot below active button ──
     rules.push('.vdi-platform-spotify #vdi-shuffle.vdi-active::after, .vdi-platform-spotify #vdi-repeat.vdi-active::after{content:""; position:absolute; bottom:-1px; left:50%; transform:translateX(-50%); width:4px; height:4px; border-radius:50%; background:var(--vdi-accent,' + accent + '); opacity:1;}');
-    rules.push('.vdi-platform-spotify #vdi-repeat.vdi-repeat-one::after, .vdi-platform-other #vdi-repeat.vdi-repeat-one::after{content:"1";position:absolute;font-size:8px;font-weight:900;top:50%;left:50%;transform:translate(-50%,-50%);pointer-events:none;}');
 
     
 
