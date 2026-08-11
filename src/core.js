@@ -1134,7 +1134,7 @@ VDI.Core = (function() {
           var sb = deepQueryOne('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]');
           if (sb) sb.click();
         } else if (act === 'repeat') {
-          var rb = deepQueryOne('button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
+          var rb = deepQueryOne('.button--repeat, amp-playback-controls-repeat, button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
           if (rb) rb.click();
         }
         return;
