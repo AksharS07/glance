@@ -58,6 +58,19 @@ Apple Music Web (`music.apple.com`) has military-grade CSP that blocks all scrip
 
 ### The Working Solution: `window.wrappedJSObject` (Firefox/Zen)
 - Firefox/Zen content scripts run in an `ISOLATED` world but can access the page's main-world objects via `window.wrappedJSObject`.
+
+### Apple Music Repeat Cycle Mapping
+Apple Music has a highly unorthodox state mapping for its repeat mode that inverses standard `MusicKit` logic visually.
+- The `MusicKit` API enum is: `0 = Off`, `1 = Repeat One`, `2 = Repeat All`.
+- The cycle UI natively goes in this order: `Off -> Repeat All -> Repeat One`.
+- Mathematically, this means the cycle skips from `0` to `2` to `1` and back to `0`.
+
+If you write a standard modulo fallback `(m.repeatMode + 1) % 3`, the cycle will jump `0 -> 1` (Off to Repeat One), breaking the user experience and desyncing the Island.
+
+**MANDATORY:**
+Always use explicit conditional assignments for Apple Music's repeat cycle:
+`m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0);`
+Do not use `+ 1 % 3` for Apple Music.
 - **No script injection needed** — this is a native Firefox security model feature.
 - **Bypasses CSP entirely** because we are reading, not injecting.
 

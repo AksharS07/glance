@@ -557,12 +557,13 @@ VDI.Core = (function() {
           // ── DOM override for repeat: .button--repeat has class mode--0/1/2 ──
           // This is more reliable than wrappedJSObject on Firefox/Zen
           try {
-            var repDomBtn = VDI.Core.deepQueryOne('.button--repeat');
+            var repDomBtn = VDI.Core.deepQueryOne('.button--repeat, amp-playback-controls-repeat');
             if (repDomBtn) {
               var rc = repDomBtn.className || '';
-              if (rc.includes('mode--2')) repeatMode = 'all';
-              else if (rc.includes('mode--1')) repeatMode = 'one';
-              else repeatMode = 'off';
+              var rl = (repDomBtn.getAttribute('aria-label') || repDomBtn.getAttribute('title') || '').toLowerCase();
+              if (rl.includes('one') || rc.includes('mode--2')) repeatMode = 'one';
+              else if (rl.includes('all') || rc.includes('mode--1')) repeatMode = 'all';
+              else if (rc.includes('mode--0')) repeatMode = 'off';
             }
           } catch(e) {}
 
@@ -1042,7 +1043,7 @@ VDI.Core = (function() {
           else if (act === 'repeat') {
             // wrappedJSObject setter is silently ignored by MusicKit.
             // Click the native .button--repeat DOM button through shadow DOM instead.
-            var repBtn = VDI.Core.deepQueryOne('.button--repeat');
+            var repBtn = VDI.Core.deepQueryOne('.button--repeat, button[aria-label*="repeat" i], amp-playback-controls-repeat');
             if (repBtn) { repBtn.click(); return; }
             // Fallback: try setting repeatMode directly (Vivaldi main world)
             m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0);
@@ -1133,7 +1134,7 @@ VDI.Core = (function() {
           var sb = deepQueryOne('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]');
           if (sb) sb.click();
         } else if (act === 'repeat') {
-          var rb = deepQueryOne('button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
+          var rb = deepQueryOne('.button--repeat, amp-playback-controls-repeat, button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
           if (rb) rb.click();
         }
         return;

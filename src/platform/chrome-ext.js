@@ -114,7 +114,7 @@ VDI.Platform.ChromeExt = (function() {
               S.platform = res.platform || 'other';
               if (!res.hasMedia) S.hasMedia = false;
               broadcastState();
-            }, 'MAIN');
+            });
           } else if (S.hasMedia) {
             S.hasMedia = false;
             broadcastState();
@@ -148,7 +148,7 @@ VDI.Platform.ChromeExt = (function() {
           S.platform = res.platform || 'other';
 
           broadcastState();
-        }, 'MAIN');
+        });
       });
     }
 
@@ -240,9 +240,27 @@ VDI.Platform.ChromeExt = (function() {
         } else {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
           chrome.tabs.get(S.tabId, function(tab) {
-            execInTab(S.tabId, function(act, val) {
-              if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
-            }, args, null, 'ISOLATED');
+            var isAM = tab && tab.url && tab.url.includes('music.apple.com');
+            if (isAM) {
+              // Apple Music: inject self-contained MusicKit call in MAIN world (VDI not available there)
+              execInTab(S.tabId, function(act, val) {
+                try {
+                  if (window.MusicKit && window.MusicKit.getInstance) {
+                    var m = window.MusicKit.getInstance();
+                    if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); }
+                    else if (act === 'prev') { m.skipToPreviousItem(); }
+                    else if (act === 'next') { m.skipToNextItem(); }
+                    else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; }
+                    else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0); }
+                    else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
+                  }
+                } catch(e) {}
+              }, args, null, 'MAIN');
+            } else {
+              execInTab(S.tabId, function(act, val) {
+                if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
+              }, args, null, 'ISOLATED');
+            }
           });
 
           // Rapid poll after actions
