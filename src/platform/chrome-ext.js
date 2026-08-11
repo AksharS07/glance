@@ -111,6 +111,7 @@ VDI.Platform.ChromeExt = (function() {
               S.shuffleOn = res.shuffleOn || false;
               S.smartShuffleOn = res.smartShuffleOn || false;
               S.repeatMode = res.repeatMode || 'off';
+              S.platform = res.platform || 'other';
               if (!res.hasMedia) S.hasMedia = false;
               broadcastState();
             });
@@ -144,6 +145,7 @@ VDI.Platform.ChromeExt = (function() {
           S.shuffleOn = res.shuffleOn || false;
           S.smartShuffleOn = res.smartShuffleOn || false;
           S.repeatMode = res.repeatMode || 'off';
+          S.platform = res.platform || 'other';
 
           broadcastState();
         });

@@ -133,6 +133,12 @@ function buildVivaldi() {
             isYouTubeVideo: res.isYouTubeVideo || false,
             isMusicApp: res.isMusicApp || false,
             isFullscreen: res.isFullscreen || false,
+            shuffleOn: res.shuffleOn || false,
+            smartShuffleOn: res.smartShuffleOn || false,
+            repeatMode: res.repeatMode || 'off',
+            platform: res.platform || 'other',
+            shufSvg: res.shufSvg || null,
+            repSvg: res.repSvg || null,
             tabId: tab.id,
             windowId: tab.windowId
           });
@@ -276,7 +282,7 @@ function buildZip() {
 console.log('Dynamic Island Build');
 console.log('====================\n');
 
-// buildVivaldi();
+buildVivaldi();
 buildChromeContent();
 buildChromeBackground();
 

@@ -735,13 +735,18 @@ VDI.Core = (function() {
     }
 
     // Spotify shuffle: 3 modes — off / on / smart
-    var shufPath = document.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
-    var shufBtn = shufPath ? shufPath.closest('button') : document.querySelector('button[aria-label*="shuffle" i]');
+    var playerBar = document.querySelector('[data-testid="player-controls"], .now-playing-bar') || document;
+    var shufPath = playerBar.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
+    var shufBtn = shufPath ? shufPath.closest('button') : playerBar.querySelector('[data-testid="control-button-shuffle"], button[aria-label*="shuffle" i]');
     var shuffleOn = false;
     var isSmartShuffle = false;
     if (shufBtn) {
-      shuffleOn = shufBtn.className.includes('encore-internal-color-text-bright-accent');
+      shuffleOn = shufBtn.className.includes('encore-internal-color-text-bright-accent') || shufBtn.getAttribute('aria-checked') === 'true' || shufBtn.getAttribute('aria-checked') === 'mixed';
+      var sLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
       isSmartShuffle = !!shufBtn.querySelector('path[d^="M12.69"]');
+      if (!isSmartShuffle && shuffleOn && sLabel.includes('disable smart')) {
+          isSmartShuffle = true;
+      }
     }
     
     var repeatMode = 'off';
@@ -934,24 +939,24 @@ VDI.Core = (function() {
         }
       }
 
-      return {
-        title: (ms && ms.metadata && ms.metadata.title) || '',
-        artist: (ms && ms.metadata && ms.metadata.artist) || '',
-        artwork: art,
-        isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
-        duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
-        position: finalPos,
-        hasMedia: !!(el || (ms && ms.metadata && ms.metadata.title)),
-        volume: el ? el.volume : 1,
-        pipOk: pipOk,
-        isFullscreen: !!document.fullscreenElement,
-        isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
-        isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
-        platform: isYTMusic ? 'ytmusic' : (location.hostname.includes('youtube.com') ? 'youtube' : 'other'),
-        shuffleOn: shuffleOn,
-        repeatMode: repeatMode,
-        timestamp: Date.now()
-      };
+        return {
+          title: (ms && ms.metadata && ms.metadata.title) || '',
+          artist: (ms && ms.metadata && ms.metadata.artist) || '',
+          artwork: art,
+          isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
+          duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
+          position: finalPos,
+          hasMedia: !!(el || (ms && ms.metadata && ms.metadata.title)),
+          volume: el ? el.volume : 1,
+          pipOk: pipOk,
+          isFullscreen: !!document.fullscreenElement,
+          isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
+          isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
+          platform: isYTMusic ? 'ytmusic' : (location.hostname.includes('youtube.com') ? 'youtube' : 'other'),
+          shuffleOn: shuffleOn,
+          repeatMode: repeatMode,
+          timestamp: Date.now()
+        };
     } catch (e) {
       return null;
     }
@@ -976,8 +981,9 @@ VDI.Core = (function() {
         var nb = document.querySelector('[data-testid="control-button-skip-forward"]');
         if (nb) nb.click();
       } else if (act === 'shuffle') {
-        var sp = document.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
-        var sb = sp ? sp.closest('button') : document.querySelector('button[aria-label*="shuffle" i]');
+        var playerBar = document.querySelector('[data-testid="player-controls"], .now-playing-bar') || document;
+        var sp = playerBar.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
+        var sb = sp ? sp.closest('button') : playerBar.querySelector('[data-testid="control-button-shuffle"], button[aria-label*="shuffle" i]');
         if (sb) sb.click();
       } else if (act === 'repeat') {
         var rb = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
