@@ -1367,7 +1367,7 @@ VDI.UI = (function() {
       var prevKey = state.title + '|' + state.artist;
 
       state.hasMedia = newState.hasMedia;
-      if (!state.isPlayToggling || (Date.now() - (state.playToggleLockTime || 0) > 300)) {
+      if (!state.isPlayToggling || (Date.now() - (state.playToggleLockTime || 0) > 1500)) {
         state.isPlayToggling = false;
         state.isPlaying = newState.isPlaying;
       }
@@ -1387,9 +1387,9 @@ VDI.UI = (function() {
         var elapsed = (now - state.lastSyncTime) / 1000.0;
         var currentPredicted = (state.basePosition || 0) + elapsed;
         
-        // Only violently snap the clock if we drifted by more than 1.5s (or if forced).
+        // Only violently snap the clock if we drifted by more than 0.4s (or if forced).
         // Otherwise, trust our local 60FPS coasting timer to prevent micro-stutters!
-        if (!state.lastSyncTime || state.forceNextSync || Math.abs(currentPredicted - newBase) > 1.5) {
+        if (!state.lastSyncTime || state.forceNextSync || Math.abs(currentPredicted - newBase) > 0.4) {
           state.basePosition = newBase;
           state.lastSyncTime = now;
           state.position = state.basePosition;
