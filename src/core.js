@@ -677,44 +677,70 @@ VDI.Core = (function() {
   // Spotify Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getSpotifyMediaState() {
-    var parseTime = function(str) {
-      if (!str) return 0;
-      var p = str.trim().split(':').map(Number);
-      return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
-    };
-
-    var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
-    var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+    var ms = navigator.mediaSession;
+    var uiDur = 0;
+    var uiCur = 0;
     var playBtn = document.querySelector('[data-testid="control-button-playpause"]');
     
-    var uiDur = 0;
-    for (var i = 0; i < durEls.length; i++) {
-      if (durEls[i].getBoundingClientRect().width > 0) {
-        var dt = parseTime(durEls[i].textContent);
-        if (dt > uiDur) uiDur = dt;
+    // Prefer MediaSession for precise duration and position to avoid parsing DOM strings
+    if (ms && typeof ms.getPositionState === 'function') {
+      try {
+        var ps = ms.getPositionState();
+        if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+        if (ps && ps.position >= 0) uiCur = ps.position;
+      } catch(e) {}
+    }
+
+    // Fallback to DOM parsing ONLY if MediaSession fails
+    if (uiDur === 0 || uiCur === 0) {
+      var parseTime = function(str) {
+        if (!str) return 0;
+        var p = str.trim().split(':').map(Number);
+        return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+      };
+      if (uiDur === 0) {
+        var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
+        for (var i = 0; i < durEls.length; i++) {
+          if (durEls[i].getBoundingClientRect().width > 0) {
+            var dt = parseTime(durEls[i].textContent);
+            if (dt > uiDur) uiDur = dt;
+          }
+        }
+      }
+      if (uiCur === 0) {
+        var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+        for (var j = 0; j < posEls.length; j++) {
+          if (posEls[j].getBoundingClientRect().width > 0) {
+            var ct = parseTime(posEls[j].textContent);
+            if (ct > uiCur) uiCur = ct;
+          }
+        }
       }
     }
-    
-    var uiCur = 0;
-    for (var j = 0; j < posEls.length; j++) {
-      if (posEls[j].getBoundingClientRect().width > 0) {
-        var ct = parseTime(posEls[j].textContent);
-        if (ct > uiCur) uiCur = ct;
-      }
-    }
-    
-    // Spotify's UI string is often 1-3 seconds delayed due to chunked media buffering.
+
+    // Spotify's UI string and MediaSession position can be slightly delayed due to buffering.
     // To sync lyrics perfectly, we MUST extract millisecond precision from the true audio element.
     var realCur = null;
     var els = Array.prototype.slice.call(document.querySelectorAll('video, audio'));
     var realEl = null;
 
     if (uiDur > 0) {
+      var matchedEls = [];
       for (var k = 0; k < els.length; k++) {
         var d = els[k].duration;
-        if (d > 0 && Math.abs(d - uiDur) <= 5) { realEl = els[k]; break; }
+        if (d > 0 && Math.abs(d - uiDur) <= 5) matchedEls.push(els[k]);
+      }
+      if (matchedEls.length === 1) {
+        realEl = matchedEls[0];
+      } else if (matchedEls.length > 1) {
+        // Crossfade tie-breaker: prioritize the playing element, or the one just starting
+        var playingEls = matchedEls.filter(function(e) { return !e.paused; });
+        if (playingEls.length === 1) realEl = playingEls[0];
+        else if (playingEls.length > 1) realEl = playingEls.sort(function(a, b) { return a.currentTime - b.currentTime; })[0];
+        else realEl = matchedEls.sort(function(a, b) { return b.currentTime - a.currentTime; })[0];
       }
     }
+
     if (!realEl) {
       for (var m = 0; m < els.length; m++) {
         var d2 = els[m].duration;
@@ -722,14 +748,23 @@ VDI.Core = (function() {
         if ((!els[m].paused || els[m].currentTime > 0) && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
       }
     }
-    if (realEl && realEl.currentTime >= 0) {
-      realCur = realEl.currentTime;
+    
+    var isPlaying = false;
+    if (realEl) {
+      if (realEl.currentTime >= 0) realCur = realEl.currentTime;
+      isPlaying = !realEl.paused;
+    } else {
+      if (playBtn) {
+        isPlaying = (playBtn.getAttribute('aria-label') || '').toLowerCase().includes('pause');
+      } else if (ms) {
+        isPlaying = (ms.playbackState === 'playing');
+      }
     }
+
     if (realCur !== null) {
       uiCur = realCur;
     }
 
-    var ms = navigator.mediaSession;
     var art = null;
     if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
@@ -775,11 +810,11 @@ VDI.Core = (function() {
       title: (ms && ms.metadata && ms.metadata.title) || document.title.replace(' - Spotify', '').trim() || '',
       artist: (ms && ms.metadata && ms.metadata.artist) || '',
       artwork: art,
-      isPlaying: realEl ? !realEl.paused : (playBtn ? (playBtn.getAttribute('aria-label') || '').toLowerCase().includes('pause') : (ms && ms.playbackState === 'playing')),
+      isPlaying: isPlaying,
       duration: uiDur,
       position: uiCur,
       hasMedia: !!((ms && ms.metadata && ms.metadata.title) || uiDur > 0),
-      volume: 1, 
+      volume: 1,
       pipOk: false,
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
