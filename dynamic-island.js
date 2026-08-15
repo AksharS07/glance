@@ -677,59 +677,136 @@ VDI.Core = (function() {
   // Spotify Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getSpotifyMediaState() {
-    var parseTime = function(str) {
-      if (!str) return 0;
-      var p = str.trim().split(':').map(Number);
-      return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
-    };
-
-    var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
-    var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+    var ms = navigator.mediaSession;
+    var uiDur = 0;
+    var uiCur = 0;
     var playBtn = document.querySelector('[data-testid="control-button-playpause"]');
     
-    var uiDur = 0;
-    for (var i = 0; i < durEls.length; i++) {
-      if (durEls[i].getBoundingClientRect().width > 0) {
-        var dt = parseTime(durEls[i].textContent);
-        if (dt > uiDur) uiDur = dt;
+    // Prefer MediaSession for precise duration and position to avoid parsing DOM strings
+    if (ms && typeof ms.getPositionState === 'function') {
+      try {
+        var ps = ms.getPositionState();
+        if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+        if (ps && ps.position >= 0) uiCur = ps.position;
+      } catch(e) {}
+    }
+
+    // Fallback to DOM parsing ONLY if MediaSession fails
+    if (uiDur === 0 || uiCur === 0) {
+      var parseTime = function(str) {
+        if (!str) return 0;
+        var p = str.trim().split(':').map(Number);
+        return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+      };
+      if (uiDur === 0) {
+        var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
+        for (var i = 0; i < durEls.length; i++) {
+          if (durEls[i].getBoundingClientRect().width > 0) {
+            var dt = parseTime(durEls[i].textContent);
+            if (dt > uiDur) uiDur = dt;
+          }
+        }
+      }
+      if (uiCur === 0) {
+        var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+        for (var j = 0; j < posEls.length; j++) {
+          if (posEls[j].getBoundingClientRect().width > 0) {
+            var ct = parseTime(posEls[j].textContent);
+            if (ct > uiCur) uiCur = ct;
+          }
+        }
       }
     }
-    
-    var uiCur = 0;
-    for (var j = 0; j < posEls.length; j++) {
-      if (posEls[j].getBoundingClientRect().width > 0) {
-        var ct = parseTime(posEls[j].textContent);
-        if (ct > uiCur) uiCur = ct;
-      }
-    }
-    
-    // Spotify's UI string is often 1-3 seconds delayed due to chunked media buffering.
+
+    // Spotify's UI string and MediaSession position can be slightly delayed due to buffering.
     // To sync lyrics perfectly, we MUST extract millisecond precision from the true audio element.
     var realCur = null;
     var els = Array.prototype.slice.call(document.querySelectorAll('video, audio'));
     var realEl = null;
 
     if (uiDur > 0) {
+      var matchedEls = [];
       for (var k = 0; k < els.length; k++) {
         var d = els[k].duration;
-        if (d > 0 && Math.abs(d - uiDur) <= 5) { realEl = els[k]; break; }
+        if (d > 0 && Math.abs(d - uiDur) <= 5) matchedEls.push(els[k]);
       }
-    }
-    if (!realEl) {
-      for (var m = 0; m < els.length; m++) {
-        var d2 = els[m].duration;
-        // Ignore < 30s elements to completely avoid 8-second looping Canvas videos!
-        if ((!els[m].paused || els[m].currentTime > 0) && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
+      if (matchedEls.length === 1) {
+        realEl = matchedEls[0];
+      } else if (matchedEls.length > 1) {
+        // Crossfade tie-breaker: prioritize the playing element, or the one just starting
+        var playingEls = matchedEls.filter(function(e) { return !e.paused; });
+        if (playingEls.length === 1) realEl = playingEls[0];
+        else if (playingEls.length > 1) realEl = playingEls.sort(function(a, b) { return a.currentTime - b.currentTime; })[0];
+        else realEl = matchedEls.sort(function(a, b) { return b.currentTime - a.currentTime; })[0];
       }
-    }
-    if (realEl && realEl.currentTime >= 0) {
-      realCur = realEl.currentTime;
-    }
-    if (realCur !== null) {
-      uiCur = realCur;
     }
 
-    var ms = navigator.mediaSession;
+    if (!realEl) {
+      var possibleEls = [];
+      for (var m = 0; m < els.length; m++) {
+        var d2 = els[m].duration;
+        var isCanvas = (d2 > 0 && d2 <= 30);
+        if (!isCanvas && (!els[m].paused || els[m].currentTime > 0)) {
+          possibleEls.push(els[m]);
+        }
+      }
+      var playingEls = possibleEls.filter(function(e) { return !e.paused; });
+      if (playingEls.length > 0) {
+        realEl = playingEls[0];
+      } else if (possibleEls.length > 0) {
+        realEl = possibleEls[0];
+      }
+    }
+    
+    var isPlaying = false;
+    if (realEl) {
+      if (realEl.currentTime >= 0) realCur = realEl.currentTime;
+      isPlaying = !realEl.paused;
+    } else {
+      if (playBtn) {
+        isPlaying = (playBtn.getAttribute('aria-label') || '').toLowerCase().includes('pause');
+      } else if (ms) {
+        isPlaying = (ms.playbackState === 'playing');
+      }
+    }
+
+    if (realCur !== null) {
+      uiCur = realCur;
+    } else {
+      // Initialize exact MutationObserver tracker
+      if (!window._vdiPosObserver) {
+        window._vdiPosFlipTime = Date.now();
+        window._vdiPosFlipText = '';
+        window._vdiPosObserver = new MutationObserver(function(mutations) {
+          if (mutations[0] && mutations[0].target) {
+            window._vdiPosFlipTime = Date.now();
+            window._vdiPosFlipText = mutations[0].target.textContent;
+          }
+        });
+        var posEl = document.querySelector('[data-testid="playback-position"]');
+        if (posEl) {
+          window._vdiPosFlipText = posEl.textContent;
+          window._vdiPosObserver.observe(posEl, { characterData: true, childList: true, subtree: true });
+        }
+      }
+
+      if (window._vdiPosFlipText) {
+        var parts = window._vdiPosFlipText.trim().split(':').map(Number);
+        var base = parts.length === 2 ? parts[0] * 60 + parts[1] : (parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : 0);
+        var elapsed = (Date.now() - window._vdiPosFlipTime) / 1000.0;
+        
+        // Prevent elapsed from compounding if Spotify is paused in the background
+        if (!isPlaying) {
+          elapsed = 0;
+          window._vdiPosFlipTime = Date.now();
+        }
+        
+        uiCur = base + elapsed;
+      } else if (uiCur > 0) {
+        uiCur += 0.5; // fallback
+      }
+    }
+
     var art = null;
     if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
@@ -775,11 +852,11 @@ VDI.Core = (function() {
       title: (ms && ms.metadata && ms.metadata.title) || document.title.replace(' - Spotify', '').trim() || '',
       artist: (ms && ms.metadata && ms.metadata.artist) || '',
       artwork: art,
-      isPlaying: realEl ? !realEl.paused : (playBtn ? (playBtn.getAttribute('aria-label') || '').toLowerCase().includes('pause') : (ms && ms.playbackState === 'playing')),
+      isPlaying: isPlaying,
       duration: uiDur,
       position: uiCur,
       hasMedia: !!((ms && ms.metadata && ms.metadata.title) || uiDur > 0),
-      volume: 1, 
+      volume: 1,
       pipOk: false,
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
@@ -966,15 +1043,36 @@ VDI.Core = (function() {
   // ─────────────────────────────────────────────────────────────
   // Media actions (injected into content pages)
   // ─────────────────────────────────────────────────────────────
+  var _vdiInternalTargetState = null;
+  var _vdiInternalStateTimeout = null;
+
   function executeMediaAction(act, val) {
     var deepQuery = VDI.Core.deepQuery;
     var deepQueryOne = VDI.Core.deepQueryOne;
     
     // 100% ISOLATION: Intercept Spotify immediately
     if (window.location.hostname.includes('spotify.com')) {
-      if (act === 'toggle') {
+      if (act === 'play' || act === 'pause' || act === 'toggle') {
         var tb = document.querySelector('[data-testid="control-button-playpause"]');
-        if (tb) tb.click();
+        if (tb) {
+          var isPlaying = (tb.getAttribute('aria-label') || '').toLowerCase().includes('pause');
+          if (_vdiInternalTargetState !== null) isPlaying = _vdiInternalTargetState;
+
+          if (act === 'toggle') {
+            tb.click();
+          } else if (act === 'play' && !isPlaying) {
+            tb.click();
+            _vdiInternalTargetState = true;
+          } else if (act === 'pause' && isPlaying) {
+            tb.click();
+            _vdiInternalTargetState = false;
+          }
+
+          if (act !== 'toggle') {
+            clearTimeout(_vdiInternalStateTimeout);
+            _vdiInternalStateTimeout = setTimeout(function() { _vdiInternalTargetState = null; }, 1000);
+          }
+        }
       } else if (act === 'prev') {
         var pb = document.querySelector('[data-testid="control-button-skip-back"]');
         if (pb) pb.click();
@@ -1549,10 +1647,10 @@ VDI.Styles = (function() {
         'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
-    rules.push('#vdi-settings-btn:hover{background:rgba(255,255,255,.15);}');
-    rules.push('#vdi-settings-btn:hover svg{fill:var(--vdi-accent, #fff);}');
-    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12);color:var(--vdi-accent, #fff);transform:scale(1.08);}');
-    rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ');}');
+    rules.push('#vdi-settings-btn:hover{background:rgba(255,255,255,.15) !important;}');
+    rules.push('#vdi-settings-btn:hover svg{fill:var(--vdi-accent, #fff) !important;}');
+    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12) !important;color:var(--vdi-accent, #fff) !important;transform:scale(1.08);}');
+    rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ') !important;}');
     rules.push('.vdi-icon-btn.loading{pointer-events: none;}');
     rules.push(
       '.vdi-loading-dots{',
@@ -1635,7 +1733,7 @@ VDI.Styles = (function() {
     rules.push('.vdi-lyric-line.active{color:rgba(255,255,255,1);filter:blur(0);transform:scale(1.1);}',
       '.vdi-lyric-line.has-words.active{color:rgba(255,255,255,0.5);}',
       '.vdi-lyric-word{transition:color 0.15s ease-out, text-shadow 0.15s ease-out;}',
-      '.vdi-lyric-word.active-word{color:#fff;text-shadow:0 0 16px rgba(255,255,255,0.4);}',
+      '.vdi-lyric-word.active-word{color:var(--vdi-accent, #fff);text-shadow:0 0 16px var(--vdi-accent, rgba(255,255,255,0.4));}',
       '.vdi-lyric-roman{font-size:14px;font-weight:500;color:inherit;opacity:0.6;margin-top:4px;}'
     );
     rules.push('.vdi-lyric-line.unsynced{font-size:16px;color:rgba(255,255,255,0.8);transform:none;filter:none;}');
@@ -2014,6 +2112,7 @@ VDI.UI = (function() {
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the island instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Enable Lyrics Engine</span><span class="vdi-stg-sub">Fetch and display time-synced lyrics</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-enlyrics"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Lyrics Time Offset</span><span class="vdi-stg-sub">Shift poorly synced lyrics</span></div><div style="display:flex;align-items:center;gap:8px;"><button id="vdi-stg-offset-dec" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">-</button><span id="vdi-stg-offset-val" style="color:#fff;font-size:12px;min-width:32px;text-align:center;user-select:none;">0.0s</span><button id="vdi-stg-offset-inc" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">+</button></div></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Free Placement</span><span class="vdi-stg-sub">Allow dragging anywhere on the screen</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-freeplace"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Keyboard Shortcuts</span><span class="vdi-stg-sub">Manage global hotkeys for media controls</span></div><button id="vdi-stg-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;">Edit</button></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Presets</div>' +
@@ -2111,7 +2210,7 @@ VDI.UI = (function() {
     var tickInterval = opts.tickInterval || 1000;
     var idleDelay = opts.idleDelay || 9000;
     var collapseDelay = opts.collapseDelay || 500;
-    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false, amoledBlack: false };
+    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, lyricsOffset: 0.0, freePlacement: true, seenTooltip: false, amoledBlack: false };
 
     // Helper
     function $(id) { return document.getElementById(id); }
@@ -2665,7 +2764,7 @@ VDI.UI = (function() {
       var idx = -1;
 
       for (var i = state.lyricsLines.length - 1; i >= 0; i--) {
-        if (state.lyricsLines[i].time <= pos + 0.1) {
+        if (state.lyricsLines[i].time <= pos + 0.1 + (settings.lyricsOffset || 0)) {
           idx = i;
           break;
         }
@@ -3084,6 +3183,37 @@ VDI.UI = (function() {
         bindStg('vdi-stg-enlyrics', 'enableLyrics');
         bindStg('vdi-stg-freeplace', 'freePlacement');
 
+        var updateOffsetVal = function() {
+          if ($('vdi-stg-offset-val')) {
+            $('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
+          }
+        };
+        updateOffsetVal();
+
+        var saveOffset = function() {
+          updateOffsetVal();
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.set({ lyricsOffset: settings.lyricsOffset });
+          } else {
+            localStorage.setItem('vdi_cfg_lyricsOffset', settings.lyricsOffset);
+          }
+        };
+
+        if ($('vdi-stg-offset-dec')) {
+          $('vdi-stg-offset-dec').addEventListener('click', function(e) {
+            e.stopPropagation();
+            settings.lyricsOffset = parseFloat((settings.lyricsOffset - 0.5).toFixed(1));
+            saveOffset();
+          });
+        }
+        if ($('vdi-stg-offset-inc')) {
+          $('vdi-stg-offset-inc').addEventListener('click', function(e) {
+            e.stopPropagation();
+            settings.lyricsOffset = parseFloat((settings.lyricsOffset + 0.5).toFixed(1));
+            saveOffset();
+          });
+        }
+
         var scBtn = $('vdi-stg-shortcuts-btn');
         if (scBtn) {
           scBtn.addEventListener('click', function(e) {
@@ -3116,16 +3246,22 @@ VDI.UI = (function() {
         if ($('vdi-stg-pos-r')) $('vdi-stg-pos-r').addEventListener('click', function(e) { e.stopPropagation(); updatePos((window.innerWidth - 210) + 'px', (window.innerHeight / 2 - 76) + 'px', 'translateX(-50%)'); });
       }
 
+      var lastPlayClick = 0;
       $('vdi-play').addEventListener('click', function(e) {
         e.stopPropagation();
         if (!state.hasMedia || !state.tabId) return;
         
-        platform.sendAction(state.tabId, 'toggle');
+        var now = Date.now();
+        if (now - lastPlayClick < 150) return; // Prevent inhuman double-clicks/hardware bounces
+        lastPlayClick = now;
+        
         state.isPlaying = !state.isPlaying;
         setPlayIcon(state.isPlaying);
         
         state.isPlayToggling = true;
         state.playToggleLockTime = Date.now();
+
+        platform.sendAction(state.tabId, 'toggle');
       });
 
       $('vdi-prog').addEventListener('click', function(e) {
@@ -3268,8 +3404,15 @@ VDI.UI = (function() {
       var prevKey = state.title + '|' + state.artist;
 
       state.hasMedia = newState.hasMedia;
-      if (!state.isPlayToggling || (Date.now() - (state.playToggleLockTime || 0) > 300)) {
-        state.isPlayToggling = false;
+      if (state.isPlayToggling) {
+        var timeSinceClick = Date.now() - (state.playToggleLockTime || 0);
+        if (timeSinceClick > 600) {
+          state.isPlayToggling = false;
+          state.isPlaying = newState.isPlaying;
+        } else if (timeSinceClick > 250 && newState.isPlaying === state.isPlaying) {
+          state.isPlayToggling = false;
+        }
+      } else {
         state.isPlaying = newState.isPlaying;
       }
       state.title = newState.title;
@@ -3288,9 +3431,9 @@ VDI.UI = (function() {
         var elapsed = (now - state.lastSyncTime) / 1000.0;
         var currentPredicted = (state.basePosition || 0) + elapsed;
         
-        // Only violently snap the clock if we drifted by more than 1.5s (or if forced).
+        // Only violently snap the clock if we drifted by more than 0.4s (or if forced).
         // Otherwise, trust our local 60FPS coasting timer to prevent micro-stutters!
-        if (!state.lastSyncTime || state.forceNextSync || Math.abs(currentPredicted - newBase) > 1.5) {
+        if (!state.lastSyncTime || state.forceNextSync || Math.abs(currentPredicted - newBase) > 0.4) {
           state.basePosition = newBase;
           state.lastSyncTime = now;
           state.position = state.basePosition;
@@ -3376,7 +3519,7 @@ VDI.UI = (function() {
         updateSettingsPanelPosition();
       });
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3'], function(res) {
+        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'lyricsOffset', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3'], function(res) {
           applyPos(res.vdi_loc_x, res.vdi_loc_y, res.vdi_transform);
           if (res.hideYouTube !== undefined) settings.hideYouTube = res.hideYouTube;
           if (res.hideYouTubeMusic !== undefined) settings.hideYouTubeMusic = res.hideYouTubeMusic;
@@ -3391,6 +3534,7 @@ VDI.UI = (function() {
           if (res.hideSpotify !== undefined) settings.hideSpotify = res.hideSpotify;
           if (res.hideAppleMusic !== undefined) settings.hideAppleMusic = res.hideAppleMusic;
           if (res.enableLyrics !== undefined) settings.enableLyrics = res.enableLyrics;
+          if (res.lyricsOffset !== undefined) settings.lyricsOffset = res.lyricsOffset;
           if (res.freePlacement !== undefined) settings.freePlacement = res.freePlacement;
           if (res.vdi_cfg_seenTooltip3 !== undefined) settings.seenTooltip = res.vdi_cfg_seenTooltip3;
 
@@ -3422,6 +3566,10 @@ VDI.UI = (function() {
             if (changes.hideSpotify) settings.hideSpotify = changes.hideSpotify.newValue;
             if (changes.hideAppleMusic) settings.hideAppleMusic = changes.hideAppleMusic.newValue;
             if (changes.enableLyrics) settings.enableLyrics = changes.enableLyrics.newValue;
+            if (changes.lyricsOffset) {
+              settings.lyricsOffset = changes.lyricsOffset.newValue;
+              if ($('vdi-stg-offset-val')) $('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
+            }
             if (changes.freePlacement) settings.freePlacement = changes.freePlacement.newValue;
             
             if (changes.vdi_loc_x && changes.vdi_loc_y && changes.vdi_transform) {
@@ -3437,11 +3585,16 @@ VDI.UI = (function() {
           var val = localStorage.getItem('vdi_cfg_' + key);
           return val !== null ? val === 'true' : defaultVal;
         };
+        var getFloat = function(key, defaultVal) {
+          var val = localStorage.getItem('vdi_cfg_' + key);
+          return val !== null ? parseFloat(val) : defaultVal;
+        };
         settings.hideYouTube = getBool('hideYouTube', settings.hideYouTube);
         settings.hideYouTubeMusic = getBool('hideYouTubeMusic', settings.hideYouTubeMusic);
         settings.amoledBlack = getBool('amoledBlack', settings.amoledBlack);
         settings.hideSpotify = getBool('hideSpotify', settings.hideSpotify);
         settings.enableLyrics = getBool('enableLyrics', settings.enableLyrics);
+        settings.lyricsOffset = getFloat('lyricsOffset', settings.lyricsOffset);
         settings.freePlacement = getBool('freePlacement', settings.freePlacement);
         settings.seenTooltip = getBool('seenTooltip3', settings.seenTooltip);
         

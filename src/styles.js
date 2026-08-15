@@ -190,10 +190,10 @@ VDI.Styles = (function() {
         'transition:color .15s,transform .15s,background .2s;',
       '}'
     );
-    rules.push('#vdi-settings-btn:hover{background:rgba(255,255,255,.15);}');
-    rules.push('#vdi-settings-btn:hover svg{fill:var(--vdi-accent, #fff);}');
-    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12);color:var(--vdi-accent, #fff);transform:scale(1.08);}');
-    rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ');}');
+    rules.push('#vdi-settings-btn:hover{background:rgba(255,255,255,.15) !important;}');
+    rules.push('#vdi-settings-btn:hover svg{fill:var(--vdi-accent, #fff) !important;}');
+    rules.push('.vdi-icon-btn:hover{background:rgba(255,255,255,.12) !important;color:var(--vdi-accent, #fff) !important;transform:scale(1.08);}');
+    rules.push('.vdi-icon-btn.active{color:var(--vdi-accent,' + accent + ') !important;}');
     rules.push('.vdi-icon-btn.loading{pointer-events: none;}');
     rules.push(
       '.vdi-loading-dots{',
@@ -276,7 +276,7 @@ VDI.Styles = (function() {
     rules.push('.vdi-lyric-line.active{color:rgba(255,255,255,1);filter:blur(0);transform:scale(1.1);}',
       '.vdi-lyric-line.has-words.active{color:rgba(255,255,255,0.5);}',
       '.vdi-lyric-word{transition:color 0.15s ease-out, text-shadow 0.15s ease-out;}',
-      '.vdi-lyric-word.active-word{color:#fff;text-shadow:0 0 16px rgba(255,255,255,0.4);}',
+      '.vdi-lyric-word.active-word{color:var(--vdi-accent, #fff);text-shadow:0 0 16px var(--vdi-accent, rgba(255,255,255,0.4));}',
       '.vdi-lyric-roman{font-size:14px;font-weight:500;color:inherit;opacity:0.6;margin-top:4px;}'
     );
     rules.push('.vdi-lyric-line.unsynced{font-size:16px;color:rgba(255,255,255,0.8);transform:none;filter:none;}');

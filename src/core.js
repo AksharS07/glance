@@ -742,10 +742,19 @@ VDI.Core = (function() {
     }
 
     if (!realEl) {
+      var possibleEls = [];
       for (var m = 0; m < els.length; m++) {
         var d2 = els[m].duration;
-        // Ignore < 30s elements to completely avoid 8-second looping Canvas videos!
-        if ((!els[m].paused || els[m].currentTime > 0) && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
+        var isCanvas = (d2 > 0 && d2 <= 30);
+        if (!isCanvas && (!els[m].paused || els[m].currentTime > 0)) {
+          possibleEls.push(els[m]);
+        }
+      }
+      var playingEls = possibleEls.filter(function(e) { return !e.paused; });
+      if (playingEls.length > 0) {
+        realEl = playingEls[0];
+      } else if (possibleEls.length > 0) {
+        realEl = possibleEls[0];
       }
     }
     
@@ -763,6 +772,39 @@ VDI.Core = (function() {
 
     if (realCur !== null) {
       uiCur = realCur;
+    } else {
+      // Initialize exact MutationObserver tracker
+      if (!window._vdiPosObserver) {
+        window._vdiPosFlipTime = Date.now();
+        window._vdiPosFlipText = '';
+        window._vdiPosObserver = new MutationObserver(function(mutations) {
+          if (mutations[0] && mutations[0].target) {
+            window._vdiPosFlipTime = Date.now();
+            window._vdiPosFlipText = mutations[0].target.textContent;
+          }
+        });
+        var posEl = document.querySelector('[data-testid="playback-position"]');
+        if (posEl) {
+          window._vdiPosFlipText = posEl.textContent;
+          window._vdiPosObserver.observe(posEl, { characterData: true, childList: true, subtree: true });
+        }
+      }
+
+      if (window._vdiPosFlipText) {
+        var parts = window._vdiPosFlipText.trim().split(':').map(Number);
+        var base = parts.length === 2 ? parts[0] * 60 + parts[1] : (parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : 0);
+        var elapsed = (Date.now() - window._vdiPosFlipTime) / 1000.0;
+        
+        // Prevent elapsed from compounding if Spotify is paused in the background
+        if (!isPlaying) {
+          elapsed = 0;
+          window._vdiPosFlipTime = Date.now();
+        }
+        
+        uiCur = base + elapsed;
+      } else if (uiCur > 0) {
+        uiCur += 0.5; // fallback
+      }
     }
 
     var art = null;
@@ -1001,15 +1043,36 @@ VDI.Core = (function() {
   // ─────────────────────────────────────────────────────────────
   // Media actions (injected into content pages)
   // ─────────────────────────────────────────────────────────────
+  var _vdiInternalTargetState = null;
+  var _vdiInternalStateTimeout = null;
+
   function executeMediaAction(act, val) {
     var deepQuery = VDI.Core.deepQuery;
     var deepQueryOne = VDI.Core.deepQueryOne;
     
     // 100% ISOLATION: Intercept Spotify immediately
     if (window.location.hostname.includes('spotify.com')) {
-      if (act === 'toggle') {
+      if (act === 'play' || act === 'pause' || act === 'toggle') {
         var tb = document.querySelector('[data-testid="control-button-playpause"]');
-        if (tb) tb.click();
+        if (tb) {
+          var isPlaying = (tb.getAttribute('aria-label') || '').toLowerCase().includes('pause');
+          if (_vdiInternalTargetState !== null) isPlaying = _vdiInternalTargetState;
+
+          if (act === 'toggle') {
+            tb.click();
+          } else if (act === 'play' && !isPlaying) {
+            tb.click();
+            _vdiInternalTargetState = true;
+          } else if (act === 'pause' && isPlaying) {
+            tb.click();
+            _vdiInternalTargetState = false;
+          }
+
+          if (act !== 'toggle') {
+            clearTimeout(_vdiInternalStateTimeout);
+            _vdiInternalStateTimeout = setTimeout(function() { _vdiInternalTargetState = null; }, 1000);
+          }
+        }
       } else if (act === 'prev') {
         var pb = document.querySelector('[data-testid="control-button-skip-back"]');
         if (pb) pb.click();

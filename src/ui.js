@@ -113,6 +113,7 @@ VDI.UI = (function() {
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the island instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Enable Lyrics Engine</span><span class="vdi-stg-sub">Fetch and display time-synced lyrics</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-enlyrics"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Lyrics Time Offset</span><span class="vdi-stg-sub">Shift poorly synced lyrics</span></div><div style="display:flex;align-items:center;gap:8px;"><button id="vdi-stg-offset-dec" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">-</button><span id="vdi-stg-offset-val" style="color:#fff;font-size:12px;min-width:32px;text-align:center;user-select:none;">0.0s</span><button id="vdi-stg-offset-inc" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">+</button></div></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Free Placement</span><span class="vdi-stg-sub">Allow dragging anywhere on the screen</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-freeplace"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Keyboard Shortcuts</span><span class="vdi-stg-sub">Manage global hotkeys for media controls</span></div><button id="vdi-stg-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;">Edit</button></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Presets</div>' +
@@ -210,7 +211,7 @@ VDI.UI = (function() {
     var tickInterval = opts.tickInterval || 1000;
     var idleDelay = opts.idleDelay || 9000;
     var collapseDelay = opts.collapseDelay || 500;
-    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, freePlacement: true, seenTooltip: false, amoledBlack: false };
+    var settings = { hideYouTube: false, hideYouTubeMusic: false, hideSpotify: false, hideAppleMusic: false, enableLyrics: true, lyricsOffset: 0.0, freePlacement: true, seenTooltip: false, amoledBlack: false };
 
     // Helper
     function $(id) { return document.getElementById(id); }
@@ -764,7 +765,7 @@ VDI.UI = (function() {
       var idx = -1;
 
       for (var i = state.lyricsLines.length - 1; i >= 0; i--) {
-        if (state.lyricsLines[i].time <= pos + 0.1) {
+        if (state.lyricsLines[i].time <= pos + 0.1 + (settings.lyricsOffset || 0)) {
           idx = i;
           break;
         }
@@ -1183,6 +1184,37 @@ VDI.UI = (function() {
         bindStg('vdi-stg-enlyrics', 'enableLyrics');
         bindStg('vdi-stg-freeplace', 'freePlacement');
 
+        var updateOffsetVal = function() {
+          if ($('vdi-stg-offset-val')) {
+            $('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
+          }
+        };
+        updateOffsetVal();
+
+        var saveOffset = function() {
+          updateOffsetVal();
+          if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+            chrome.storage.local.set({ lyricsOffset: settings.lyricsOffset });
+          } else {
+            localStorage.setItem('vdi_cfg_lyricsOffset', settings.lyricsOffset);
+          }
+        };
+
+        if ($('vdi-stg-offset-dec')) {
+          $('vdi-stg-offset-dec').addEventListener('click', function(e) {
+            e.stopPropagation();
+            settings.lyricsOffset = parseFloat((settings.lyricsOffset - 0.5).toFixed(1));
+            saveOffset();
+          });
+        }
+        if ($('vdi-stg-offset-inc')) {
+          $('vdi-stg-offset-inc').addEventListener('click', function(e) {
+            e.stopPropagation();
+            settings.lyricsOffset = parseFloat((settings.lyricsOffset + 0.5).toFixed(1));
+            saveOffset();
+          });
+        }
+
         var scBtn = $('vdi-stg-shortcuts-btn');
         if (scBtn) {
           scBtn.addEventListener('click', function(e) {
@@ -1215,16 +1247,22 @@ VDI.UI = (function() {
         if ($('vdi-stg-pos-r')) $('vdi-stg-pos-r').addEventListener('click', function(e) { e.stopPropagation(); updatePos((window.innerWidth - 210) + 'px', (window.innerHeight / 2 - 76) + 'px', 'translateX(-50%)'); });
       }
 
+      var lastPlayClick = 0;
       $('vdi-play').addEventListener('click', function(e) {
         e.stopPropagation();
         if (!state.hasMedia || !state.tabId) return;
         
-        platform.sendAction(state.tabId, 'toggle');
+        var now = Date.now();
+        if (now - lastPlayClick < 150) return; // Prevent inhuman double-clicks/hardware bounces
+        lastPlayClick = now;
+        
         state.isPlaying = !state.isPlaying;
         setPlayIcon(state.isPlaying);
         
         state.isPlayToggling = true;
         state.playToggleLockTime = Date.now();
+
+        platform.sendAction(state.tabId, 'toggle');
       });
 
       $('vdi-prog').addEventListener('click', function(e) {
@@ -1367,8 +1405,15 @@ VDI.UI = (function() {
       var prevKey = state.title + '|' + state.artist;
 
       state.hasMedia = newState.hasMedia;
-      if (!state.isPlayToggling || (Date.now() - (state.playToggleLockTime || 0) > 1500)) {
-        state.isPlayToggling = false;
+      if (state.isPlayToggling) {
+        var timeSinceClick = Date.now() - (state.playToggleLockTime || 0);
+        if (timeSinceClick > 600) {
+          state.isPlayToggling = false;
+          state.isPlaying = newState.isPlaying;
+        } else if (timeSinceClick > 250 && newState.isPlaying === state.isPlaying) {
+          state.isPlayToggling = false;
+        }
+      } else {
         state.isPlaying = newState.isPlaying;
       }
       state.title = newState.title;
@@ -1475,7 +1520,7 @@ VDI.UI = (function() {
         updateSettingsPanelPosition();
       });
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3'], function(res) {
+        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'lyricsOffset', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3'], function(res) {
           applyPos(res.vdi_loc_x, res.vdi_loc_y, res.vdi_transform);
           if (res.hideYouTube !== undefined) settings.hideYouTube = res.hideYouTube;
           if (res.hideYouTubeMusic !== undefined) settings.hideYouTubeMusic = res.hideYouTubeMusic;
@@ -1490,6 +1535,7 @@ VDI.UI = (function() {
           if (res.hideSpotify !== undefined) settings.hideSpotify = res.hideSpotify;
           if (res.hideAppleMusic !== undefined) settings.hideAppleMusic = res.hideAppleMusic;
           if (res.enableLyrics !== undefined) settings.enableLyrics = res.enableLyrics;
+          if (res.lyricsOffset !== undefined) settings.lyricsOffset = res.lyricsOffset;
           if (res.freePlacement !== undefined) settings.freePlacement = res.freePlacement;
           if (res.vdi_cfg_seenTooltip3 !== undefined) settings.seenTooltip = res.vdi_cfg_seenTooltip3;
 
@@ -1521,6 +1567,10 @@ VDI.UI = (function() {
             if (changes.hideSpotify) settings.hideSpotify = changes.hideSpotify.newValue;
             if (changes.hideAppleMusic) settings.hideAppleMusic = changes.hideAppleMusic.newValue;
             if (changes.enableLyrics) settings.enableLyrics = changes.enableLyrics.newValue;
+            if (changes.lyricsOffset) {
+              settings.lyricsOffset = changes.lyricsOffset.newValue;
+              if ($('vdi-stg-offset-val')) $('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
+            }
             if (changes.freePlacement) settings.freePlacement = changes.freePlacement.newValue;
             
             if (changes.vdi_loc_x && changes.vdi_loc_y && changes.vdi_transform) {
@@ -1536,11 +1586,16 @@ VDI.UI = (function() {
           var val = localStorage.getItem('vdi_cfg_' + key);
           return val !== null ? val === 'true' : defaultVal;
         };
+        var getFloat = function(key, defaultVal) {
+          var val = localStorage.getItem('vdi_cfg_' + key);
+          return val !== null ? parseFloat(val) : defaultVal;
+        };
         settings.hideYouTube = getBool('hideYouTube', settings.hideYouTube);
         settings.hideYouTubeMusic = getBool('hideYouTubeMusic', settings.hideYouTubeMusic);
         settings.amoledBlack = getBool('amoledBlack', settings.amoledBlack);
         settings.hideSpotify = getBool('hideSpotify', settings.hideSpotify);
         settings.enableLyrics = getBool('enableLyrics', settings.enableLyrics);
+        settings.lyricsOffset = getFloat('lyricsOffset', settings.lyricsOffset);
         settings.freePlacement = getBool('freePlacement', settings.freePlacement);
         settings.seenTooltip = getBool('seenTooltip3', settings.seenTooltip);
         
