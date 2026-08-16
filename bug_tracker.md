@@ -12,12 +12,6 @@
 
 
 
-### 3. Island elements get squished/elongated/oval
-- **Severity:** MEDIUM (Visual/Animation)
-- **Description:** Sometimes the island UI elements (buttons, icons) appear squished or elongated, as if the container aspect ratio is wrong.
-- **Likely cause:** CSS flex/grid layout interaction with the dynamic width/height transitions during expand/collapse animation.
-- **Where to fix:** `src/styles.js` — check the `#vdi` container styles (specifically `width`, `height`, `transition`, and flex properties). Make sure styles use `!important` to prevent host page CSS bleed.
-
 ### 4. Island UI gets weird (missing icons in media controls / Play button solid color)
 - **Severity:** LOW (Visual/Cosmetic)
 - **Description:** The media control buttons (including play/pause, previous, next, like) sometimes render as dark or solid accent-colored circles with their inner icons completely missing or displaying incorrectly (e.g., as a tiny dot).
@@ -93,3 +87,4 @@
 4. **Preset buttons not moving island**: Synced position storage keys (`vdi_loc_x` / `vdi_loc_y`) between popup and content scripts.
 5. **Keyboard shortcuts unusable in Windows**: Fixed by using global media keys as default shortcuts and adding a cross-browser shortcut settings button. *(Note: yet to test in Chromium based browsers)*.
 6. **Spotify playback/lyrics delay and seek unreliability**: Replaced CSS-based progress parsing with a precise `MutationObserver` on the playback-position DOM element in `core.js` and removed complex action queues for play/pause in favor of a blind toggle with 150ms debounce.
+7. **Island elements get squished/elongated/oval**: Added !important flags to container styles and buttons in `src/styles.js` to prevent host page CSS bleed.
