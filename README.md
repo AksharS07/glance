@@ -41,7 +41,7 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 - **Keyboard Shortcuts**: Control your media from any tab. Use Alt+Space to toggle play/pause, and Alt+Left/Right to skip tracks (fully customizable!).
 - **Quick Playlists**: Instantly launch your favorite playlists right from the extension popup with just one click.
 - **Smooth Polish**: Re-engineered click targets, removed confusing animations, and fixed Apple Music bugs for a seamless experience.
-- **AMOLED Black Mode**: Pure pitch-black background for OLED screens.
+- **AMOLED Black Mode**: Pure pitch-black background for OLED screens, available as a toggle in the island's settings menu.
 
 ## What's New in V1.5 🚀
 
