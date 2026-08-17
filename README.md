@@ -37,10 +37,12 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 
 ## What's New in V1.6 🚀
 
-- **Advanced Playback Support**: Natively extracts and controls Shuffle and Repeat modes for Spotify, Apple Music, and YouTube Music.
+- **Shuffle & Repeat Support**: Natively extracts and controls Shuffle and Repeat modes for Spotify, Apple Music, and YouTube Music with platform-native icons.
+- **Keyboard Shortcuts**: Global media key support (Play/Pause, Next, Previous) that works from any tab. Fully customizable via the browser's shortcut settings.
+- **Quick Playlists**: Save up to 3 favorite playlists in the popup and launch them with one click.
 - **AMOLED Black Mode**: Fully integrated pitch-black background mode that re-extracts album accent colors on the fly, saving battery on OLED screens.
+- **Manual Lyrics Offset**: Added a customizable ±0.5s lyrics offset stepper in the settings panel to manually fine-tune lyrics synchronization.
 - **Ultra-Precise Sync Engine**: Reduced UI drift tolerance to just 400ms, ensuring the 60FPS progress bar remains pixel-perfect with the underlying audio.
-- **Manual Lyrics Offset**: Added a customizable lyrics offset toggle in the settings panel to manually fine-tune lyrics synchronization.
 - **MV3 Architecture Polish**: Rewrote Apple Music hooks to strictly comply with Manifest V3 sandboxing, routing controls through native DOM clickers.
 - **Fortified UI**: Added strict CSS specificity (`!important` constraints) and a 600ms debounce lock on playback toggles to eradicate crossfade desyncs and host-site CSS bleeding.
 
