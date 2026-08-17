@@ -37,11 +37,12 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 
 ## What's New in V1.6 🚀
 
-- **Shuffle & Repeat Support**: Take full control of your queue. The Island now natively supports Apple Music, Spotify, and YouTube Music's advanced playback modes.
-- **Keyboard Shortcuts**: Control your media from any tab. Use Alt+Space to toggle play/pause, and Alt+Left/Right to skip tracks (fully customizable!).
-- **Quick Playlists**: Instantly launch your favorite playlists right from the extension popup with just one click.
-- **Smooth Polish**: Re-engineered click targets, removed confusing animations, and fixed Apple Music bugs for a seamless experience.
-- **AMOLED Black Mode**: Pure pitch-black background for OLED screens, available as a toggle in the island's settings menu.
+- **Advanced Playback Support**: Natively extracts and controls Shuffle and Repeat modes for Spotify, Apple Music, and YouTube Music.
+- **AMOLED Black Mode**: Fully integrated pitch-black background mode that re-extracts album accent colors on the fly, saving battery on OLED screens.
+- **Ultra-Precise Sync Engine**: Reduced UI drift tolerance to just 400ms, ensuring the 60FPS progress bar remains pixel-perfect with the underlying audio.
+- **Manual Lyrics Offset**: Added a customizable lyrics offset toggle in the settings panel to manually fine-tune lyrics synchronization.
+- **MV3 Architecture Polish**: Rewrote Apple Music hooks to strictly comply with Manifest V3 sandboxing, routing controls through native DOM clickers.
+- **Fortified UI**: Added strict CSS specificity (`!important` constraints) and a 600ms debounce lock on playback toggles to eradicate crossfade desyncs and host-site CSS bleeding.
 
 ## What's New in V1.5 🚀
 
