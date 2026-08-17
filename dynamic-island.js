@@ -2765,7 +2765,7 @@ VDI.UI = (function() {
       var idx = -1;
 
       for (var i = state.lyricsLines.length - 1; i >= 0; i--) {
-        if (state.lyricsLines[i].time <= pos + 0.1 + (settings.lyricsOffset || 0)) {
+        if (state.lyricsLines[i].time <= pos + lookahead + (settings.lyricsOffset || 0)) {
           idx = i;
           break;
         }
@@ -3116,9 +3116,7 @@ VDI.UI = (function() {
         stgPanel.addEventListener('mouseenter', function() {
           handleMouseEnter();
         });
-        island.addEventListener('mouseenter', function() {
-          // Island enter logic handled centrally, this is just a stub if needed
-        });
+
 
         document.addEventListener('click', function(e) {
           if (!island.contains(e.target) && !stgPanel.contains(e.target)) {
@@ -3385,8 +3383,6 @@ VDI.UI = (function() {
     // Fullscreen handling
     function setupFullscreen() {
       // Chrome Extension context: injected directly into the page, so standard HTML5 API works instantly
-
-      // 2. Chrome Extension context: injected directly into the page, so standard HTML5 API works perfectly
       document.addEventListener('fullscreenchange', function() {
         if (document.fullscreenElement) {
           island.style.display = 'none';

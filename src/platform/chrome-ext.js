@@ -132,7 +132,7 @@ VDI.Platform.ChromeExt = (function() {
             return;
           }
 
-          S.hasMedia = res.hasMedia || true;
+          S.hasMedia = res.hasMedia !== undefined ? res.hasMedia : true;
           S.isPlaying = res.isPlaying;
           S.title = res.title || tab.title || '';
           S.artist = res.artist || '';
