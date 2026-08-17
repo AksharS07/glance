@@ -1,7 +1,7 @@
 node_modules/
 .env
-.mp4
-.png
+*.mp4
+*.png
 generate_promos.js
 DEVELOPER_NOTES.md
 .agents/
@@ -13,4 +13,12 @@ skeleton/
 HACKATHON_MASTER_PLAN.md
 find_reasons.js
 *.zip
+glance-extension-*/
 BUILD_INSTRUCTIONS.md
+bug_tracker.md
+*features*.md
+FUTURE_FEATURES.md
+*.key
+*.pem
+*.cert
+*.log

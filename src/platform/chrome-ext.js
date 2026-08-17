@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Chrome Extension Platform
+ * Glance - Chrome Extension Platform
  * Content script that communicates with background service worker
  */
 
@@ -49,20 +49,10 @@ VDI.Platform.ChromeExt = (function() {
   /* Background Script Side (for background.js) */
 
   function createBackgroundWorker() {
-    var S = {
-      isPlaying: false,
-      title: '',
-      artist: '',
-      artwork: null,
-      duration: 0,
-      position: 0,
-      hasMedia: false,
-      tabId: null,
-      windowId: null,
-      supportsPiP: false
-    };
-
+    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, smartShuffleOn: false, repeatMode: 'off' };
     var pollInterval = 1000;
+    var returnTabId = null;
+    var returnWinId = null;
 
     function execInTab(tabId, fn, args, cb, world) {
       if (!tabId) {
@@ -118,6 +108,10 @@ VDI.Platform.ChromeExt = (function() {
               S.isFullscreen = res.isFullscreen || false;
               S.isYouTubeVideo = res.isYouTubeVideo || false;
               S.isMusicApp = res.isMusicApp || false;
+              S.shuffleOn = res.shuffleOn || false;
+              S.smartShuffleOn = res.smartShuffleOn || false;
+              S.repeatMode = res.repeatMode || 'off';
+              S.platform = res.platform || 'other';
               if (!res.hasMedia) S.hasMedia = false;
               broadcastState();
             });
@@ -148,6 +142,10 @@ VDI.Platform.ChromeExt = (function() {
           S.supportsPiP = res.pipOk || false;
           S.isYouTubeVideo = res.isYouTubeVideo || false;
           S.isMusicApp = res.isMusicApp || false;
+          S.shuffleOn = res.shuffleOn || false;
+          S.smartShuffleOn = res.smartShuffleOn || false;
+          S.repeatMode = res.repeatMode || 'off';
+          S.platform = res.platform || 'other';
 
           broadcastState();
         });
@@ -200,37 +198,88 @@ VDI.Platform.ChromeExt = (function() {
               chrome.windows.update(S.windowId, { focused: true });
             }
           }
+        } else if (msg.act === 'teleport') {
+          if (returnTabId === null) {
+            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
+              if (tabs && tabs.length > 0) {
+                returnTabId = tabs[0].id;
+                returnWinId = tabs[0].windowId;
+                if (S.tabId !== null) {
+                  chrome.tabs.update(S.tabId, { active: true });
+                  if (S.windowId !== null) {
+                    chrome.windows.update(S.windowId, { focused: true });
+                  }
+                }
+              }
+            });
+          } else {
+            chrome.tabs.update(returnTabId, { active: true });
+            if (returnWinId !== null) {
+              chrome.windows.update(returnWinId, { focused: true });
+            }
+            returnTabId = null;
+            returnWinId = null;
+          }
+        } else if (msg.act === 'VDI_TELEPORT_BACK') {
+          if (msg.val && msg.val.source) {
+            if (msg.val.source.tabId) chrome.tabs.update(msg.val.source.tabId, { active: true });
+            if (msg.val.source.winId) chrome.windows.update(msg.val.source.winId, { focused: true });
+          }
+        } else if (msg.act === 'openShortcuts') {
+          var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
+          if (isFirefox && typeof browser !== 'undefined' && browser.commands && browser.commands.openShortcutSettings) {
+            browser.commands.openShortcutSettings();
+          } else {
+            var isEdge = navigator.userAgent.includes("Edg/");
+            var isBrave = navigator.brave !== undefined;
+            var url = "chrome://extensions/shortcuts";
+            if (isEdge) url = "edge://extensions/shortcuts";
+            if (isBrave) url = "brave://extensions/shortcuts";
+            chrome.tabs.create({ url: url });
+          }
         } else {
           var args = msg.val !== undefined ? [msg.act, msg.val] : [msg.act];
-          execInTab(S.tabId, VDI.Core.executeMediaAction, args, null);
-
-          // APPLE MUSIC: Inject into the MAIN world to access MusicKit JS (Apple's public SDK).
-          // This silently does nothing on Spotify/YouTube, but flawlessly controls Apple Music natively.
-          execInTab(S.tabId, function(act, val) {
-            if (window.location && window.location.hostname && window.location.hostname.includes('music.apple.com')) {
-              if (window.MusicKit && window.MusicKit.getInstance()) {
-                var m = window.MusicKit.getInstance();
-                if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); }
-                else if (act === 'prev') { m.skipToPreviousItem(); }
-                else if (act === 'next') { m.skipToNextItem(); }
-                else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
-              }
+          chrome.tabs.get(S.tabId, function(tab) {
+            var isAM = tab && tab.url && tab.url.includes('music.apple.com');
+            if (isAM) {
+              // Apple Music: inject self-contained MusicKit call in MAIN world (VDI not available there)
+              execInTab(S.tabId, function(act, val) {
+                try {
+                  if (window.MusicKit && window.MusicKit.getInstance) {
+                    var m = window.MusicKit.getInstance();
+                    if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); }
+                    else if (act === 'prev') { m.skipToPreviousItem(); }
+                    else if (act === 'next') { m.skipToNextItem(); }
+                    else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; }
+                    else if (act === 'repeat') { m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0); }
+                    else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); }
+                  }
+                } catch(e) {}
+              }, args, null, 'MAIN');
+            } else {
+              execInTab(S.tabId, function(act, val) {
+                if (typeof VDI !== 'undefined' && VDI.Core) VDI.Core.executeMediaAction(act, val);
+              }, args, null, 'ISOLATED');
             }
-          }, args, null, 'MAIN');
+          });
 
           // Rapid poll after actions
-          multiPoll(poll, [200, 500, 1000]);
+          multiPoll(poll, [200, 600, 1200]);
         }
-      } else if (msg.type === 'VDI_TELEPORT_BACK' && msg.source) {
-        if (msg.source.tabId) chrome.tabs.update(msg.source.tabId, { active: true });
-        if (msg.source.winId) chrome.windows.update(msg.source.winId, { focused: true });
       } else if (msg.type === 'VDI_REQUEST_STATE') {
+        sendResponse(S);
+      } else if (msg.type === 'VDI_GET_NOW_PLAYING') {
         sendResponse(S);
       } else if (msg.type === 'VDI_FETCH_LYRICS') {
         VDI.Core.fetchLyrics(msg.title, msg.artist, msg.duration, function(result) {
           sendResponse(result);
         });
         return true; // Keep message channel open for async response
+      } else if (msg.type === 'VDI_EXTRACT_COLOR') {
+        VDI.Core.extractVibrant(msg.url, msg.amoled, function(res) {
+          sendResponse(res);
+        });
+        return true;
       } else if (msg.type === 'VDI_BATCH_ROMANIZE') {
         VDI.Core.batchRomanize(msg.lines, function(result) {
           sendResponse(result);
@@ -247,8 +296,19 @@ VDI.Platform.ChromeExt = (function() {
       chrome.tabs.onActivated.addListener(function() { poll(); });
       chrome.windows.onFocusChanged.addListener(function() { poll(); });
 
+      chrome.commands.onCommand.addListener(function(command) {
+        chrome.storage.local.get({ enableShortcuts: true }, function(res) {
+          if (!res.enableShortcuts) return;
+          if (command === 'toggle-playback') handleMessage({type: 'VDI_ACTION', act: 'toggle'});
+          else if (command === 'next-track') handleMessage({type: 'VDI_ACTION', act: 'next'});
+          else if (command === 'prev-track') handleMessage({type: 'VDI_ACTION', act: 'prev'});
+        });
+      });
+
       chrome.runtime.onInstalled.addListener(function(details) {
-        if (details.reason === "update") {
+        if (details.reason === "install") {
+          chrome.tabs.create({ url: "welcome.html" });
+        } else if (details.reason === "update") {
           chrome.tabs.create({ url: "patch-notes.html" });
         }
       });

@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Vivaldi Platform
+ * Glance - Vivaldi Platform
  * Uses chrome.tabs and chrome.scripting directly from browser UI context
  */
 

@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
-  "name": "Dynamic Island for Web",
-  "version": "1.5",
-  "description": "An Apple-style Dynamic Island for your browser! Syncs with media, extracts album colors, shows live lyrics, and adds PiP controls.",
+  "name": "Glance",
+  "version": "1.6",
+  "description": "An Apple-style Glance for your browser! Syncs with media, extracts album colors, shows live lyrics, and adds PiP controls.",
   "icons": {
     "128": "icon128.png"
   },
@@ -10,6 +10,23 @@
     "default_popup": "popup.html",
     "default_icon": {
       "128": "icon128.png"
+    }
+  },
+  "commands": {
+    "toggle-playback": {
+      "suggested_key": { "default": "MediaPlayPause" },
+      "description": "Play/Pause",
+      "global": true
+    },
+    "next-track": {
+      "suggested_key": { "default": "MediaNextTrack" },
+      "description": "Next Track",
+      "global": true
+    },
+    "prev-track": {
+      "suggested_key": { "default": "MediaPrevTrack" },
+      "description": "Previous Track",
+      "global": true
     }
   },
   "permissions": [
@@ -21,7 +38,7 @@
     "<all_urls>"
   ],
   "background": {
-    "service_worker": "background.js"
+    "scripts": ["background.js"]
   },
   "browser_specific_settings": {
     "gecko": {

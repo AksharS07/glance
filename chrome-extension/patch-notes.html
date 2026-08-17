@@ -2,140 +2,298 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Dynamic Island V1.5 - What's New</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glance V1.6 - What's New</title>
   <link rel="icon" href="icon128.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+  
   <style>
+    /* --- BRAND COLORS DERIVED FROM YOUR LOGO'S NEON GLOW --- */
+    :root {
+      --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --vdi-accent: #818cf8; /* Soft Indigo from neon glow */
+      --vdi-grad: linear-gradient(135deg, #6366f1, #a855f7);
+      --vdi-dark: #0b0b10; /* Deep midnight to make the glow pop */
+      --vdi-glow: rgba(99, 102, 241, 0.25);
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
     body {
-      background-color: #0d0d0d;
-      color: #ffffff;
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-      margin: 0;
-      padding: 0;
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--vdi-dark);
+      color: #f5f5f7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
       display: flex;
       justify-content: center;
       align-items: center;
       min-height: 100vh;
+      padding: 40px 24px;
+      transition: background 0.8s var(--apple-ease);
     }
+
+    /* --- CONTAINER --- */
     .container {
-      max-width: 600px;
-      padding: 40px;
+      max-width: 740px;
+      width: 100%;
       background: rgba(255, 255, 255, 0.03);
+      backdrop-filter: blur(10px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
       border-radius: 24px;
-      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
-      border: 1px solid rgba(255,255,255,0.05);
+      padding: 48px;
+      box-sizing: border-box;
+      transition: background 0.8s var(--apple-ease), border-color 0.6s var(--apple-ease);
+    }
+
+    /* --- HEADER --- */
+    .header {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    .logo {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 16px;
+    }
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 600;
+      letter-spacing: .12em;
+      color: var(--vdi-accent);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      transition: color 0.6s var(--apple-ease);
     }
     h1 {
       font-size: 32px;
-      font-weight: 700;
-      margin-top: 0;
-      margin-bottom: 8px;
-      background: linear-gradient(135deg, #fff, #a78bfa);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
+      font-weight: 800;
+      letter-spacing: -.03em;
+      margin: 0 0 8px 0;
+      color: #ffffff;
     }
     .subtitle {
       font-size: 16px;
       color: rgba(255, 255, 255, 0.5);
-      margin-bottom: 32px;
+      line-height: 1.5;
+      max-width: 400px;
+      margin: 0 auto;
     }
+
+    /* --- FEATURES GRID --- */
+    .features-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 40px;
+    }
+    @media (max-width: 600px) {
+      .features-grid { grid-template-columns: 1fr; }
+    }
+
     .feature {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: 16px;
+      padding: 24px 20px;
       display: flex;
-      gap: 14px;
-      margin-bottom: 24px;
+      flex-direction: column;
       align-items: flex-start;
+      text-align: left;
+      transition: all 0.3s var(--apple-ease);
+    }
+    .feature:hover {
+      background: rgba(255,255,255,0.06);
+      transform: translateY(-2px);
+      border-color: var(--vdi-accent);
     }
     .feature-icon {
-      width: 36px;
-      height: 36px;
-      min-width: 36px;
-      border-radius: 10px;
+      width: 40px;
+      height: 40px;
+      border-radius: 12px;
       display: flex;
       align-items: center;
       justify-content: center;
-      margin-top: 2px;
+      margin-bottom: 16px;
+      color: var(--vdi-accent);
+      background: rgba(255,255,255,0.05);
+      transition: color 0.6s var(--apple-ease);
     }
-    .feature-icon svg {
-      width: 18px;
-      height: 18px;
-    }
-    .icon-settings { background: rgba(167,139,250,0.12); border: 1px solid rgba(167,139,250,0.2); }
-    .icon-settings svg { fill: #a78bfa; }
-    .icon-move { background: rgba(96,165,250,0.12); border: 1px solid rgba(96,165,250,0.2); }
-    .icon-move svg { fill: #60a5fa; }
-    .icon-hide { background: rgba(251,191,36,0.12); border: 1px solid rgba(251,191,36,0.2); }
-    .icon-hide svg { fill: #fbbf24; }
-    .icon-lyrics { background: rgba(52,211,153,0.12); border: 1px solid rgba(52,211,153,0.2); }
-    .icon-lyrics svg { fill: #34d399; }
-    .feature-content h3 {
+    .feature h3 {
       font-size: 16px;
-      font-weight: 600;
-      margin: 0 0 4px 0;
+      font-weight: 700;
+      margin: 0 0 8px 0;
+      color: #ffffff;
+      letter-spacing: -0.02em;
     }
-    .feature-content p {
+    .feature p {
       margin: 0;
       font-size: 14px;
       line-height: 1.5;
-      color: rgba(255, 255, 255, 0.55);
+      color: rgba(255, 255, 255, 0.5);
     }
-    .btn {
-      display: inline-block;
-      margin-top: 24px;
-      padding: 12px 24px;
-      background: #fff;
-      color: #000;
-      text-decoration: none;
-      font-weight: 600;
+
+    /* --- TASTER DEMO (Subtle color preview) --- */
+    .taster-section {
+      margin-top: 40px;
+      padding-top: 32px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      text-align: center;
+    }
+    .taster-label {
+      font-size: 11px;
+      color: rgba(255, 255, 255, 0.3);
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      margin-bottom: 16px;
+    }
+    .taster-row {
+      display: flex;
+      justify-content: center;
+      gap: 12px;
+    }
+    .taster-card {
+      width: 60px;
+      height: 60px;
       border-radius: 12px;
-      transition: opacity 0.2s;
+      cursor: pointer;
+      background-size: cover;
+      background-position: center;
+      border: 1px solid rgba(255,255,255,0.05);
+      transition: all 0.4s var(--apple-ease);
+      transform: scale(0.95);
+      opacity: 0.6;
+    }
+    .taster-card:hover {
+      transform: scale(1.05);
+      opacity: 1;
+      border-color: var(--vdi-accent);
+      box-shadow: 0 0 20px var(--vdi-glow);
+    }
+
+    /* --- CTA --- */
+    .btn {
+      display: block;
+      width: 100%;
+      padding: 16px;
+      background: #ffffff;
+      color: #000000;
+      font-weight: 700;
+      border-radius: 99px;
+      text-align: center;
+      font-size: 16px;
+      font-family: inherit;
+      border: none;
+      cursor: pointer;
+      transition: transform 0.3s var(--apple-ease), background 0.3s var(--apple-ease), color 0.3s var(--apple-ease), box-shadow 0.3s var(--apple-ease);
+      box-sizing: border-box;
     }
     .btn:hover {
-      opacity: 0.8;
+      transform: scale(1.02);
+      background: var(--vdi-accent);
+      color: #fff;
+      box-shadow: 0 0 30px var(--vdi-glow);
     }
-    .icon-spotify {
-      background: rgba(29, 185, 84, 0.1) !important;
+    .btn:active {
+      transform: scale(0.98);
     }
-    .icon-spotify svg {
-      fill: #1DB954 !important;
+
+    /* --- FOOTER --- */
+    .footer {
+      margin-top: 32px;
+      text-align: center;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    .footer-actions {
+      display: flex;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      margin-bottom: 16px;
+    }
+    .footer-actions a {
+      color: rgba(255, 255, 255, 0.4);
+      text-decoration: none;
+      font-size: 12px;
+      font-weight: 500;
+      transition: color 0.2s;
+    }
+    .footer-actions a:hover {
+      color: #ffffff;
+    }
+    .copyright {
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.2);
     }
   </style>
 </head>
 <body>
   <div class="container">
-    <h1>Dynamic Island V1.5</h1>
-    <div class="subtitle">The Apple Music Update has arrived!</div>
+    <div class="header">
+      <img src="icon128.png" alt="Logo" class="logo">
+      <div class="hero-eyebrow">Glance V1.6</div>
+      <h1>What's New</h1>
+      <div class="subtitle">The Polish & Power update — re‑engineered click targets, smarter controls, and a smoother experience.</div>
+    </div>
 
-    <div class="feature">
-      <div class="feature-icon icon-settings" style="background: rgba(250, 96, 114, 0.12); border: 1px solid rgba(250, 96, 114, 0.2);">
-        <svg viewBox="0 0 24 24" style="fill: #fa6072;"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
+    <div class="features-grid">
+      <div class="feature">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
+        </div>
+        <h3>Shuffle & Repeat Support</h3>
+        <p>Take full control of your queue. The Island now natively supports Apple Music, Spotify, and YouTube Music's advanced playback modes.</p>
       </div>
-      <div class="feature-content">
-        <h3>Apple Music Support</h3>
-        <p>The island now fully supports Apple Music! Control playback seamlessly and enjoy perfectly synced live lyrics without ever switching tabs.</p>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M6 8h.01"></path><path d="M10 8h.01"></path><path d="M14 8h.01"></path><path d="M18 8h.01"></path><path d="M8 12h.01"></path><path d="M12 12h.01"></path><path d="M16 12h.01"></path><path d="M7 16h10"></path></svg>
+        </div>
+        <h3>Keyboard Shortcuts</h3>
+        <p>Control your media from any tab. Use Alt+Space to toggle play/pause, and Alt+Left/Right to skip tracks (fully customizable!).</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
+        </div>
+        <h3>Quick Playlists</h3>
+        <p>Instantly launch your favorite playlists right from the extension popup with just one click.</p>
+      </div>
+      <div class="feature">
+        <div class="feature-icon">
+          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>
+        </div>
+        <h3>Smooth Polish</h3>
+        <p>Re-engineered click targets, removed confusing animations, and fixed Apple Music bugs for a seamless experience.</p>
       </div>
     </div>
 
-    <div class="feature">
-      <div class="feature-icon icon-move">
-        <svg viewBox="0 0 24 24"><path d="M17 3H5c-1.11 0-2 .9-2 2v14c0 1.1.89 2 2 2h14c1.1 0 2-.9 2-2V7l-4-4zm-5 16c-1.66 0-3-1.34-3-3s1.34-3 3-3 3 1.34 3 3-1.34 3-3 3zm3-10H5V5h10v4z"/></svg>
-      </div>
-      <div class="feature-content">
-        <h3>Performance & Security Upgrade</h3>
-        <p>Re-engineered the core engine for improved cross-platform compatibility, ensuring the Island never freezes or lags your media tabs.</p>
-      </div>
-    </div>
-
-    <div class="feature">
-      <div class="feature-icon icon-spotify">
-        <svg viewBox="0 0 24 24"><path d="M12 3v10.55c-.59-.34-1.27-.55-2-.55-2.21 0-4 1.79-4 4s1.79 4 4 4 4-1.79 4-4V7h4V3h-6z"/></svg>
-      </div>
-      <div class="feature-content">
-        <h3>Seamless Lyrics Sync</h3>
-        <p>Upgraded the lyrics tracking engine to completely ignore background looping videos on streaming sites, ensuring your lyrics never desync again.</p>
+    <!-- SUBTLE COLOR TASTER FOR THE ENGINE -->
+    <div class="taster-section">
+      <div class="taster-label">✨ See the color engine in action</div>
+      <div class="taster-row">
+        <div class="taster-card" style="background-image: url('blinding_lights.png');" data-color="#d4820a" data-bg="#1a0a00"></div>
+        <div class="taster-card" style="background-image: url('arabic_kuthu.png');" data-color="#d4a820" data-bg="#180a00"></div>
+        <div class="taster-card" style="background-image: url('apna_bana_le.png');" data-color="#3a8ecc" data-bg="#0a1626"></div>
       </div>
     </div>
 
-    <a href="#" id="close-btn" class="btn">Awesome, let's go!</a>
+    <button id="close-btn" class="btn">Awesome, let's go!</button>
+
+    <div class="footer">
+      <div class="footer-actions">
+        <a href="https://github.com/AksharS07/dynamic-island-vivaldi" target="_blank">⭐ Star on GitHub</a>
+        <a href="https://addons.mozilla.org/en-US/firefox/addon/dynamic-island-for-web/" target="_blank">📝 Review on Firefox</a>
+        <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk" target="_blank">📝 Review on Edge</a>
+      </div>
+      <div class="copyright">© Glance · v1.6</div>
+    </div>
   </div>
+
   <script src="patch-notes.js"></script>
 </body>
 </html>

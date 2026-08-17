@@ -1,0 +1,56 @@
+{
+  "manifest_version": 3,
+  "name": "Dynamic Island for Web",
+  "version": "1.6",
+  "description": "An Apple-style Dynamic Island for your browser! Syncs with media, extracts album colors, shows live lyrics, and adds PiP controls.",
+  "icons": {
+    "128": "icon128.png"
+  },
+  "action": {
+    "default_popup": "popup.html",
+    "default_icon": {
+      "128": "icon128.png"
+    }
+  },
+  "commands": {
+    "toggle-playback": {
+      "suggested_key": { "default": "MediaPlayPause" },
+      "description": "Play/Pause",
+      "global": true
+    },
+    "next-track": {
+      "suggested_key": { "default": "MediaNextTrack" },
+      "description": "Next Track",
+      "global": true
+    },
+    "prev-track": {
+      "suggested_key": { "default": "MediaPrevTrack" },
+      "description": "Previous Track",
+      "global": true
+    }
+  },
+  "permissions": [
+    "tabs",
+    "scripting",
+    "storage"
+  ],
+  "host_permissions": [
+    "<all_urls>"
+  ],
+  "background": {
+    "scripts": ["background.js"]
+  },
+  "browser_specific_settings": {
+    "gecko": {
+      "id": "dynamic-island-web@aksharsrijan.com",
+      "strict_min_version": "109.0"
+    }
+  },
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["dynamic-island.js"],
+      "run_at": "document_idle"
+    }
+  ]
+}

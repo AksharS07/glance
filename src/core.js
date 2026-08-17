@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Shared Core Module
+ * Glance - Shared Core Module
  * Common utilities, color extraction, and lyrics handling
  */
 
@@ -32,107 +32,197 @@ VDI.Core = (function() {
   // ─────────────────────────────────────────────────────────────
   // Color extraction from album art
   // ─────────────────────────────────────────────────────────────
-  function extractVibrant(url, cb) {
+  function extractVibrant(url, amoledBlack, cb) {
+    if (!url || url.indexOf('data:') === 0) return cb(null);
     var img = new Image();
-    img.crossOrigin = 'anonymous';
+    img.crossOrigin = 'Anonymous';
     img.onload = function() {
       try {
-        var W = 40, H = 40;
-        var cv = document.createElement('canvas');
-        cv.width = W;
-        cv.height = H;
-        var cx = cv.getContext('2d');
-        cx.drawImage(img, 0, 0, W, H);
-        var d = cx.getImageData(0, 0, W, H).data;
+        var W = 128, H = 128;
+        var cvs=document.createElement('canvas');
+        var ctx=cvs.getContext('2d',{willReadFrequently:true});
+        cvs.width = W; cvs.height = H;
+        ctx.drawImage(img, 0, 0, W, H);
+        var d = ctx.getImageData(0, 0, W, H).data;
+        var total = W * H;
 
-        // 36 buckets for hue ranges (10 degrees each)
-        var buckets = new Array(36);
-        for (var i = 0; i < 36; i++) {
-          buckets[i] = { sumS: 0, maxS: 0, r: 0, g: 0, b: 0 };
-        }
+        // ── PASS 1: Dominant color — the album's overall "mood" ──
+        // 12 coarse hue buckets (30° each). All non-extreme pixels count.
+        var dom = [];
+        for (var i = 0; i < 12; i++) dom[i] = { n: 0, sr: 0, sg: 0, sb: 0 };
+        var darkN = 0, darkR = 0, darkG = 0, darkB = 0;
+        var greyN = 0, lightN = 0;
+        var domHue = -1; // -1 = no dominant chromatic hue (neutral image)
 
-        for (var i = 0; i < W * H * 4; i += 4) {
-          var r = d[i] / 255;
-          var g = d[i + 1] / 255;
-          var b = d[i + 2] / 255;
-          var mx = Math.max(r, g, b);
-          var mn = Math.min(r, g, b);
-          var l = (mx + mn) / 2;
-          var delta = mx - mn;
-
-          // Skip very dark, very light, or grayscale pixels
-          if (l < 0.05 || l > 0.95 || delta < 0.02) continue;
-
-          var sat = delta / (1 - Math.abs(2 * l - 1));
-
-          // Calculate hue
+        for (var i = 0; i < total * 4; i += 4) {
+          var r = d[i]/255, g = d[i+1]/255, b = d[i+2]/255;
+          var mx = Math.max(r,g,b), mn = Math.min(r,g,b);
+          var l = (mx+mn)/2, delta = mx-mn;
+          if (l < 0.04) { darkN++; darkR+=r; darkG+=g; darkB+=b; continue; }
+          if (l > 0.94) { lightN++; continue; }
+          if (delta < 0.09) { greyN++; continue; }
           var h = 0;
-          if (mx === r) h = ((g - b) / delta) % 6;
-          else if (mx === g) h = (b - r) / delta + 2;
-          else h = (r - g) / delta + 4;
-          h = Math.round(h * 60);
-          if (h < 0) h += 360;
+          if (mx===r) h=((g-b)/delta)%6;
+          else if (mx===g) h=(b-r)/delta+2;
+          else h=(r-g)/delta+4;
+          h=Math.round(h*60); if(h<0)h+=360;
+          var bIdx=Math.floor(h/30)%12;
+          dom[bIdx].n++; dom[bIdx].sr+=r; dom[bIdx].sg+=g; dom[bIdx].sb+=b;
+        }
 
-          var bIdx = Math.floor(h / 10) % 36;
-          var score = sat * (l > 0.5 ? (1 - l) * 2 : l * 2);
-          buckets[bIdx].sumS += score;
+        var domBest=null, domMax=-1;
+        for(var j=0;j<12;j++){if(dom[j].n>domMax){domMax=dom[j].n;domBest=dom[j];}}
 
-          if (sat > buckets[bIdx].maxS) {
-            buckets[bIdx].maxS = sat;
-            buckets[bIdx].r = r;
-            buckets[bIdx].g = g;
-            buckets[bIdx].b = b;
+        // Is image mostly neutral (grey/dark/light)?
+        var neutralN = darkN + greyN + lightN;
+        var isNeutral = (neutralN > total * 0.50);
+
+        // Dominant hue center (degrees) — used to devalue in accent pass
+        if (!isNeutral && domBest && domBest.n > 0) {
+          var dr=domBest.sr/domBest.n,dg=domBest.sg/domBest.n,db_=domBest.sb/domBest.n;
+          var mxD=Math.max(dr,dg,db_),mnD=Math.min(dr,dg,db_),dltD=mxD-mnD;
+          if(dltD>0){
+            var hD=0;
+            if(mxD===dr) hD=((dg-db_)/dltD)%6;
+            else if(mxD===dg) hD=(db_-dr)/dltD+2;
+            else hD=(dr-dg)/dltD+4;
+            domHue=Math.round(hD*60); if(domHue<0)domHue+=360;
           }
         }
 
-        // Find the bucket with highest saturation score
-        var best = null;
-        var maxSum = -1;
-        for (var j = 0; j < 36; j++) {
-          if (buckets[j].sumS > maxSum) {
-            maxSum = buckets[j].sumS;
-            best = buckets[j];
+        // Background color → forced very dark version of dominant
+        var bgR=0.09,bgG=0.09,bgB=0.09; // default near-black
+        if (!isNeutral && domBest && domBest.n>0) {
+          bgR=domBest.sr/domBest.n; bgG=domBest.sg/domBest.n; bgB=domBest.sb/domBest.n;
+        } else if (darkN > 0) {
+          bgR=darkR/darkN*0.6; bgG=darkG/darkN*0.6; bgB=darkB/darkN*0.6;
+        }
+        // AMOLED MODE vs TINTED MODE
+        // If AMOLED Black is enabled, use pure black (lBg = 0.0)
+        // If disabled, use a very dark tint of the dominant background (lBg ~ 0.07-0.12)
+        var hBg = 0, sBg = 0, lBg = 0.0;
+        
+        if (!amoledBlack) {
+          // Convert bg to HSL, force very dark
+          var mxBg=Math.max(bgR,bgG,bgB),mnBg=Math.min(bgR,bgG,bgB);
+          lBg=(mxBg+mnBg)/2;
+          if(mxBg!==mnBg){
+            var dBg=mxBg-mnBg;
+            sBg=lBg>0.5?dBg/(2-mxBg-mnBg):dBg/(mxBg+mnBg);
+            if(mxBg===bgR) hBg=(bgG-bgB)/dBg+(bgG<bgB?6:0);
+            else if(mxBg===bgG) hBg=(bgB-bgR)/dBg+2;
+            else hBg=(bgR-bgG)/dBg+4;
+            hBg=Math.round(hBg*60); if(hBg<0)hBg+=360;
           }
+          lBg=Math.max(0.06,Math.min(0.16,lBg*0.4+0.03));
+          sBg=Math.min(0.5,sBg*0.55);
         }
 
-        if (!best || maxSum === 0) {
-          cb(null);
+        // ── PASS 2: Accent color — the vibrant "pop" (buttons, toggles) ──
+        // Key: DEVALUE hues close to dominant so contrasting highlights win.
+        // e.g. Monica: red fabric (dominant) → gold text (accent) wins over more red
+        var acc = [];
+        for(var i=0;i<36;i++) acc[i]={n:0,ss:0,maxS:0,br:0,bg:0,bb:0};
+
+        for(var i=0;i<total*4;i+=4){
+          var r=d[i]/255,g=d[i+1]/255,b=d[i+2]/255;
+          var mx=Math.max(r,g,b),mn=Math.min(r,g,b);
+          var l=(mx+mn)/2,delta=mx-mn;
+          // Looser thresholds so thin, dark-anti-aliased lines (like Spider-Man's red ring) aren't discarded
+          if(l<0.03||l>0.97||delta<0.08) continue;
+          var sat=delta/(1-Math.abs(2*l-1));
+          if(sat<0.25) continue;
+          var h=0;
+          if(mx===r) h=((g-b)/delta)%6;
+          else if(mx===g) h=(b-r)/delta+2;
+          else h=(r-g)/delta+4;
+          h=Math.round(h*60); if(h<0)h+=360;
+          var bIdx=Math.floor(h/10)%36;
+          acc[bIdx].n++; acc[bIdx].ss+=delta; // Accumulate CHROMA (delta), not HSL saturation
+          if(delta>acc[bIdx].maxS){acc[bIdx].maxS=delta;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
+        }
+
+        // Glance Color Extraction
+        // We do NOT use a contrast multiplier (cMult) because the Island background is always dark.
+        // Forcing a contrasting color causes tiny logos (like Blue text in Jawan) to artificially win over the main theme.
+        var accBest=null,accScore=-1;
+        for(var j=0;j<36;j++){
+          var bkt=acc[j]; 
+          // Noise filter: Must be at least 25 pixels
+          if(bkt.n < 25) continue;
+          
+          var avgC=bkt.ss/bkt.n; // Average Chroma
+          
+          // The pure Golden Ratio: Area * Purity
+          // Allows pure tiny elements (Spider-Man red ring) to beat pale reflections,
+          // but ensures massive vibrant themes (Jawan Red) easily beat tiny pure text.
+          var score = Math.sqrt(bkt.n) * Math.pow(avgC, 4);
+          if(score>accScore){accScore=score;accBest=bkt;}
+        }
+
+        // Fallback: no vibrant pixels at all → neutral white/silver accent
+        if(!accBest){
+          cb({
+            isAmoled: amoledBlack,
+            accent:'hsl(0,0%,88%)',
+            gradient:'linear-gradient(135deg,#e0e0e0,#bbb)',
+            dark:'hsl('+hBg+','+Math.round(sBg*100)+'%,'+Math.round(lBg*100)+'%)',
+            glow:'rgba(220,220,220,0.35)'
+          });
           return;
         }
 
-        // Convert to HSL with boosted saturation
-        var mxA = Math.max(best.r, best.g, best.b);
-        var mnA = Math.min(best.r, best.g, best.b);
-        var hA = 0, sA = 0, lA = (mxA + mnA) / 2;
-
-        if (mxA !== mnA) {
-          var dA = mxA - mnA;
-          sA = lA > 0.5 ? dA / (2 - mxA - mnA) : dA / (mxA + mnA);
-          if (mxA === best.r) hA = (best.g - best.b) / dA + (best.g < best.b ? 6 : 0);
-          else if (mxA === best.g) hA = (best.b - best.r) / dA + 2;
-          else hA = (best.r - best.g) / dA + 4;
-          hA = Math.round(hA * 60);
+        var ar=accBest.br,ag=accBest.bg,ab=accBest.bb;
+        var mxA=Math.max(ar,ag,ab),mnA=Math.min(ar,ag,ab);
+        var hA=0,sA=0,lA=(mxA+mnA)/2;
+        if(mxA!==mnA){
+          var dA=mxA-mnA;
+          sA=lA>0.5?dA/(2-mxA-mnA):dA/(mxA+mnA);
+          if(mxA===ar) hA=(ag-ab)/dA+(ag<ab?6:0);
+          else if(mxA===ag) hA=(ab-ar)/dA+2;
+          else hA=(ar-ag)/dA+4;
+          hA=Math.round(hA*60); if(hA<0)hA+=360;
         }
-
-        // Boost saturation and constrain lightness
-        // Avoid making dull colors look "dirty" and avoid blowing out saturated colors
-        sA = sA < 0.05 ? 0 : Math.min(1, sA * 1.2 + 0.1);
-        lA = Math.max(0.35, Math.min(0.7, lA));
+        sA=Math.max(0.78,Math.min(1.0,sA*1.15));
+        lA=Math.max(0.48,Math.min(0.65,lA));
 
         cb({
-          accent: 'hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%)',
-          gradient: 'linear-gradient(135deg, hsl(' + hA + ',' + Math.round(sA * 100) + '%,' + Math.round(lA * 100) + '%), hsl(' + ((hA + 35) % 360) + ',' + Math.round(sA * 90) + '%,' + Math.round((lA - 0.15) * 100) + '%))',
-          dark: 'hsl(' + hA + ', ' + Math.round(sA * 40) + '%, 12%)',
-          glow: 'hsla(' + hA + ', ' + Math.round(sA * 100) + '%, ' + Math.round(lA * 100) + '%, 0.45)'
+          isAmoled: amoledBlack,
+          accent:'hsl('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%)',
+          gradient:'linear-gradient(135deg,hsl('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%),hsl('+((hA+40)%360)+','+Math.round(sA*85)+'%,'+Math.round((lA-0.1)*100)+'%))',
+          dark:'hsl('+hBg+','+Math.round(sBg*100)+'%,'+Math.round(lBg*100)+'%)',
+          glow:'hsla('+hA+','+Math.round(sA*100)+'%,'+Math.round(lA*100)+'%,0.45)'
         });
-      } catch (e) {
-        cb(null);
+      } catch(e){cb(null);}
+    };
+    img.onerror=function(){cb(null);};
+    img.src=url;
+  }
+
+
+  // ─────────────────────────────────────────────────────────────
+
+  // DOM Utilities
+  // ─────────────────────────────────────────────────────────────
+  function deepQuery(selector, root) {
+    var results = [];
+    var traverse = function(node) {
+      if (!node) return;
+      if (node.shadowRoot) traverse(node.shadowRoot);
+      var els = node.querySelectorAll(selector);
+      for (var i = 0; i < els.length; i++) results.push(els[i]);
+      var all = node.querySelectorAll('*');
+      for (var j = 0; j < all.length; j++) {
+        if (all[j].shadowRoot) traverse(all[j].shadowRoot);
       }
     };
-    img.onerror = function() {
-      cb(null);
-    };
-    img.src = url;
+    traverse(root || document);
+    return results;
+  }
+
+  function deepQueryOne(selector, root) {
+    var els = deepQuery(selector, root);
+    return els.length > 0 ? els[0] : null;
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -425,110 +515,143 @@ VDI.Core = (function() {
   // Apple Music Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getAppleMusicMediaState() {
-    var parseTime = function(str) {
-      if (!str) return 0;
-      var p = str.trim().split(':').map(Number);
-      return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
-    };
-
-    var deepQuery = function(selector, root) {
-      var results = [];
-      var traverse = function(node) {
-        var els = node.querySelectorAll(selector);
-        for (var i = 0; i < els.length; i++) results.push(els[i]);
-        var all = node.querySelectorAll('*');
-        for (var j = 0; j < all.length; j++) {
-          if (all[j].shadowRoot) traverse(all[j].shadowRoot);
-        }
-      };
-      traverse(root || document);
-      return results;
-    };
-
     var ms = navigator.mediaSession;
-    var uiDur = 0;
-    var uiCur = 0;
-    
-    // Apple Music Web uses MusicKit JS which heavily utilizes Shadow DOMs.
-    var els = deepQuery('video, audio');
-    var realEl = null;
+    var uiDur = 0, uiCur = 0;
+    var isPlaying = false;
+    var shuffleOn = false;
+    var repeatMode = 'off';
+    var finalTitle = '', finalArtist = '', art = null;
+    var mkFound = false;
 
-    // Find the active element, ignoring short looping background videos
-    for (var k = 0; k < els.length; k++) {
-      var d = els[k].duration;
-      if (!els[k].paused && els[k].currentTime > 0 && (isNaN(d) || d === Infinity || d > 30)) {
-        realEl = els[k];
-        break;
-      }
-    }
-    if (!realEl && els.length > 0) {
-      for (var j = 0; j < els.length; j++) {
-        var d2 = els[j].duration;
-        if (isNaN(d2) || d2 === Infinity || d2 > 30) {
-          realEl = els[j];
-          break;
+    // ─── PRIMARY: MusicKit via wrappedJSObject (Firefox/Zen only) ───
+    // Firefox content scripts can access page JS objects via wrappedJSObject.
+    // This bypasses CSP entirely since no script injection is needed.
+    try {
+      var pageWin = window.wrappedJSObject || window;
+      var MK = pageWin.MusicKit;
+      if (MK && typeof MK.getInstance === 'function') {
+        var mk = MK.getInstance();
+        if (mk) {
+          mkFound = true;
+          var ni = mk.nowPlayingItem;
+
+          // Position (seconds)
+          uiCur = mk.currentPlaybackTime || 0;
+
+          // Duration: playbackDuration is in MILLISECONDS
+          if (ni && ni.playbackDuration) {
+            uiDur = ni.playbackDuration / 1000;
+          }
+
+          isPlaying = !!mk.isPlaying;
+
+          // Shuffle: 0=off, 1=songs
+          shuffleOn = (mk.shuffleMode !== 0 && mk.shuffleMode !== undefined);
+
+          // Repeat: 0=off, 1=one, 2=all
+          // NOTE: wrappedJSObject setter is ignored by MusicKit, so we read only.
+          // DOM class 'mode--X' on .button--repeat is the ground truth.
+          var rm = mk.repeatMode;
+          repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
+
+          // ── DOM override for repeat: .button--repeat has class mode--0/1/2 ──
+          // This is more reliable than wrappedJSObject on Firefox/Zen
+          try {
+            var repDomBtn = VDI.Core.deepQueryOne('.button--repeat, amp-playback-controls-repeat');
+            if (repDomBtn) {
+              var rc = repDomBtn.className || '';
+              var rl = (repDomBtn.getAttribute('aria-label') || repDomBtn.getAttribute('title') || '').toLowerCase();
+              if (rl.includes('one') || rc.includes('mode--2')) repeatMode = 'one';
+              else if (rl.includes('all') || rc.includes('mode--1')) repeatMode = 'all';
+              else if (rc.includes('mode--0')) repeatMode = 'off';
+            }
+          } catch(e) {}
+
+          // Metadata
+          if (ni) {
+            finalTitle = ni.title || (ni.attributes && ni.attributes.name) || '';
+            finalArtist = ni.artistName || (ni.attributes && ni.attributes.artistName) || '';
+            if (ni.artwork && MK.formatArtworkURL) {
+              try { art = MK.formatArtworkURL(ni.artwork, 600, 600); } catch(e) {}
+            }
+          }
         }
       }
-      if (!realEl) realEl = els[0];
+    } catch(e) {
+      // wrappedJSObject not available (Chrome) or MusicKit not loaded yet
     }
 
-    if (realEl) {
-      uiCur = realEl.currentTime >= 0 ? realEl.currentTime : 0;
-    }
-    
-    // Apple Music pads its HLS video durations, and ms.getPositionState is notoriously buggy on Apple Music Web.
-    // The ONLY source of truth is the visual time strings in the playback controls bar.
-    var playerBar = document.querySelector('#apple-music-player, .amp-playback-controls, apple-music-playback-controls, [role="region"][aria-label="Media Controls"], .web-chrome-playback-lcd') || document.body;
-    var timeEls = deepQuery('[class*="time"], [class*="duration"], [class*="current"], time', playerBar);
-    var times = [];
-    for (var i = 0; i < timeEls.length; i++) {
-      if (timeEls[i].getBoundingClientRect().width > 0) {
-        var tVal = parseTime(timeEls[i].textContent);
-        if (tVal > 0) times.push(tVal);
+    // ─── FALLBACK: Audio element + mediaSession (Chrome/Vivaldi) ───
+    if (!mkFound) {
+      var realEl = document.getElementById('apple-music-player');
+      if (!realEl) {
+        var els = document.querySelectorAll('audio, video');
+        for (var k = 0; k < els.length; k++) {
+          if (!els[k].paused && els[k].currentTime > 0) { realEl = els[k]; break; }
+        }
+        if (!realEl && els.length > 0) realEl = els[0];
       }
-    }
-    if (times.length > 0) {
-      times.sort(function(a, b) { return a - b; });
-      uiDur = times[times.length - 1]; // Largest is duration
-      if (!uiCur || uiCur === 0) {
-        uiCur = times.length >= 2 ? times[0] : (times[0] !== uiDur ? times[0] : 0);
+
+      if (realEl) {
+        uiCur = realEl.currentTime || 0;
+        isPlaying = !realEl.paused;
+        if (isFinite(realEl.duration) && realEl.duration > 0) uiDur = realEl.duration;
       }
-    }
 
-    if ((!uiDur || uiDur === 0) && realEl && isFinite(realEl.duration)) {
-      uiDur = realEl.duration;
-    }
-    if (!uiDur || uiDur === 0) {
-      if (ms && typeof ms.getPositionState === 'function') {
-        try {
-          var pState = ms.getPositionState();
-          if (pState && pState.duration > 0) uiDur = pState.duration;
-        } catch(e) {}
+      // mediaSession for metadata and better duration
+      if (ms) {
+        if (typeof ms.getPositionState === 'function') {
+          try {
+            var ps = ms.getPositionState();
+            if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+            if (ps && ps.position > 0 && (!uiCur || uiCur === 0)) uiCur = ps.position;
+          } catch(e) {}
+        }
+        if (ms.metadata) {
+          finalTitle = ms.metadata.title || '';
+          finalArtist = ms.metadata.artist || '';
+          if (ms.metadata.artwork && ms.metadata.artwork.length) {
+            art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+          }
+        }
+        if (!isPlaying) isPlaying = ms.playbackState === 'playing';
       }
-    }
 
-    var isPlaying = realEl ? !realEl.paused : (ms && ms.playbackState === 'playing');
-    var art = null;
-    if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
-      art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
-    }
+      // Audio element title: "Song Name - Album - Artist"
+      if (!finalTitle && realEl && realEl.title) {
+        var tParts = realEl.title.split(' - ');
+        if (tParts.length >= 1) finalTitle = tParts[0].trim();
+        if (tParts.length >= 3 && !finalArtist) finalArtist = tParts[tParts.length - 1].trim();
+      }
 
-    var titleEls = deepQuery('.web-chrome-playback-lcd__song-name-scroll, [data-testid="track-title"], .ticker-item, [class*="song-name"]', playerBar);
-    var artistEls = deepQuery('.web-chrome-playback-lcd__sub-info-scroll, [data-testid="track-artist"], [class*="artist-name"]', playerBar);
-    
-    var domTitle = titleEls.length > 0 ? titleEls[0].textContent.trim() : '';
-    var domArtist = artistEls.length > 0 ? artistEls[0].textContent.trim() : '';
-    
-    var finalTitle = (ms && ms.metadata && ms.metadata.title) || domTitle || '';
-    var finalArtist = (ms && ms.metadata && ms.metadata.artist) || domArtist || '';
-    
-    if (!finalTitle && document.title) {
-      var parts = document.title.split(' - ');
-      if (parts.length >= 2) {
-        finalTitle = parts[0].trim();
-        if (!finalArtist) finalArtist = parts[1].trim();
-      } else {
-        finalTitle = document.title.replace(' - Apple Music', '').trim();
+      // Page title fallback
+      if (!finalTitle && document.title) {
+        var parts = document.title.split(' - ');
+        if (parts.length >= 2) {
+          finalTitle = parts[0].trim();
+          if (!finalArtist) finalArtist = parts[1].trim();
+        } else {
+          finalTitle = document.title.replace(' - Apple Music', '').trim();
+        }
+      }
+
+      // TreeWalker: scan for "-M:SS" remaining time to compute real duration
+      if (uiCur > 0) {
+        var timeRx = /^-\d{1,2}:\d{2}$/;
+        var walker = document.createTreeWalker(document.body, NodeFilter.SHOW_TEXT, null, false);
+        var tNode;
+        while ((tNode = walker.nextNode())) {
+          var txt = tNode.textContent.trim();
+          if (timeRx.test(txt)) {
+            var cleaned = txt.replace(/^-/, '');
+            var tp = cleaned.split(':').map(Number);
+            var remaining = tp.length === 2 ? tp[0] * 60 + tp[1] : 0;
+            if (remaining > 0) {
+              uiDur = uiCur + remaining;
+              break;
+            }
+          }
+        }
       }
     }
 
@@ -540,77 +663,189 @@ VDI.Core = (function() {
       duration: uiDur,
       position: uiCur,
       hasMedia: !!(finalTitle || uiDur > 0),
-      volume: realEl ? realEl.volume : 1,
-      pipOk: false, // PiP is generally blocked or custom on Apple Music
+      volume: 1,
+      pipOk: false,
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
+      platform: 'apple',
+      shuffleOn: shuffleOn,
+      repeatMode: repeatMode,
       timestamp: Date.now()
     };
   }
-
-  // ─────────────────────────────────────────────────────────────
   // Spotify Media State Extractor (Isolated)
   // ─────────────────────────────────────────────────────────────
   function getSpotifyMediaState() {
-    var parseTime = function(str) {
-      if (!str) return 0;
-      var p = str.trim().split(':').map(Number);
-      return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
-    };
-
-    var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
-    var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+    var ms = navigator.mediaSession;
+    var uiDur = 0;
+    var uiCur = 0;
     var playBtn = document.querySelector('[data-testid="control-button-playpause"]');
     
-    var uiDur = 0;
-    for (var i = 0; i < durEls.length; i++) {
-      if (durEls[i].getBoundingClientRect().width > 0) {
-        var dt = parseTime(durEls[i].textContent);
-        if (dt > uiDur) uiDur = dt;
-      }
+    // Prefer MediaSession for precise duration and position to avoid parsing DOM strings
+    if (ms && typeof ms.getPositionState === 'function') {
+      try {
+        var ps = ms.getPositionState();
+        if (ps && ps.duration > 0 && ps.duration < 3600) uiDur = ps.duration;
+        if (ps && ps.position >= 0) uiCur = ps.position;
+      } catch(e) {}
     }
-    
-    var uiCur = 0;
-    for (var j = 0; j < posEls.length; j++) {
-      if (posEls[j].getBoundingClientRect().width > 0) {
-        var ct = parseTime(posEls[j].textContent);
-        if (ct > uiCur) uiCur = ct;
-      }
-    }
-    
-    var isPlaying = playBtn ? playBtn.getAttribute('aria-label') === 'Pause' : false;
 
-    // Spotify's UI string is often 1-3 seconds delayed due to chunked media buffering.
+    // Fallback to DOM parsing ONLY if MediaSession fails
+    if (uiDur === 0 || uiCur === 0) {
+      var parseTime = function(str) {
+        if (!str) return 0;
+        var p = str.trim().split(':').map(Number);
+        return p.length === 2 ? p[0] * 60 + p[1] : (p.length === 3 ? p[0] * 3600 + p[1] * 60 + p[2] : 0);
+      };
+      if (uiDur === 0) {
+        var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
+        for (var i = 0; i < durEls.length; i++) {
+          if (durEls[i].getBoundingClientRect().width > 0) {
+            var dt = parseTime(durEls[i].textContent);
+            if (dt > uiDur) uiDur = dt;
+          }
+        }
+      }
+      if (uiCur === 0) {
+        var posEls = document.querySelectorAll('[data-testid="playback-position"]');
+        for (var j = 0; j < posEls.length; j++) {
+          if (posEls[j].getBoundingClientRect().width > 0) {
+            var ct = parseTime(posEls[j].textContent);
+            if (ct > uiCur) uiCur = ct;
+          }
+        }
+      }
+    }
+
+    // Spotify's UI string and MediaSession position can be slightly delayed due to buffering.
     // To sync lyrics perfectly, we MUST extract millisecond precision from the true audio element.
     var realCur = null;
     var els = Array.prototype.slice.call(document.querySelectorAll('video, audio'));
     var realEl = null;
 
     if (uiDur > 0) {
+      var matchedEls = [];
       for (var k = 0; k < els.length; k++) {
         var d = els[k].duration;
-        if (d > 0 && Math.abs(d - uiDur) <= 5) { realEl = els[k]; break; }
+        if (d > 0 && Math.abs(d - uiDur) <= 5) matchedEls.push(els[k]);
       }
-    }
-    if (!realEl) {
-      for (var m = 0; m < els.length; m++) {
-        var d2 = els[m].duration;
-        // Ignore < 30s elements to completely avoid 8-second looping Canvas videos!
-        if (!els[m].paused && (isNaN(d2) || d2 === Infinity || d2 > 30)) { realEl = els[m]; break; }
+      if (matchedEls.length === 1) {
+        realEl = matchedEls[0];
+      } else if (matchedEls.length > 1) {
+        // Crossfade tie-breaker: prioritize the playing element, or the one just starting
+        var playingEls = matchedEls.filter(function(e) { return !e.paused; });
+        if (playingEls.length === 1) realEl = playingEls[0];
+        else if (playingEls.length > 1) realEl = playingEls.sort(function(a, b) { return a.currentTime - b.currentTime; })[0];
+        else realEl = matchedEls.sort(function(a, b) { return b.currentTime - a.currentTime; })[0];
       }
-    }
-    if (realEl && realEl.currentTime >= 0) {
-      realCur = realEl.currentTime;
-    }
-    if (realCur !== null) {
-      uiCur = realCur;
     }
 
-    var ms = navigator.mediaSession;
+    if (!realEl) {
+      var possibleEls = [];
+      for (var m = 0; m < els.length; m++) {
+        var d2 = els[m].duration;
+        var isCanvas = (d2 > 0 && d2 <= 30);
+        if (!isCanvas && (!els[m].paused || els[m].currentTime > 0)) {
+          possibleEls.push(els[m]);
+        }
+      }
+      var playingEls = possibleEls.filter(function(e) { return !e.paused; });
+      if (playingEls.length > 0) {
+        realEl = playingEls[0];
+      } else if (possibleEls.length > 0) {
+        realEl = possibleEls[0];
+      }
+    }
+    
+    var isPlaying = false;
+    if (realEl) {
+      if (realEl.currentTime >= 0) realCur = realEl.currentTime;
+      isPlaying = !realEl.paused;
+    } else {
+      if (playBtn) {
+        isPlaying = (playBtn.getAttribute('aria-label') || '').toLowerCase().includes('pause');
+      } else if (ms) {
+        isPlaying = (ms.playbackState === 'playing');
+      }
+    }
+
+    if (realCur !== null) {
+      uiCur = realCur;
+    } else {
+      // Initialize exact MutationObserver tracker
+      if (!window._vdiPosObserver) {
+        window._vdiPosFlipTime = Date.now();
+        window._vdiPosFlipText = '';
+        window._vdiPosObserver = new MutationObserver(function(mutations) {
+          if (mutations[0] && mutations[0].target) {
+            window._vdiPosFlipTime = Date.now();
+            window._vdiPosFlipText = mutations[0].target.textContent;
+          }
+        });
+        var posEl = document.querySelector('[data-testid="playback-position"]');
+        if (posEl) {
+          window._vdiPosFlipText = posEl.textContent;
+          window._vdiPosObserver.observe(posEl, { characterData: true, childList: true, subtree: true });
+        }
+      }
+
+      if (window._vdiPosFlipText) {
+        var parts = window._vdiPosFlipText.trim().split(':').map(Number);
+        var base = parts.length === 2 ? parts[0] * 60 + parts[1] : (parts.length === 3 ? parts[0] * 3600 + parts[1] * 60 + parts[2] : 0);
+        var elapsed = (Date.now() - window._vdiPosFlipTime) / 1000.0;
+        
+        // Prevent elapsed from compounding if Spotify is paused in the background
+        if (!isPlaying) {
+          elapsed = 0;
+          window._vdiPosFlipTime = Date.now();
+        }
+        
+        uiCur = base + elapsed;
+      } else if (uiCur > 0) {
+        uiCur += 0.5; // fallback
+      }
+    }
+
     var art = null;
     if (ms && ms.metadata && ms.metadata.artwork && ms.metadata.artwork.length) {
       art = ms.metadata.artwork[ms.metadata.artwork.length - 1].src;
+    }
+
+    // Spotify shuffle: 3 modes — off / on / smart
+    var playerBar = document.querySelector('[data-testid="player-controls"], .now-playing-bar') || document;
+    var shufPath = playerBar.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
+    var shufBtn = shufPath ? shufPath.closest('button') : playerBar.querySelector('[data-testid="control-button-shuffle"], button[aria-label*="shuffle" i]');
+    var shuffleOn = false;
+    var isSmartShuffle = false;
+    if (shufBtn) {
+      shuffleOn = shufBtn.className.includes('encore-internal-color-text-bright-accent') || shufBtn.getAttribute('aria-checked') === 'true' || shufBtn.getAttribute('aria-checked') === 'mixed';
+      var sLabel = (shufBtn.getAttribute('aria-label') || '').toLowerCase();
+      isSmartShuffle = !!shufBtn.querySelector('path[d^="M12.69"]');
+      if (!isSmartShuffle && shuffleOn && sLabel.includes('disable smart')) {
+          isSmartShuffle = true;
+      }
+    }
+    
+    var repeatMode = 'off';
+    var repBtn = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
+    if (repBtn) {
+      var ariaChecked = repBtn.getAttribute('aria-checked');
+      var rLabel = (repBtn.getAttribute('aria-label') || '').toLowerCase();
+      
+      if (ariaChecked === 'true' || ariaChecked === 'mixed') {
+        if (ariaChecked === 'mixed' || rLabel.includes('disable') || rLabel.includes('turn off')) {
+          repeatMode = 'one';
+        } else {
+          repeatMode = 'all';
+        }
+      } else if (!ariaChecked) {
+         if (rLabel.includes('disable') || rLabel.includes('turn off')) {
+            repeatMode = 'one';
+         } else if (rLabel.includes('enable repeat one')) {
+            repeatMode = 'all'; // Spotify next-action logic
+         }
+      }
     }
 
     return {
@@ -621,11 +856,15 @@ VDI.Core = (function() {
       duration: uiDur,
       position: uiCur,
       hasMedia: !!((ms && ms.metadata && ms.metadata.title) || uiDur > 0),
-      volume: 1, 
+      volume: 1,
       pipOk: false,
       isFullscreen: !!document.fullscreenElement,
       isYouTubeVideo: false,
       isMusicApp: true,
+      platform: 'spotify',
+      shuffleOn: shuffleOn,
+      smartShuffleOn: isSmartShuffle,
+      repeatMode: repeatMode,
       timestamp: Date.now()
     };
   }
@@ -634,6 +873,19 @@ VDI.Core = (function() {
   // Tab media state extraction (injected into content pages)
   // ─────────────────────────────────────────────────────────────
   function getTabMediaState() {
+    var deepQuery = VDI.Core.deepQuery;
+    var deepQueryOne = VDI.Core.deepQueryOne;
+    var getAppleMusicMediaState = VDI.Core.getAppleMusicMediaState;
+    var getSpotifyMediaState = VDI.Core.getSpotifyMediaState;
+    // URL LOCKDOWN: Only detect media on supported sites
+    var ALLOWED_HOSTS = ['music.apple.com', 'open.spotify.com', 'spotify.com', 'youtube.com', 'www.youtube.com', 'music.youtube.com'];
+    var host = window.location.hostname;
+    var isAllowed = false;
+    for (var i = 0; i < ALLOWED_HOSTS.length; i++) {
+      if (host === ALLOWED_HOSTS[i] || host.endsWith('.' + ALLOWED_HOSTS[i])) { isAllowed = true; break; }
+    }
+    if (!isAllowed) return null;
+
     // 100% ISOLATION: Intercept Apple Music immediately
     if (window.location.hostname.includes('music.apple.com')) {
       return getAppleMusicMediaState();
@@ -714,21 +966,75 @@ VDI.Core = (function() {
 
       var finalPos = (uiCur !== null) ? uiCur : (el ? el.currentTime : 0);
 
-      return {
-        title: (ms && ms.metadata && ms.metadata.title) || '',
-        artist: (ms && ms.metadata && ms.metadata.artist) || '',
-        artwork: art,
-        isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
-        duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
-        position: finalPos,
-        hasMedia: !!(el || (ms && ms.metadata && ms.metadata.title)),
-        volume: el ? el.volume : 1,
-        pipOk: pipOk,
-        isFullscreen: !!document.fullscreenElement,
-        isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
-        isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
-        timestamp: Date.now()
-      };
+      var shuffleOn = false;
+      var repeatMode = 'off';
+      if (isYTMusic) {
+        var playerBar = document.querySelector('ytmusic-player-bar');
+        // Pierce TWO shadow DOM levels: player-bar SR -> toggle-button-renderer -> its SR -> paper-icon-button
+        function isNodeActive(el) {
+          if (!el) return false;
+          if (el.getAttribute('aria-pressed') === 'true') return true;
+          if (el.getAttribute('is-toggled') === 'true') return true;
+          var title = (el.getAttribute('title') || el.getAttribute('aria-label') || '').toLowerCase();
+          if (title.includes('turn off') || title.includes('disable')) return true;
+          
+          // Check children for aria-pressed
+          var children = deepQuery('*', el);
+          for (var i = 0; i < children.length; i++) {
+             if (children[i].getAttribute('aria-pressed') === 'true') return true;
+             if (children[i].getAttribute('is-toggled') === 'true') return true;
+             var ct = (children[i].getAttribute('title') || children[i].getAttribute('aria-label') || '').toLowerCase();
+             if (ct.includes('turn off') || ct.includes('disable')) return true;
+          }
+          
+          // Check color of SVG/Icon
+          var icon = deepQueryOne('yt-icon, svg', el) || el;
+          var c = window.getComputedStyle(icon).color || '';
+          var f = window.getComputedStyle(icon).fill || '';
+          if (c.includes('255, 255, 255') || f.includes('255, 255, 255')) return true;
+          
+          return false;
+        }
+
+        var shuffleEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="shuffle" i], ytmusic-toggle-button-renderer[title*="shuffle" i], tp-yt-paper-icon-button[aria-label*="shuffle" i], tp-yt-paper-icon-button[title*="shuffle" i], button[aria-label*="shuffle" i], button[title*="shuffle" i]', playerBar);
+        var repeatEl = deepQueryOne('ytmusic-toggle-button-renderer[aria-label*="repeat" i], ytmusic-toggle-button-renderer[title*="repeat" i], tp-yt-paper-icon-button[aria-label*="repeat" i], tp-yt-paper-icon-button[title*="repeat" i], button[aria-label*="repeat" i], button[title*="repeat" i]', playerBar);
+        
+        if (shuffleEl && isNodeActive(shuffleEl)) {
+           shuffleOn = true;
+        }
+        
+        if (repeatEl) {
+           var rTitle = (repeatEl.getAttribute('title') || repeatEl.getAttribute('aria-label') || '').toLowerCase();
+           var children = deepQuery('*', repeatEl);
+           for (var j = 0; j < children.length; j++) {
+              rTitle += ' ' + (children[j].getAttribute('title') || children[j].getAttribute('aria-label') || '').toLowerCase();
+           }
+           if (rTitle.includes('one') || rTitle.includes('1')) {
+              repeatMode = 'one';
+           } else if (rTitle.includes('all') || isNodeActive(repeatEl)) {
+              repeatMode = 'all';
+           }
+        }
+      }
+
+        return {
+          title: (ms && ms.metadata && ms.metadata.title) || '',
+          artist: (ms && ms.metadata && ms.metadata.artist) || '',
+          artwork: art,
+          isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
+          duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
+          position: finalPos,
+          hasMedia: !!(el || (ms && ms.metadata && ms.metadata.title)),
+          volume: el ? el.volume : 1,
+          pipOk: pipOk,
+          isFullscreen: !!document.fullscreenElement,
+          isYouTubeVideo: location.hostname.includes('youtube.com') && !location.hostname.includes('music.youtube.com'),
+          isMusicApp: location.hostname.includes('music.youtube') || location.hostname.includes('spotify') || location.hostname.includes('soundcloud') || location.hostname.includes('music.apple'),
+          platform: isYTMusic ? 'ytmusic' : (location.hostname.includes('youtube.com') ? 'youtube' : 'other'),
+          shuffleOn: shuffleOn,
+          repeatMode: repeatMode,
+          timestamp: Date.now()
+        };
     } catch (e) {
       return null;
     }
@@ -737,18 +1043,50 @@ VDI.Core = (function() {
   // ─────────────────────────────────────────────────────────────
   // Media actions (injected into content pages)
   // ─────────────────────────────────────────────────────────────
+  var _vdiInternalTargetState = null;
+  var _vdiInternalStateTimeout = null;
+
   function executeMediaAction(act, val) {
+    var deepQuery = VDI.Core.deepQuery;
+    var deepQueryOne = VDI.Core.deepQueryOne;
+    
     // 100% ISOLATION: Intercept Spotify immediately
     if (window.location.hostname.includes('spotify.com')) {
-      if (act === 'toggle') {
+      if (act === 'play' || act === 'pause' || act === 'toggle') {
         var tb = document.querySelector('[data-testid="control-button-playpause"]');
-        if (tb) tb.click();
+        if (tb) {
+          var isPlaying = (tb.getAttribute('aria-label') || '').toLowerCase().includes('pause');
+          if (_vdiInternalTargetState !== null) isPlaying = _vdiInternalTargetState;
+
+          if (act === 'toggle') {
+            tb.click();
+          } else if (act === 'play' && !isPlaying) {
+            tb.click();
+            _vdiInternalTargetState = true;
+          } else if (act === 'pause' && isPlaying) {
+            tb.click();
+            _vdiInternalTargetState = false;
+          }
+
+          if (act !== 'toggle') {
+            clearTimeout(_vdiInternalStateTimeout);
+            _vdiInternalStateTimeout = setTimeout(function() { _vdiInternalTargetState = null; }, 1000);
+          }
+        }
       } else if (act === 'prev') {
         var pb = document.querySelector('[data-testid="control-button-skip-back"]');
         if (pb) pb.click();
       } else if (act === 'next') {
         var nb = document.querySelector('[data-testid="control-button-skip-forward"]');
         if (nb) nb.click();
+      } else if (act === 'shuffle') {
+        var playerBar = document.querySelector('[data-testid="player-controls"], .now-playing-bar') || document;
+        var sp = playerBar.querySelector('path[d^="M13.151"], path[d^="M4.502"]');
+        var sb = sp ? sp.closest('button') : playerBar.querySelector('[data-testid="control-button-shuffle"], button[aria-label*="shuffle" i]');
+        if (sb) sb.click();
+      } else if (act === 'repeat') {
+        var rb = document.querySelector('[data-testid="control-button-repeat"], button[aria-label*="repeat" i]');
+        if (rb) rb.click();
       } else if (act === 'seek' && typeof val === 'number') {
         var durEls = document.querySelectorAll('[data-testid="playback-duration"]');
         var dur = 0;
@@ -787,33 +1125,28 @@ VDI.Core = (function() {
     }
     
     try {
-      var deepQuery = function(selector, root) {
-        var results = [];
-        var traverse = function(node) {
-          var els = node.querySelectorAll(selector);
-          for (var i = 0; i < els.length; i++) results.push(els[i]);
-          var all = node.querySelectorAll('*');
-          for (var j = 0; j < all.length; j++) {
-            if (all[j].shadowRoot) traverse(all[j].shadowRoot);
-          }
-        };
-        traverse(root || document);
-        return results;
-      };
-      var deepQueryOne = function(selector, root) {
-        var els = deepQuery(selector, root);
-        return els.length > 0 ? els[0] : null;
-      };
-
       // 100% ISOLATION: Intercept Apple Music actions
       if (window.location.hostname.includes('music.apple.com')) {
-        // Vivaldi Web Panel executes this in the MAIN world natively, so MusicKit is available!
-        if (window.MusicKit && window.MusicKit.getInstance()) {
-          var m = window.MusicKit.getInstance();
+        // Vivaldi runs in MAIN world (window.MusicKit available).
+        // Firefox/Zen: use wrappedJSObject to access page's MusicKit from ISOLATED world.
+        var pageWin = window.wrappedJSObject || window;
+        var MK = pageWin.MusicKit;
+        if (MK && typeof MK.getInstance === 'function' && MK.getInstance()) {
+          var m = MK.getInstance();
           if (act === 'toggle') { m.isPlaying ? m.pause() : m.play(); return; }
           else if (act === 'prev') { m.skipToPreviousItem(); return; }
           else if (act === 'next') { m.skipToNextItem(); return; }
           else if (act === 'seek' && typeof val === 'number') { m.seekToTime(val); return; }
+          else if (act === 'shuffle') { m.shuffleMode = m.shuffleMode === 0 ? 1 : 0; return; }
+          else if (act === 'repeat') {
+            // wrappedJSObject setter is silently ignored by MusicKit.
+            // Click the native .button--repeat DOM button through shadow DOM instead.
+            var repBtn = VDI.Core.deepQueryOne('.button--repeat, button[aria-label*="repeat" i], amp-playback-controls-repeat');
+            if (repBtn) { repBtn.click(); return; }
+            // Fallback: try setting repeatMode directly (Vivaldi main world)
+            m.repeatMode = m.repeatMode === 0 ? 2 : (m.repeatMode === 2 ? 1 : 0);
+            return;
+          }
         }
 
         if (act === 'toggle') {
@@ -895,6 +1228,12 @@ VDI.Core = (function() {
               }
             }
           }
+        } else if (act === 'shuffle') {
+          var sb = deepQueryOne('button[aria-label*="shuffle" i], button[aria-label*="Shuffle" i], [class*="shuffle"]');
+          if (sb) sb.click();
+        } else if (act === 'repeat') {
+          var rb = deepQueryOne('.button--repeat, amp-playback-controls-repeat, button[aria-label*="repeat" i], button[aria-label*="Repeat" i], [class*="repeat"]');
+          if (rb) rb.click();
         }
         return;
       }
@@ -939,6 +1278,12 @@ VDI.Core = (function() {
           if (nb) nb.click();
           else el.currentTime = el.duration;
         }
+      } else if (act === 'shuffle') {
+        var sb = deepQueryOne('ytmusic-player-bar .shuffle, ytmusic-player-bar .shuffle-button, [aria-label*="shuffle" i], [title*="shuffle" i]');
+        if (sb) sb.click();
+      } else if (act === 'repeat') {
+        var rb = deepQueryOne('ytmusic-player-bar .repeat, ytmusic-player-bar .repeat-button, [aria-label*="repeat" i], [title*="repeat" i]');
+        if (rb) rb.click();
       } else if (act === 'seek' && typeof val === 'number') {
         var isYTM = window.location.hostname === 'music.youtube.com';
         var v = deepQuery('video, audio');
@@ -1100,6 +1445,10 @@ VDI.Core = (function() {
     fetchLyrics: fetchLyrics,
     batchRomanize: batchRomanize,
     getTabMediaState: getTabMediaState,
+    deepQuery: deepQuery,
+    deepQueryOne: deepQueryOne,
+    getAppleMusicMediaState: getAppleMusicMediaState,
+    getSpotifyMediaState: getSpotifyMediaState,
     executeMediaAction: executeMediaAction,
     togglePiP: togglePiP
   };

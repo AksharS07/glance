@@ -1,28 +1,26 @@
-# Dynamic Island for Web Browsers (V1.5) 
-
+# Glance (V1.6) 
+*(Cross-Browser Extension)*
 
 <p align="center">
-  <a href="https://addons.mozilla.org/en-US/firefox/addon/dynamic-island-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
+  <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
   &nbsp;&nbsp;
   <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it from Microsoft Edge"></a>
 </p>
 
-
-
 <p align="center">
-  <img src="final_large_promo.jpg" alt="Dynamic Island Promo Logo" width="100%">
+  <img src="final_large_promo.jpg" alt="Glance Promo Logo" width="100%">
 </p>
 
-A beautifully animated, Apple-style Dynamic Island that lives natively in your browser. It supports Spotify Web, Apple Music, YouTube, & YouTube Music with a 60FPS Deep-Media Timer engine, Universal Picture-in-Picture teleportation, and live time-synced lyrics.
+A beautifully animated, Apple-style Glance that lives natively in your browser. It supports Spotify Web, Apple Music, YouTube, & YouTube Music with a 60FPS Deep-Media Timer engine, Universal Picture-in-Picture teleportation, and live time-synced lyrics.
 
-Works on Firefox, Chrome, Edge, Brave, or any modern Chromium browser. Sits as a fixed overlay at the top of every webpage. Anyone can install it in 30 seconds without touching their browser's internals.
+Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium browser. Sits as a fixed overlay at the top of every webpage. Anyone can install it in 30 seconds without touching their browser's internals.
 
 ## In Action 🎬
 
 ### YouTube & YouTube Music in Edge
 ![Edge Demo](edge-demo.gif)
 
-### Spotify in Vivaldi
+### Spotify Web
 ![Spotify Demo](spotify_demo.gif)
 
 ### Apple Music in Firefox
@@ -36,6 +34,14 @@ Works on Firefox, Chrome, Edge, Brave, or any modern Chromium browser. Sits as a
 </p>
 
 ---
+
+## What's New in V1.6 🚀
+
+- **Shuffle & Repeat Support**: Take full control of your queue. The Island now natively supports Apple Music, Spotify, and YouTube Music's advanced playback modes.
+- **Keyboard Shortcuts**: Control your media from any tab. Use Alt+Space to toggle play/pause, and Alt+Left/Right to skip tracks (fully customizable!).
+- **Quick Playlists**: Instantly launch your favorite playlists right from the extension popup with just one click.
+- **Smooth Polish**: Re-engineered click targets, removed confusing animations, and fixed Apple Music bugs for a seamless experience.
+- **AMOLED Black Mode**: Pure pitch-black background for OLED screens, available in the welcome page.
 
 ## What's New in V1.5 🚀
 
@@ -85,10 +91,15 @@ Works on Firefox, Chrome, Edge, Brave, or any modern Chromium browser. Sits as a
 
 ## Steps to Download & Install
 
-### Installing the Cross-Browser Extension (Recommended):
-1. Download the latest **`dynamic-island-extension-v1.5.zip`** release file.
+### Install from the Store (Recommended)
+- **Firefox / Zen Browser**: Install from the [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/).
+- **Microsoft Edge**: Install from the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk).
+- **Google Chrome**: (Coming soon to the Chrome Web Store). In the meantime, use the manual installation below.
+
+### Manual Installation (For Chrome, Brave, or Developers):
+1. Download the latest **`glance-extension-v1.6.zip`** release file.
 2. Extract the folder to a safe location on your computer.
-3. Open `chrome://extensions` (or `edge://extensions`).
+3. Open `chrome://extensions` (or `edge://extensions` or `about:debugging` in Firefox/Zen).
 4. Enable **Developer Mode** using the toggle in the top right.
 5. Click **Load unpacked** and select the folder you extracted.
 
