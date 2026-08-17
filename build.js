@@ -256,26 +256,52 @@ function buildChromeBackground() {
 const { execSync } = require('child_process');
 
 function buildZip() {
-  console.log('Building Extension ZIP...');
+  console.log('Building Extension ZIPs (Firefox & Chromium)...');
   const extDir = path.join(__dirname, 'chrome-extension');
-  const zipPath = path.join(__dirname, 'glance-extension-v1.6.zip');
+  const manifestPath = path.join(extDir, 'manifest.json');
   
+  // Read original manifest
+  const manifestRaw = fs.readFileSync(manifestPath, 'utf8');
+  let manifest = JSON.parse(manifestRaw);
+  
+  // 1. Build Firefox Zip (requires 'scripts')
+  manifest.background = { scripts: ["background.js"] };
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+  
+  const zipFirefox = path.join(__dirname, 'glance-extension-v1.6-firefox.zip');
   try {
-    if (fs.existsSync(zipPath)) {
-      fs.unlinkSync(zipPath);
-    }
-    
-    // Windows
+    if (fs.existsSync(zipFirefox)) fs.unlinkSync(zipFirefox);
     if (process.platform === 'win32') {
-      execSync(`powershell.exe -NoProfile -Command "Compress-Archive -Path '${extDir}\\*' -DestinationPath '${zipPath}' -Force"`);
+      execSync(`powershell.exe -NoProfile -Command "Compress-Archive -Path '${extDir}\\*' -DestinationPath '${zipFirefox}' -Force"`);
     } else {
-      // Mac/Linux
-      execSync(`cd "${extDir}" && zip -r "${zipPath}" ./*`);
+      execSync(`cd "${extDir}" && zip -r "${zipFirefox}" ./*`);
     }
-    console.log('  -> ' + zipPath);
+    console.log('  -> ' + zipFirefox);
   } catch (e) {
-    console.error('Failed to build ZIP:', e.message);
+    console.error('Failed to build Firefox ZIP:', e.message);
   }
+
+  // 2. Build Chromium Zip (requires 'service_worker')
+  manifest.background = { service_worker: "background.js" };
+  // Remove gecko specific settings to prevent Chromium warnings
+  delete manifest.browser_specific_settings;
+  fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
+  
+  const zipChromium = path.join(__dirname, 'glance-extension-v1.6-chromium.zip');
+  try {
+    if (fs.existsSync(zipChromium)) fs.unlinkSync(zipChromium);
+    if (process.platform === 'win32') {
+      execSync(`powershell.exe -NoProfile -Command "Compress-Archive -Path '${extDir}\\*' -DestinationPath '${zipChromium}' -Force"`);
+    } else {
+      execSync(`cd "${extDir}" && zip -r "${zipChromium}" ./*`);
+    }
+    console.log('  -> ' + zipChromium);
+  } catch (e) {
+    console.error('Failed to build Chromium ZIP:', e.message);
+  }
+
+  // Restore original manifest for development
+  fs.writeFileSync(manifestPath, manifestRaw, 'utf8');
 }
 
 // Run builds
