@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Shared Core Module
+ * Glance - Shared Core Module
  * Common utilities, color extraction, and lyrics handling
  */
 
@@ -142,7 +142,7 @@ VDI.Core = (function() {
           if(delta>acc[bIdx].maxS){acc[bIdx].maxS=delta;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
         }
 
-        // Dynamic Island Color Extraction
+        // Glance Color Extraction
         // We do NOT use a contrast multiplier (cMult) because the Island background is always dark.
         // Forcing a contrasting color causes tiny logos (like Blue text in Jawan) to artificially win over the main theme.
         var accBest=null,accScore=-1;

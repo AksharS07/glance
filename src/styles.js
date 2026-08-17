@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Shared CSS Styles
+ * Glance - Shared CSS Styles
  * Generates CSS string based on configuration
  */
 
@@ -36,8 +36,8 @@ VDI.Styles = (function() {
         'opacity:0 !important;pointer-events:none !important;',
         'font-family:-apple-system,Inter,Segoe UI,sans-serif !important;',
         '-webkit-font-smoothing:antialiased !important;-moz-osx-font-smoothing:grayscale !important;text-rendering:optimizeLegibility !important;letter-spacing:normal !important;line-height:normal !important;',
-        'transition:width .6s cubic-bezier(0.2, 0.8, 0.2, 1),height .6s cubic-bezier(0.2, 0.8, 0.2, 1),',
-          'border-radius .6s cubic-bezier(0.2, 0.8, 0.2, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease !important;',
+        'transition:width .5s cubic-bezier(0.32, 0.72, 0, 1),height .5s cubic-bezier(0.32, 0.72, 0, 1),',
+          'border-radius .5s cubic-bezier(0.32, 0.72, 0, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease !important;',
       '}'
     );
 
@@ -54,12 +54,12 @@ VDI.Styles = (function() {
         'position:absolute !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;',
         'width:168px !important;height:34px !important;box-sizing:border-box !important;',
         'display:flex !important;align-items:center !important;gap:8px !important;padding:0 13px !important;',
-        'opacity:1 !important;transition:opacity .18s ease !important;',
+        'opacity:1 !important;transition:opacity .25s ease !important;',
       '}'
     );
     rules.push('#vdi.vdi-expanded #vdi-col{opacity:0 !important;pointer-events:none !important;}');
-    rules.push('#vdi.vdi-idle #vdi-col{justify-content:center;padding:0;width:28px;height:28px;}');
-    rules.push('#vdi.vdi-idle #vdi-col-text,#vdi.vdi-idle #vdi-col-btn{display:none;}');
+    rules.push('#vdi.vdi-idle #vdi-col{justify-content:center;padding:0;width:28px;height:28px;gap:0 !important;transition:gap .3s cubic-bezier(0.32, 0.72, 0, 1) !important;}');
+    rules.push('#vdi.vdi-idle #vdi-col-text, #vdi.vdi-idle #vdi-col-btn{max-width:0 !important;opacity:0 !important;margin:0 !important;padding:0 !important;pointer-events:none !important;border:none !important;}');
 
     // EQ Visualizer
     rules.push(
@@ -78,7 +78,7 @@ VDI.Styles = (function() {
     );
 
     // Track text
-    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;transition:width 0.3s ease, flex 0.3s ease;}');
+    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;max-width:200px;transition:max-width 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease,margin 0.3s ease;}');
     rules.push(
       '#vdi-col-inner{',
         'display:inline-block;font-size:11px;font-weight:500;color:rgba(255,255,255,.82);',
@@ -86,7 +86,7 @@ VDI.Styles = (function() {
       '}'
     );
     rules.push('@keyframes vdi-scroll{0%,28%{transform:translateX(0)}72%{transform:translateX(-55%)}100%{transform:translateX(0)}}');
-    rules.push('#vdi-col-btn{width:18px !important;height:18px !important;border-radius:50% !important;background:rgba(255,255,255,.1) !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;}');
+    rules.push('#vdi-col-btn{width:18px !important;height:18px !important;max-width:18px !important;border-radius:50% !important;background:rgba(255,255,255,.1) !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;overflow:hidden !important;transition:max-width 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease,margin 0.3s ease,background .2s !important;}');
 
     // ═══════════════════════════════════════════════════════════
     // Expanded View
@@ -97,7 +97,7 @@ VDI.Styles = (function() {
         'width:400px !important;height:152px !important;box-sizing:border-box !important;',
         'display:flex !important;align-items:center !important;padding:14px 15px !important;gap:13px !important;',
         'opacity:0 !important;',
-        'transition:opacity .28s ease .13s,transform .28s ease .13s !important;pointer-events:none !important;',
+        'transition:opacity .35s ease .1s,transform .4s cubic-bezier(0.32, 0.72, 0, 1) !important;pointer-events:none !important;',
       '}'
     );
     rules.push('#vdi.vdi-expanded #vdi-exp{opacity:1 !important;transform:translate(-50%,-50%) scale(1) !important;pointer-events:all !important;}');
@@ -159,7 +159,7 @@ VDI.Styles = (function() {
         'display:flex !important;align-items:center !important;justify-content:center !important;',
         'background:transparent !important;',
         'color:rgba(255,255,255,.75) !important;',
-        'transition:color .15s,transform .15s,background .2s !important;',
+        'transition:color .2s ease,transform .25s cubic-bezier(0.32,0.72,0,1),background .25s ease !important;',
       '}'
     );
     rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08) !important;color:var(--vdi-accent, #fff) !important;transform:scale(1.1) !important;}');
@@ -213,7 +213,7 @@ VDI.Styles = (function() {
         'background:rgba(255,255,255,0.12) !important;',
         'color:#fff !important;',
         'display:flex;align-items:center;justify-content:center;border:none !important;',
-        'cursor:pointer;transition:transform .15s cubic-bezier(0.4, 0, 0.2, 1), background .2s;',
+        'cursor:pointer;transition:transform .25s cubic-bezier(0.32, 0.72, 0, 1), background .25s ease;',
         'backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);',
         'box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;',
       '}'

@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Shared Core Module
+ * Glance - Shared Core Module
  * Common utilities, color extraction, and lyrics handling
  */
 
@@ -142,7 +142,7 @@ VDI.Core = (function() {
           if(delta>acc[bIdx].maxS){acc[bIdx].maxS=delta;acc[bIdx].br=r;acc[bIdx].bg=g;acc[bIdx].bb=b;}
         }
 
-        // Dynamic Island Color Extraction
+        // Glance Color Extraction
         // We do NOT use a contrast multiplier (cMult) because the Island background is always dark.
         // Forcing a contrasting color causes tiny logos (like Blue text in Jawan) to artificially win over the main theme.
         var accBest=null,accScore=-1;
@@ -1456,7 +1456,7 @@ VDI.Core = (function() {
 
 
 /**
- * Dynamic Island - Shared CSS Styles
+ * Glance - Shared CSS Styles
  * Generates CSS string based on configuration
  */
 
@@ -1493,8 +1493,8 @@ VDI.Styles = (function() {
         'opacity:0 !important;pointer-events:none !important;',
         'font-family:-apple-system,Inter,Segoe UI,sans-serif !important;',
         '-webkit-font-smoothing:antialiased !important;-moz-osx-font-smoothing:grayscale !important;text-rendering:optimizeLegibility !important;letter-spacing:normal !important;line-height:normal !important;',
-        'transition:width .6s cubic-bezier(0.2, 0.8, 0.2, 1),height .6s cubic-bezier(0.2, 0.8, 0.2, 1),',
-          'border-radius .6s cubic-bezier(0.2, 0.8, 0.2, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease !important;',
+        'transition:width .5s cubic-bezier(0.32, 0.72, 0, 1),height .5s cubic-bezier(0.32, 0.72, 0, 1),',
+          'border-radius .5s cubic-bezier(0.32, 0.72, 0, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease !important;',
       '}'
     );
 
@@ -1511,12 +1511,12 @@ VDI.Styles = (function() {
         'position:absolute !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;',
         'width:168px !important;height:34px !important;box-sizing:border-box !important;',
         'display:flex !important;align-items:center !important;gap:8px !important;padding:0 13px !important;',
-        'opacity:1 !important;transition:opacity .18s ease !important;',
+        'opacity:1 !important;transition:opacity .25s ease !important;',
       '}'
     );
     rules.push('#vdi.vdi-expanded #vdi-col{opacity:0 !important;pointer-events:none !important;}');
-    rules.push('#vdi.vdi-idle #vdi-col{justify-content:center;padding:0;width:28px;height:28px;}');
-    rules.push('#vdi.vdi-idle #vdi-col-text,#vdi.vdi-idle #vdi-col-btn{display:none;}');
+    rules.push('#vdi.vdi-idle #vdi-col{justify-content:center;padding:0;width:28px;height:28px;gap:0 !important;transition:gap .3s cubic-bezier(0.32, 0.72, 0, 1) !important;}');
+    rules.push('#vdi.vdi-idle #vdi-col-text, #vdi.vdi-idle #vdi-col-btn{max-width:0 !important;opacity:0 !important;margin:0 !important;padding:0 !important;pointer-events:none !important;border:none !important;}');
 
     // EQ Visualizer
     rules.push(
@@ -1535,7 +1535,7 @@ VDI.Styles = (function() {
     );
 
     // Track text
-    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;transition:width 0.3s ease, flex 0.3s ease;}');
+    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;max-width:200px;transition:max-width 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease,margin 0.3s ease;}');
     rules.push(
       '#vdi-col-inner{',
         'display:inline-block;font-size:11px;font-weight:500;color:rgba(255,255,255,.82);',
@@ -1543,7 +1543,7 @@ VDI.Styles = (function() {
       '}'
     );
     rules.push('@keyframes vdi-scroll{0%,28%{transform:translateX(0)}72%{transform:translateX(-55%)}100%{transform:translateX(0)}}');
-    rules.push('#vdi-col-btn{width:18px !important;height:18px !important;border-radius:50% !important;background:rgba(255,255,255,.1) !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;}');
+    rules.push('#vdi-col-btn{width:18px !important;height:18px !important;max-width:18px !important;border-radius:50% !important;background:rgba(255,255,255,.1) !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;overflow:hidden !important;transition:max-width 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease,margin 0.3s ease,background .2s !important;}');
 
     // ═══════════════════════════════════════════════════════════
     // Expanded View
@@ -1554,7 +1554,7 @@ VDI.Styles = (function() {
         'width:400px !important;height:152px !important;box-sizing:border-box !important;',
         'display:flex !important;align-items:center !important;padding:14px 15px !important;gap:13px !important;',
         'opacity:0 !important;',
-        'transition:opacity .28s ease .13s,transform .28s ease .13s !important;pointer-events:none !important;',
+        'transition:opacity .35s ease .1s,transform .4s cubic-bezier(0.32, 0.72, 0, 1) !important;pointer-events:none !important;',
       '}'
     );
     rules.push('#vdi.vdi-expanded #vdi-exp{opacity:1 !important;transform:translate(-50%,-50%) scale(1) !important;pointer-events:all !important;}');
@@ -1616,7 +1616,7 @@ VDI.Styles = (function() {
         'display:flex !important;align-items:center !important;justify-content:center !important;',
         'background:transparent !important;',
         'color:rgba(255,255,255,.75) !important;',
-        'transition:color .15s,transform .15s,background .2s !important;',
+        'transition:color .2s ease,transform .25s cubic-bezier(0.32,0.72,0,1),background .25s ease !important;',
       '}'
     );
     rules.push('.vdi-btn:hover{background:rgba(255,255,255,.08) !important;color:var(--vdi-accent, #fff) !important;transform:scale(1.1) !important;}');
@@ -1670,7 +1670,7 @@ VDI.Styles = (function() {
         'background:rgba(255,255,255,0.12) !important;',
         'color:#fff !important;',
         'display:flex;align-items:center;justify-content:center;border:none !important;',
-        'cursor:pointer;transition:transform .15s cubic-bezier(0.4, 0, 0.2, 1), background .2s;',
+        'cursor:pointer;transition:transform .25s cubic-bezier(0.32, 0.72, 0, 1), background .25s ease;',
         'backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px);',
         'box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important;',
       '}'
@@ -1853,7 +1853,7 @@ VDI.Styles = (function() {
 
 
 /**
- * Dynamic Island - Vivaldi Platform
+ * Glance - Vivaldi Platform
  * Uses chrome.tabs and chrome.scripting directly from browser UI context
  */
 
@@ -1998,7 +1998,7 @@ VDI.Platform.Vivaldi = (function() {
 
 
 /**
- * Dynamic Island - Shared UI Component
+ * Glance - Shared UI Component
  * Manages the DOM, interactions, and visual updates
  */
 
@@ -2058,7 +2058,7 @@ VDI.UI = (function() {
         '<div id="vdi-settings-btn" title="Settings">' +
           '<svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"></path></svg>' +
         '</div>' +
-        '<button id="vdi-close-btn" title="Hide Island" style="position:absolute; top:12px; right:12px; z-index:100; background:rgba(255,255,255,0.1); border:none; border-radius:50%; width:24px; height:24px; color:rgba(255,255,255,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">' +
+        '<button id="vdi-close-btn" title="Hide Glance" style="position:absolute; top:12px; right:12px; z-index:100; background:rgba(255,255,255,0.1); border:none; border-radius:50%; width:24px; height:24px; color:rgba(255,255,255,0.6); cursor:pointer; display:flex; align-items:center; justify-content:center; transition:background 0.2s;">' +
           '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>' +
         '</button>' +
         '<button id="vdi-teleport-btn" title="Jump to Media Tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></button>' +
@@ -2105,12 +2105,13 @@ VDI.UI = (function() {
     panel.id = 'vdi-settings-panel';
     panel.innerHTML =
       '<div class="vdi-stg-header">General</div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YouTube</span><span class="vdi-stg-sub">Hides the island completely while on YouTube</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideyt"><span class="vdi-slider"></span></label></div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YT Music</span><span class="vdi-stg-sub">Hides the island completely while on YT Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideytm"><span class="vdi-slider"></span></label></div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Spotify</span><span class="vdi-stg-sub">Hides the island completely while on Spotify</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hidespotify"><span class="vdi-slider"></span></label></div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Apple Music</span><span class="vdi-stg-sub">Hides the island completely on Apple Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideapplemusic"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YouTube</span><span class="vdi-stg-sub">Hides the glance completely while on YouTube</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideyt"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on YT Music</span><span class="vdi-stg-sub">Hides the glance completely while on YT Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideytm"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Spotify</span><span class="vdi-stg-sub">Hides the glance completely while on Spotify</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hidespotify"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Hide on Apple Music</span><span class="vdi-stg-sub">Hides the glance completely on Apple Music</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-hideapplemusic"><span class="vdi-slider"></span></label></div>' +
+      '<div style="height:1px;background:rgba(255,255,255,0.1);margin:4px 0;"></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the island instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the glance instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Enable Lyrics Engine</span><span class="vdi-stg-sub">Fetch and display time-synced lyrics</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-enlyrics"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Lyrics Time Offset</span><span class="vdi-stg-sub">Shift poorly synced lyrics</span></div><div style="display:flex;align-items:center;gap:8px;"><button id="vdi-stg-offset-dec" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">-</button><span id="vdi-stg-offset-val" style="color:#fff;font-size:12px;min-width:32px;text-align:center;user-select:none;">0.0s</span><button id="vdi-stg-offset-inc" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">+</button></div></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Free Placement</span><span class="vdi-stg-sub">Allow dragging anywhere on the screen</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-freeplace"><span class="vdi-slider"></span></label></div>' +
@@ -2130,7 +2131,7 @@ VDI.UI = (function() {
     var tt = document.createElement('div');
     tt.id = 'vdi-stg-tooltip';
     tt.innerHTML = 
-      '<span>Customize the island here!</span>' +
+      '<span>Customize the glance here!</span>' +
       '<button id="vdi-stg-tooltip-btn">Got it</button>';
     return tt;
   }
@@ -2917,7 +2918,7 @@ VDI.UI = (function() {
         var r = island.getBoundingClientRect();
         startLeftCenter = r.left + (r.width / 2);
         startTop = r.top;
-        island.style.transition = 'none';
+        island.style.setProperty('transition', 'none', 'important');
 
         // Show snap zones
         if (!$('vdi-snap-zones')) {
@@ -2978,9 +2979,9 @@ VDI.UI = (function() {
         newTop = Math.max(10, Math.min(newTop, maxTop));
 
         // Always keep it centered via transform to ensure symmetrical width expansion!
-        island.style.left = newLeftCenter + 'px';
-        island.style.top = newTop + 'px';
-        island.style.transform = 'translateX(-50%)';
+        island.style.setProperty('left', newLeftCenter + 'px', 'important');
+        island.style.setProperty('top', newTop + 'px', 'important');
+        island.style.setProperty('transform', 'translateX(-50%)', 'important');
         
         if (state.lyricsOn) {
           updateLyricsPanelPosition();
@@ -2991,7 +2992,7 @@ VDI.UI = (function() {
       document.addEventListener('mouseup', function(e) {
         if (!isDragging) return;
         isDragging = false;
-        island.style.transition = '';
+        island.style.removeProperty('transition');
         if ($('vdi-snap-zones')) $('vdi-snap-zones').classList.remove('active');
         
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
@@ -3225,9 +3226,9 @@ VDI.UI = (function() {
         }
 
         var updatePos = function(left, top, transform) {
-          island.style.left = left;
-          island.style.top = top;
-          island.style.transform = transform;
+          island.style.setProperty('left', left, 'important');
+          island.style.setProperty('top', top, 'important');
+          island.style.setProperty('transform', transform, 'important');
           if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             chrome.storage.local.set({ 'vdi_loc_x': left, 'vdi_loc_y': top, 'vdi_transform': transform });
           } else {
@@ -3477,9 +3478,9 @@ VDI.UI = (function() {
         if (y === 'BOTTOM') y = (window.innerHeight - expH - 10) + 'px';
         if (y === 'MIDDLE') y = (midY - (expH/2)) + 'px';
 
-        island.style.left = x;
-        island.style.top = y;
-        island.style.transform = tf || 'none';
+        island.style.setProperty('left', x, 'important');
+        island.style.setProperty('top', y, 'important');
+        island.style.setProperty('transform', tf || 'none', 'important');
         
         if (state.lyricsOn) {
           // Give it a frame to apply CSS before measuring bounds
@@ -3510,8 +3511,8 @@ VDI.UI = (function() {
         var currentTop = parseFloat(island.style.top) || 10;
         var newTop = Math.max(10, Math.min(currentTop, maxTop));
         
-        island.style.left = newLeftCenter + 'px';
-        island.style.top = newTop + 'px';
+        island.style.setProperty('left', newLeftCenter + 'px', 'important');
+        island.style.setProperty('top', newTop + 'px', 'important');
         
         if (state.lyricsOn) {
           updateLyricsPanelPosition();
@@ -3738,5 +3739,5 @@ VDI.UI = (function() {
 
   poll();
 
-  console.log('[Vivaldi Dynamic Island] Loaded OK');
+  console.log('[Vivaldi Glance] Loaded OK');
 })();

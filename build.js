@@ -1,6 +1,6 @@
 #!/usr/bin/env node
 /**
- * Dynamic Island Build Script
+ * Glance Build Script
  * Concatenates source modules into standalone browser files
  *
  * Usage: node build.js
@@ -150,7 +150,7 @@ function buildVivaldi() {
 
   poll();
 
-  console.log('[Vivaldi Dynamic Island] Loaded OK');
+  console.log('[Vivaldi Glance] Loaded OK');
 })();
 `
   ];
@@ -258,7 +258,7 @@ const { execSync } = require('child_process');
 function buildZip() {
   console.log('Building Extension ZIP...');
   const extDir = path.join(__dirname, 'chrome-extension');
-  const zipPath = path.join(__dirname, 'dynamic-island-extension-v1.6.zip');
+  const zipPath = path.join(__dirname, 'glance-extension-v1.6.zip');
   
   try {
     if (fs.existsSync(zipPath)) {
@@ -279,7 +279,7 @@ function buildZip() {
 }
 
 // Run builds
-console.log('Dynamic Island Build');
+console.log('Glance Build');
 console.log('====================\n');
 
 buildVivaldi();

@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Shared Core Module
+ * Glance - Shared Core Module
  * Common utilities, color extraction, and lyrics handling
  */
 
@@ -817,7 +817,7 @@ VDI.Core = (function() {
 
 
 /**
- * Dynamic Island - Chrome Extension Platform
+ * Glance - Chrome Extension Platform
  * Content script that communicates with background service worker
  */
 

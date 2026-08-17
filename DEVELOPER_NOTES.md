@@ -1,10 +1,9 @@
 # Developer Notes & Project Knowledge Base
-*This file contains critical context, historical bug fixes, architecture quirks, and logic rules for the Vivaldi Dynamic Island project. It is strictly maintained for the AI agent to prevent regressions and understand the complex interaction between the Vivaldi UI, the Chrome Extension wrapper, and YouTube Music.*
+*This file contains critical context, historical bug fixes, architecture quirks, and logic rules for the Glance Cross-Browser Extension project. It is strictly maintained for the AI agent to prevent regressions and understand the complex interactions involved in the extension.*
 
-## 1. Project Architecture (The Dual-Build System)
-This project compiles into TWO distinct platforms from the exact same core codebase (`core.js`, `ui.js`, `styles.js`):
-1. **Vivaldi Web Panel Mod**: Injected directly into Vivaldi's `window.html`. Relies on `vivaldi.js` as the platform adapter.
-2. **Standard Chrome Extension**: Loaded via `chrome://extensions`. Relies on `chrome-ext.js` as the platform adapter, bundled with a background script (`background.js`) and a content bridge.
+## 1. Project Architecture
+This project is a standalone extension compiled from the core codebase (`core.js`, `ui.js`, `styles.js`).
+Historically, it was also a Vivaldi Web Panel mod, so you may still see some legacy build script fragments for it, but the project is now strictly a **Standard Cross-Browser Extension** (Manifest V3 for Chromium/Firefox/Zen). It relies on `chrome-ext.js` as the platform adapter, bundled with a background script (`background.js`) and a content bridge.
 
 **CRITICAL BUILD QUIRK (`sendAction`):**
 - `ui.js` always calls `platform.sendAction(tabId, action, value)` (the Vivaldi signature).
@@ -165,7 +164,7 @@ repeatMode = rc.includes('mode--2') ? 'all' : (rc.includes('mode--1') ? 'one' : 
 **MusicKit API values** (for reading only via `wrappedJSObject`): `0=off, 1=one, 2=all`. Use DOM class as primary source of truth.
 
 ## 12. The Golden Ratio of Color Extraction
-The dynamic island mathematically extracts the most vibrant accent color from the album art. Because the Island itself is always black/dark, the accent color does **not** need to contrast against the dominant background hue (unlike Apple Music's full-screen player).
+The glance mathematically extracts the most vibrant accent color from the album art. Because the Island itself is always black/dark, the accent color does **not** need to contrast against the dominant background hue (unlike Apple Music's full-screen player).
 
 **The Math (The Golden Ratio):**
 ```js
@@ -255,3 +254,13 @@ Here is the exact, pristine `NATIVE_SVGS` block containing all the updated icons
     }
   };
 ```
+
+## 20. CSS Transitions & JS `!important` Conflicts
+**The CSS Bleed vs JS Dragging Conflict:**
+- *The Problem:* To prevent aggressive global CSS from host websites (like YouTube or Devpost) from stretching the Island, `!important` flags were added to the base `#vdi` properties in `src/styles.js` (including `top`, `left`, and `transform`). However, adding `!important` to the CSS stylesheet causes standard JavaScript inline assignments (`island.style.left = ...`) to fail silently because inline styles without `!important` cannot override stylesheet rules with `!important`.
+- *The Consequence:* The island lost its ability to be dragged, and position restoration (`applyPos`) during tab teleportation silently failed, causing the island to always snap back to the default center position (Bug #13).
+- *The Fix:* All positional JavaScript assignments in `ui.js` (dragging, resizing, initializing) MUST use the explicit `setProperty` method with the important flag: `island.style.setProperty('left', value, 'important')`. Do not use `island.style.left = ...`.
+
+**Smooth Pill-to-Dot Transitions:**
+- *The Problem:* The transition from the expanded "pill" shape (with track text) to the idle "dot" shape felt broken because elements were hidden using `display: none !important`. This caused the inner content to instantly vanish while the outer wrapper slowly shrunk over 0.6s, creating a squished snapping effect.
+- *The Fix:* `display: none` is no longer used for the `.vdi-idle` state. Instead, internal elements have their `max-width`, `opacity`, `margin`, and `padding` animated to `0` using Apple's fluid iOS spring curve (`cubic-bezier(0.32, 0.72, 0, 1)`). This allows the elements to gracefully dissolve as the island collapses around them.

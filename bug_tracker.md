@@ -46,17 +46,6 @@
   }
   ```
 
-### 9. Spotify Smart Shuffle vs Shuffle visual distinction is too subtle
-- **Severity:** LOW (Visual/UX)
-- **Description:** The visual distinction between the "Shuffle" icon and "Smart Shuffle" icon (with the tiny star/sparkle) is extremely hard to recognize.
-- **Root cause:** The sparkle element added to the shuffle SVG is likely too small, has too low opacity, or its color blends in too much.
-- **Where to fix:** `src/ui.js` (SVG paths for smart shuffle) and `src/styles.js` (styling/opacity for the smart shuffle sparkle).
-
-### 10. Island collapses into a weird circle on long press
-- **Severity:** Visual / Interaction
-- **Description:** When the island is open and the user holds down the mouse button to keep it open, after a few seconds it visually breaks and turns into a small, weird black circle. 
-- **Notes:** Could be a timeout/state issue where the island attempts to collapse but the long press interrupts the animation, or a CSS width/height transition glitch when held.
-- **User Report:** "when the island is open and i hold my mouse button to keep it open...after few seconds it turns into a weird circle"
 
 ### 11. Timer logic broken in Apple Music on Edge
 - **Severity:** MEDIUM (Functional/Syncing)
@@ -70,13 +59,6 @@
 - **Root cause:** Similar to the Spotify playback delay, the 1-second polling interval in the background script or the latency of `chrome.tabs.sendMessage` / `chrome.scripting.executeScript` might be introducing too much lag between the actual DOM time and the island UI time.
 - **Where to fix:** `chrome-extension/background.js` (polling interval logic) or `VDI.Core.getTabMediaState()` for YouTube Music specifically.
 
-### 13. Island position shifts when teleporting back and forth
-- **Severity:** MEDIUM (Functional/UX)
-- **Description:** When teleporting to the media tab and navigating back and forth, the island shifts its position. Tested on Zen Browser in PopOS! (Linux).
-- **Root cause:** Likely an issue with how the island's X/Y coordinates (`vdi_loc_x`, `vdi_loc_y`) are being stored, retrieved, or applied upon initialization on a newly focused/teleported tab. The coordinates might be lost, calculated relative to the wrong viewport, or not synced fast enough between `ui.js` and `chrome.storage.local`.
-- **Where to fix:** `src/ui.js` (position restoration logic around `applyPos()`, `chrome.storage.local.get` in init, and teleport event handling).
-- **User Report:** "when i teleport to the media tab...the island shifts its position when i go back and forth...theres some issue with storing the coordinates i feel (12 august) tested only on zen browser in PopOS! aka linux"
-
 ---
 
 ## ✅ FIXED (pushed August 6, 2026)
@@ -88,3 +70,6 @@
 5. **Keyboard shortcuts unusable in Windows**: Fixed by using global media keys as default shortcuts and adding a cross-browser shortcut settings button. *(Note: yet to test in Chromium based browsers)*.
 6. **Spotify playback/lyrics delay and seek unreliability**: Replaced CSS-based progress parsing with a precise `MutationObserver` on the playback-position DOM element in `core.js` and removed complex action queues for play/pause in favor of a blind toggle with 150ms debounce.
 7. **Island elements get squished/elongated/oval**: Added !important flags to container styles and buttons in `src/styles.js` to prevent host page CSS bleed.
+8. **Island collapses into weird circle in idle state**: Added `!important` to the `display: none` rule for the play/pause button so it correctly hides during the `.vdi-idle` pill view.
+9. **Spotify Smart Shuffle vs Shuffle visual distinction is too subtle**: Confirmed fixed by user.
+10. **Island position shifts when teleporting back and forth & Dragging broken**: The previous CSS bleed fix (which added `!important` to `.vdi` styles) inadvertently locked the `top`, `left`, and `transform` properties, making JS inline assignments silently fail. Fixed by using `setProperty(..., 'important')` in `src/ui.js`.

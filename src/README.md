@@ -1,6 +1,6 @@
 # Source Module Structure
 
-The Dynamic Island codebase has been modularized for maintainability while remaining dependency-free for end users.
+The Glance codebase has been modularized for maintainability while remaining dependency-free for end users.
 
 ## Architecture
 

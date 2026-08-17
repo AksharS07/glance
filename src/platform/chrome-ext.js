@@ -1,5 +1,5 @@
 /**
- * Dynamic Island - Chrome Extension Platform
+ * Glance - Chrome Extension Platform
  * Content script that communicates with background service worker
  */
 

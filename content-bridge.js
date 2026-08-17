@@ -1,7 +1,7 @@
 /**
- * Vivaldi Dynamic Island – Content Script Bridge
+ * Vivaldi Glance – Content Script Bridge
  *
- * This script is auto-injected into tabs by the Dynamic Island mod (via chrome.scripting).
+ * This script is auto-injected into tabs by the Glance mod (via chrome.scripting).
  * It reads the page's Media Session API and responds to messages from the browser UI.
  *
  * Place this file alongside dynamic-island.js in:
@@ -11,7 +11,7 @@
 (function () {
   'use strict';
 
-  // ── Listen for messages from the Dynamic Island in the browser UI ──
+  // ── Listen for messages from the Glance in the browser UI ──
   window.addEventListener('message', handleWindowMessage);
 
   // chrome.runtime message bridge (when called from chrome.tabs.sendMessage)
