@@ -1158,6 +1158,12 @@ VDI.Core = (function() {
         } else if (act === 'next') {
           var nb = deepQueryOne('button[aria-label*="Next"], button[title*="Next"], button[aria-label*="next"]');
           if (nb) nb.click();
+        } else if (act === 'shuffle') {
+          var sb = deepQueryOne('.button--shuffle, button[aria-label*="shuffle" i], amp-playback-controls-shuffle');
+          if (sb) sb.click();
+        } else if (act === 'repeat') {
+          var rb = deepQueryOne('.button--repeat, button[aria-label*="repeat" i], amp-playback-controls-repeat');
+          if (rb) rb.click();
         } else if (act === 'seek' && typeof val === 'number') {
           var ms = navigator.mediaSession;
           var dur = 0;
