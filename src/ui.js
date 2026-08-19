@@ -325,7 +325,8 @@ VDI.UI = (function() {
       $('vdi-artist').textContent = state.artist || 'Unknown Artist';
 
       if ($('vdi-shuffle')) {
-        $('vdi-shuffle').style.display = (state.isYouTubeVideo || !state.isMusicApp) ? 'none' : '';
+        var canShuffle = ['apple', 'spotify', 'ytmusic'].includes(state.platform);
+        $('vdi-shuffle').style.display = canShuffle ? '' : 'none';
         var p = NATIVE_SVGS[platform] ? platform : (platform === 'ytmusic' ? 'youtube' : 'other');
         var shufOffSvg = NATIVE_SVGS[p].shuffleOff || NATIVE_SVGS[p].shuffle;
         var shufOnSvg = NATIVE_SVGS[p].shuffle;
@@ -349,7 +350,8 @@ VDI.UI = (function() {
       }
 
       if ($('vdi-repeat')) {
-        $('vdi-repeat').style.display = (state.isYouTubeVideo || !state.isMusicApp) ? 'none' : '';
+        var canRepeat = ['apple', 'spotify', 'ytmusic'].includes(state.platform);
+        $('vdi-repeat').style.display = canRepeat ? '' : 'none';
         $('vdi-repeat').classList.remove('vdi-active', 'vdi-repeat-one');
         var p = NATIVE_SVGS[platform] ? platform : (platform === 'ytmusic' ? 'youtube' : 'other');
         var repOffSvg = NATIVE_SVGS[p].repeatOff || NATIVE_SVGS[p].repeat;
