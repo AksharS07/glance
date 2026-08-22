@@ -87,8 +87,26 @@ VDI.Platform.ChromeExt = (function() {
     }
 
     function poll() {
+      var SUPPORTED_HOSTS = ['youtube.com', 'music.youtube.com', 'spotify.com', 'open.spotify.com', 'music.apple.com'];
       chrome.tabs.query({ audible: true }, function(tabs) {
-        var tab = (tabs && tabs.length) ? tabs[0] : null;
+        // Filter to only supported media platforms
+        var mediaTabs = [];
+        if (tabs && tabs.length) {
+          for (var t = 0; t < tabs.length; t++) {
+            if (tabs[t].url) {
+              try {
+                var h = new URL(tabs[t].url).hostname;
+                for (var s = 0; s < SUPPORTED_HOSTS.length; s++) {
+                  if (h === SUPPORTED_HOSTS[s] || h.endsWith('.' + SUPPORTED_HOSTS[s])) {
+                    mediaTabs.push(tabs[t]);
+                    break;
+                  }
+                }
+              } catch(e) {}
+            }
+          }
+        }
+        var tab = mediaTabs.length ? mediaTabs[0] : null;
 
         var targetTabId = tab ? tab.id : S.tabId;
         if (!targetTabId) {
@@ -245,26 +263,25 @@ VDI.Platform.ChromeExt = (function() {
             }
           }
         } else if (msg.act === 'teleport') {
-          if (returnTabId === null) {
-            chrome.tabs.query({ active: true, currentWindow: true }, function(tabs) {
-              if (tabs && tabs.length > 0) {
-                returnTabId = tabs[0].id;
-                returnWinId = tabs[0].windowId;
-                if (S.tabId !== null) {
-                  chrome.tabs.update(S.tabId, { active: true });
-                  if (S.windowId !== null) {
-                    chrome.windows.update(S.windowId, { focused: true });
-                  }
-                }
-              }
-            });
-          } else {
-            chrome.tabs.update(returnTabId, { active: true });
-            if (returnWinId !== null) {
-              chrome.windows.update(returnWinId, { focused: true });
+          // Teleport: toggle between current tab and the media tab
+          if (sender && sender.tab && sender.tab.id === S.tabId) {
+            // Already on the media tab — teleport back to the last non-media tab
+            if (returnTabId !== null) {
+              chrome.tabs.update(returnTabId, { active: true });
+              if (returnWinId !== null) chrome.windows.update(returnWinId, { focused: true });
+              returnTabId = null;
+              returnWinId = null;
             }
-            returnTabId = null;
-            returnWinId = null;
+          } else {
+            // On a different tab — save origin and jump to media tab
+            if (sender && sender.tab) {
+              returnTabId = sender.tab.id;
+              returnWinId = sender.tab.windowId;
+            }
+            if (S.tabId !== null) {
+              chrome.tabs.update(S.tabId, { active: true });
+              if (S.windowId !== null) chrome.windows.update(S.windowId, { focused: true });
+            }
           }
         // VDI_TELEPORT_BACK was previously handled here but the message uses
         // type: 'VDI_TELEPORT_BACK' (not act), so it never matched. Moved to

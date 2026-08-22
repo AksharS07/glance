@@ -10,298 +10,343 @@
   <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
   
   <style>
-    /* --- BRAND COLORS DERIVED FROM YOUR LOGO'S NEON GLOW --- */
     :root {
       --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
-      --vdi-accent: #818cf8; /* Soft Indigo from neon glow */
-      --vdi-grad: linear-gradient(135deg, #6366f1, #a855f7);
-      --vdi-dark: #0b0b10; /* Deep midnight to make the glow pop */
-      --vdi-glow: rgba(99, 102, 241, 0.25);
+      --accent: #818cf8;
+      --accent-glow: rgba(99, 102, 241, 0.25);
+      --bg: #0b0b10;
+      --surface: rgba(255, 255, 255, 0.03);
+      --border: rgba(255, 255, 255, 0.06);
+      --text-primary: #f5f5f7;
+      --text-secondary: rgba(255, 255, 255, 0.5);
+      --text-tertiary: rgba(255, 255, 255, 0.3);
+      --timeline-line: rgba(255, 255, 255, 0.08);
     }
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html { scroll-behavior: smooth; }
     body {
       font-family: 'Inter', -apple-system, sans-serif;
-      background: var(--vdi-dark);
-      color: #f5f5f7;
+      background: var(--bg);
+      color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
       display: flex;
       justify-content: center;
-      align-items: center;
       min-height: 100vh;
       padding: 40px 24px;
-      transition: background 0.8s var(--apple-ease);
     }
 
-    /* --- CONTAINER --- */
     .container {
-      max-width: 740px;
+      max-width: 600px;
       width: 100%;
-      background: rgba(255, 255, 255, 0.03);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.06);
-      border-radius: 24px;
-      padding: 48px;
-      box-sizing: border-box;
-      transition: background 0.8s var(--apple-ease), border-color 0.6s var(--apple-ease);
     }
 
     /* --- HEADER --- */
     .header {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
       text-align: center;
-      margin-bottom: 40px;
+      margin-bottom: 48px;
     }
     .logo {
-      width: 64px;
-      height: 64px;
+      width: 56px;
+      height: 56px;
       margin-bottom: 16px;
+      border-radius: 14px;
     }
-    .hero-eyebrow {
-      font-size: 12px;
+    .eyebrow {
+      font-size: 11px;
       font-weight: 600;
-      letter-spacing: .12em;
-      color: var(--vdi-accent);
-      margin-bottom: 8px;
+      letter-spacing: .14em;
+      color: var(--accent);
       text-transform: uppercase;
-      transition: color 0.6s var(--apple-ease);
+      margin-bottom: 8px;
     }
     h1 {
-      font-size: 32px;
+      font-size: 28px;
       font-weight: 800;
       letter-spacing: -.03em;
-      margin: 0 0 8px 0;
-      color: #ffffff;
+      margin-bottom: 8px;
     }
     .subtitle {
-      font-size: 16px;
-      color: rgba(255, 255, 255, 0.5);
+      font-size: 15px;
+      color: var(--text-secondary);
       line-height: 1.5;
-      max-width: 400px;
+      max-width: 380px;
       margin: 0 auto;
     }
 
-    /* --- FEATURES GRID --- */
-    .features-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
+    /* --- TIMELINE --- */
+    .timeline {
+      position: relative;
+      padding-left: 32px;
       margin-bottom: 40px;
     }
-    @media (max-width: 600px) {
-      .features-grid { grid-template-columns: 1fr; }
+    .timeline::before {
+      content: '';
+      position: absolute;
+      left: 7px;
+      top: 8px;
+      bottom: 8px;
+      width: 2px;
+      background: var(--timeline-line);
+      border-radius: 1px;
     }
 
-    .feature {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.06);
-      border-radius: 16px;
-      padding: 24px 20px;
-      display: flex;
-      flex-direction: column;
-      align-items: flex-start;
-      text-align: left;
+    .tl-item {
+      position: relative;
+      padding-bottom: 24px;
+      opacity: 0;
+      transform: translateY(12px);
+      animation: tl-enter 0.5s var(--apple-ease) forwards;
+    }
+    .tl-item:last-child { padding-bottom: 0; }
+
+    .tl-item:nth-child(1) { animation-delay: 0.1s; }
+    .tl-item:nth-child(2) { animation-delay: 0.15s; }
+    .tl-item:nth-child(3) { animation-delay: 0.2s; }
+    .tl-item:nth-child(4) { animation-delay: 0.25s; }
+    .tl-item:nth-child(5) { animation-delay: 0.3s; }
+    .tl-item:nth-child(6) { animation-delay: 0.35s; }
+    .tl-item:nth-child(7) { animation-delay: 0.4s; }
+    .tl-item:nth-child(8) { animation-delay: 0.45s; }
+
+    @keyframes tl-enter {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* Dot marker */
+    .tl-item::before {
+      content: '';
+      position: absolute;
+      left: -32px;
+      top: 6px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--bg);
+      border: 2px solid var(--accent);
+      z-index: 1;
       transition: all 0.3s var(--apple-ease);
     }
-    .feature:hover {
-      background: rgba(255,255,255,0.06);
-      transform: translateY(-2px);
-      border-color: var(--vdi-accent);
-    }
-    .feature-icon {
-      width: 40px;
-      height: 40px;
-      border-radius: 12px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      margin-bottom: 16px;
-      color: var(--vdi-accent);
-      background: rgba(255,255,255,0.05);
-      transition: color 0.6s var(--apple-ease);
-    }
-    .feature h3 {
-      font-size: 16px;
-      font-weight: 700;
-      margin: 0 0 8px 0;
-      color: #ffffff;
-      letter-spacing: -0.02em;
-    }
-    .feature p {
-      margin: 0;
-      font-size: 14px;
-      line-height: 1.5;
-      color: rgba(255, 255, 255, 0.5);
+    .tl-item:hover::before {
+      background: var(--accent);
+      box-shadow: 0 0 12px var(--accent-glow);
     }
 
-    /* --- TASTER DEMO (Subtle color preview) --- */
-    .taster-section {
-      margin-top: 40px;
-      padding-top: 32px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+    /* Highlight dot for major features */
+    .tl-item.major::before {
+      background: var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
+    }
+
+    .tl-title {
+      font-size: 15px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .tl-tag {
+      font-size: 10px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 2px 7px;
+      border-radius: 4px;
+      line-height: 1.4;
+    }
+    .tl-tag.new {
+      background: rgba(52, 211, 153, 0.15);
+      color: #34d399;
+    }
+    .tl-tag.improved {
+      background: rgba(129, 140, 248, 0.15);
+      color: #818cf8;
+    }
+    .tl-tag.fix {
+      background: rgba(251, 191, 36, 0.15);
+      color: #fbbf24;
+    }
+    .tl-desc {
+      font-size: 13px;
+      line-height: 1.5;
+      color: var(--text-secondary);
+    }
+
+    /* --- COLOR TASTER --- */
+    .taster {
       text-align: center;
+      margin-bottom: 32px;
+      padding: 24px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
     }
     .taster-label {
       font-size: 11px;
-      color: rgba(255, 255, 255, 0.3);
+      color: var(--text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.1em;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     .taster-row {
       display: flex;
       justify-content: center;
-      gap: 12px;
+      gap: 10px;
     }
     .taster-card {
-      width: 60px;
-      height: 60px;
+      width: 52px;
+      height: 52px;
       border-radius: 12px;
       cursor: pointer;
       background-size: cover;
       background-position: center;
-      border: 1px solid rgba(255,255,255,0.05);
+      border: 1px solid var(--border);
       transition: all 0.4s var(--apple-ease);
-      transform: scale(0.95);
       opacity: 0.6;
     }
     .taster-card:hover {
-      transform: scale(1.05);
+      transform: scale(1.1);
       opacity: 1;
-      border-color: var(--vdi-accent);
-      box-shadow: 0 0 20px var(--vdi-glow);
+      border-color: var(--accent);
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    /* --- KO-FI --- */
+    .kofi-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 14px 0;
+      margin-bottom: 24px;
+    }
+    .kofi-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 10px 20px;
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.12), rgba(255, 195, 113, 0.12));
+      border: 1px solid rgba(255, 95, 109, 0.25);
+      border-radius: 10px;
+      color: #ffc371;
+      font-size: 13px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s var(--apple-ease);
+    }
+    .kofi-link:hover {
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.22), rgba(255, 195, 113, 0.22));
+      transform: scale(1.03);
+      border-color: rgba(255, 195, 113, 0.4);
     }
 
     /* --- CTA --- */
     .btn {
       display: block;
       width: 100%;
-      padding: 16px;
+      padding: 14px;
       background: #ffffff;
       color: #000000;
       font-weight: 700;
       border-radius: 99px;
       text-align: center;
-      font-size: 16px;
+      font-size: 15px;
       font-family: inherit;
       border: none;
       cursor: pointer;
-      transition: transform 0.3s var(--apple-ease), background 0.3s var(--apple-ease), color 0.3s var(--apple-ease), box-shadow 0.3s var(--apple-ease);
-      box-sizing: border-box;
+      transition: all 0.3s var(--apple-ease);
     }
     .btn:hover {
       transform: scale(1.02);
-      background: var(--vdi-accent);
+      background: var(--accent);
       color: #fff;
-      box-shadow: 0 0 30px var(--vdi-glow);
+      box-shadow: 0 0 30px var(--accent-glow);
     }
-    .btn:active {
-      transform: scale(0.98);
-    }
+    .btn:active { transform: scale(0.98); }
 
     /* --- FOOTER --- */
     .footer {
-      margin-top: 32px;
+      margin-top: 24px;
       text-align: center;
-      padding-top: 24px;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
     }
     .footer-actions {
       display: flex;
       justify-content: center;
       gap: 16px;
       flex-wrap: wrap;
-      margin-bottom: 16px;
+      margin-bottom: 12px;
     }
     .footer-actions a {
-      color: rgba(255, 255, 255, 0.4);
+      color: var(--text-tertiary);
       text-decoration: none;
       font-size: 12px;
       font-weight: 500;
       transition: color 0.2s;
     }
-    .footer-actions a:hover {
-      color: #ffffff;
-    }
+    .footer-actions a:hover { color: #ffffff; }
     .copyright {
       font-size: 12px;
-      color: rgba(255, 255, 255, 0.2);
+      color: rgba(255, 255, 255, 0.15);
+    }
+
+    @media (max-width: 480px) {
+      body { padding: 24px 16px; }
+      h1 { font-size: 24px; }
+      .timeline { padding-left: 28px; }
+      .tl-item::before { left: -28px; width: 14px; height: 14px; }
     }
   </style>
 </head>
 <body>
   <div class="container">
     <div class="header">
-      <img src="icon128.png" alt="Logo" class="logo">
-      <div class="hero-eyebrow">Glance V1.6</div>
+      <img src="icon128.png" alt="Glance" class="logo">
+      <div class="eyebrow">Glance V1.6</div>
       <h1>What's New</h1>
-      <div class="subtitle">The Polish & Power update — re‑engineered click targets, smarter controls, and a smoother experience.</div>
+      <div class="subtitle">The Polish &amp; Power update — smarter controls, tighter sync, and a smoother experience across every platform.</div>
     </div>
 
-    <div class="features-grid">
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="16 3 21 3 21 8"></polyline><line x1="4" y1="20" x2="21" y2="3"></line><polyline points="21 16 21 21 16 21"></polyline><line x1="15" y1="15" x2="21" y2="21"></line><line x1="4" y1="4" x2="9" y2="9"></line></svg>
-        </div>
-        <h3>Shuffle & Repeat</h3>
-        <p>Natively extracts and controls Shuffle and Repeat modes for Spotify, Apple Music, and YouTube Music with platform-native icons.</p>
+    <div class="timeline">
+      <div class="tl-item major">
+        <div class="tl-title">Shuffle & Repeat Controls <span class="tl-tag new">New</span></div>
+        <div class="tl-desc">Natively extracts and controls shuffle and repeat modes for Spotify, Apple Music, and YouTube Music — with platform-native icons.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2" ry="2"></rect><path d="M6 8h.01"></path><path d="M10 8h.01"></path><path d="M14 8h.01"></path><path d="M18 8h.01"></path><path d="M8 12h.01"></path><path d="M12 12h.01"></path><path d="M16 12h.01"></path><path d="M7 16h10"></path></svg>
-        </div>
-        <h3>Keyboard Shortcuts</h3>
-        <p>Global media key support — Play/Pause, Next, Previous — that works from any tab. Fully customizable in your browser's shortcut settings.</p>
+      <div class="tl-item major">
+        <div class="tl-title">Keyboard Shortcuts <span class="tl-tag new">New</span></div>
+        <div class="tl-desc">Global media keys — Play/Pause, Next, Previous — that work from any tab. Fully customizable in your browser's shortcut settings.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon></svg>
-        </div>
-        <h3>Quick Playlists</h3>
-        <p>Save up to 3 favorite playlists in the popup and launch them with a single click.</p>
+      <div class="tl-item">
+        <div class="tl-title">Quick Playlists <span class="tl-tag new">New</span></div>
+        <div class="tl-desc">Save up to 3 favorite playlists in the popup and launch them with one click.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path></svg>
-        </div>
-        <h3>AMOLED Black Mode</h3>
-        <p>Pitch-black background mode that re-extracts album accent colors on the fly, saving battery on OLED screens.</p>
+      <div class="tl-item">
+        <div class="tl-title">AMOLED Black Mode <span class="tl-tag new">New</span></div>
+        <div class="tl-desc">Pitch-black background with re-extracted accent colors. Saves battery on OLED screens.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="4" y1="21" x2="4" y2="14"></line><line x1="4" y1="10" x2="4" y2="3"></line><line x1="12" y1="21" x2="12" y2="12"></line><line x1="12" y1="8" x2="12" y2="3"></line><line x1="20" y1="21" x2="20" y2="16"></line><line x1="20" y1="12" x2="20" y2="3"></line><line x1="1" y1="14" x2="7" y2="14"></line><line x1="9" y1="8" x2="15" y2="8"></line><line x1="17" y1="16" x2="23" y2="16"></line></svg>
-        </div>
-        <h3>Manual Lyrics Offset</h3>
-        <p>A ±0.5s stepper in the settings panel to manually fine-tune lyrics synchronization for poorly synced tracks.</p>
+      <div class="tl-item">
+        <div class="tl-title">Manual Lyrics Offset <span class="tl-tag new">New</span></div>
+        <div class="tl-desc">A ±0.5s stepper to fine-tune lyrics sync for poorly timed tracks.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
-        </div>
-        <h3>Ultra-Precise Sync</h3>
-        <p>Reduced UI drift tolerance to 400ms with a sub-second MutationObserver on Spotify for pixel-perfect lyrics sync.</p>
+      <div class="tl-item">
+        <div class="tl-title">Ultra-Precise Sync <span class="tl-tag improved">Improved</span></div>
+        <div class="tl-desc">Reduced drift tolerance to 400ms with sub-second syncing on Spotify for pixel-perfect lyrics.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path></svg>
-        </div>
-        <h3>MV3 Architecture Polish</h3>
-        <p>Rewrote Apple Music hooks to strictly comply with Manifest V3 sandboxing, routing controls through native DOM clickers.</p>
+      <div class="tl-item">
+        <div class="tl-title">MV3 Architecture Polish <span class="tl-tag fix">Fix</span></div>
+        <div class="tl-desc">Rewrote Apple Music hooks for strict Manifest V3 sandboxing, routing controls through native DOM.</div>
       </div>
-      <div class="feature">
-        <div class="feature-icon">
-          <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg>
-        </div>
-        <h3>Fortified UI</h3>
-        <p>Strict CSS specificity and a 600ms debounce lock on playback toggles to eradicate crossfade desyncs and CSS bleeding.</p>
+      <div class="tl-item">
+        <div class="tl-title">Fortified UI <span class="tl-tag fix">Fix</span></div>
+        <div class="tl-desc">Strict CSS specificity and debounce locks to eradicate crossfade desyncs and host CSS bleeding.</div>
       </div>
     </div>
 
-    <!-- SUBTLE COLOR TASTER FOR THE ENGINE -->
-    <div class="taster-section">
+    <!-- COLOR TASTER -->
+    <div class="taster">
       <div class="taster-label">✨ See the color engine in action</div>
       <div class="taster-row">
         <div class="taster-card" style="background-image: url('blinding_lights.png');" data-color="#d4820a" data-bg="#1a0a00"></div>
@@ -310,13 +355,19 @@
       </div>
     </div>
 
+    <!-- KO-FI -->
+    <div class="kofi-row">
+      <a href="https://ko-fi.com/aksharsrijan" target="_blank" rel="noopener" class="kofi-link">☕ Support on Ko-fi</a>
+    </div>
+
     <button id="close-btn" class="btn">Awesome, let's go!</button>
 
     <div class="footer">
       <div class="footer-actions">
+        <a href="https://ko-fi.com/aksharsrijan" target="_blank">☕ Ko-fi</a>
         <a href="https://github.com/AksharS07/glance" target="_blank">⭐ Star on GitHub</a>
-        <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/" target="_blank">📝 Review on Firefox</a>
-        <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk" target="_blank">📝 Review on Edge</a>
+        <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/" target="_blank">📝 Firefox</a>
+        <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk" target="_blank">📝 Edge</a>
       </div>
       <div class="copyright">© Glance · v1.6</div>
     </div>
