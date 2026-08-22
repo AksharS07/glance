@@ -243,4 +243,9 @@ document.addEventListener('DOMContentLoaded', function() {
       chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'openShortcuts' });
     }
   });
+
+  // Ko-fi Support Link
+  document.getElementById('kofi-btn')?.addEventListener('click', function() {
+    chrome.tabs.create({ url: 'https://ko-fi.com/aksharsrijan' });
+  });
 });

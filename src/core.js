@@ -1405,15 +1405,21 @@ VDI.Core = (function() {
     }
 
     try {
-      var vids = Array.prototype.slice.call(document.querySelectorAll('video'));
       var v = null;
-      for (var i = 0; i < vids.length; i++) {
-        if (!vids[i].paused) {
-          v = vids[i];
-          break;
-        }
+      // On YouTube, prioritize the main player video to avoid hover preview thumbnails
+      if (window.location.hostname.includes('youtube.com')) {
+        v = document.querySelector('.html5-main-video');
       }
-      if (!v && vids.length) v = vids[0];
+      if (!v) {
+        var vids = Array.prototype.slice.call(document.querySelectorAll('video'));
+        for (var i = 0; i < vids.length; i++) {
+          if (!vids[i].paused) {
+            v = vids[i];
+            break;
+          }
+        }
+        if (!v && vids.length) v = vids[0];
+      }
       if (!v) return false;
 
       if (document.pictureInPictureElement) {

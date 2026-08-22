@@ -409,3 +409,46 @@ input:checked + .slider:before {
   background: var(--accent-color, #4f46e5);
   opacity: 0.9;
 }
+
+/* Ko-fi Support Card */
+.kofi-card {
+  background: linear-gradient(135deg, rgba(255, 95, 109, 0.08), rgba(255, 195, 113, 0.08)) !important;
+  border: 1px solid rgba(255, 95, 109, 0.2) !important;
+}
+.kofi-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+.kofi-icon {
+  font-size: 22px;
+  flex-shrink: 0;
+}
+.kofi-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #f4f4f5;
+}
+.kofi-sub {
+  font-size: 11px;
+  color: #a1a1aa;
+  line-height: 1.4;
+  margin-top: 2px;
+}
+.kofi-btn {
+  width: 100%;
+  background: linear-gradient(135deg, #ff5f6d, #ffc371);
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  padding: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: opacity 0.2s, transform 0.2s;
+}
+.kofi-btn:hover {
+  opacity: 0.9;
+  transform: scale(0.98);
+}

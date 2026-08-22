@@ -79,11 +79,11 @@ VDI.UI = (function() {
           '</div>' +
           '<div id="vdi-ctrl-row">' +
             '<div id="vdi-ctrl-main">' +
-              '<button class="vdi-btn" id="vdi-shuffle" title="Shuffle" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>' +
+              '<button class="vdi-btn vdi-hidden" id="vdi-shuffle" title="Shuffle"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>' +
               '<button class="vdi-btn" id="vdi-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>' +
               '<button class="vdi-btn" id="vdi-play" title="Play/Pause"><svg id="vdi-pp" viewBox="0 0 24 24" fill="currentColor">' + VDI.Core.getPlayIcon(false) + '</svg></button>' +
               '<button class="vdi-btn" id="vdi-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>' +
-              '<button class="vdi-btn" id="vdi-repeat" title="Repeat" style="display:none;"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>' +
+              '<button class="vdi-btn vdi-hidden" id="vdi-repeat" title="Repeat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>' +
             '</div>' +
             '<div id="vdi-ctrl-extra">' +
               '<button class="vdi-icon-btn" id="vdi-lyr-btn" title="Lyrics">' +
@@ -325,8 +325,8 @@ VDI.UI = (function() {
       $('vdi-artist').textContent = state.artist || 'Unknown Artist';
 
       if ($('vdi-shuffle')) {
-        var canShuffle = ['apple', 'spotify', 'ytmusic'].includes(state.platform);
-        $('vdi-shuffle').style.display = canShuffle ? '' : 'none';
+        var canShuffle = (platform === 'apple' || platform === 'spotify' || platform === 'ytmusic');
+        if (canShuffle) { $('vdi-shuffle').classList.remove('vdi-hidden'); } else { $('vdi-shuffle').classList.add('vdi-hidden'); }
         var p = NATIVE_SVGS[platform] ? platform : (platform === 'ytmusic' ? 'youtube' : 'other');
         var shufOffSvg = NATIVE_SVGS[p].shuffleOff || NATIVE_SVGS[p].shuffle;
         var shufOnSvg = NATIVE_SVGS[p].shuffle;
@@ -350,8 +350,8 @@ VDI.UI = (function() {
       }
 
       if ($('vdi-repeat')) {
-        var canRepeat = ['apple', 'spotify', 'ytmusic'].includes(state.platform);
-        $('vdi-repeat').style.display = canRepeat ? '' : 'none';
+        var canRepeat = (platform === 'apple' || platform === 'spotify' || platform === 'ytmusic');
+        if (canRepeat) { $('vdi-repeat').classList.remove('vdi-hidden'); } else { $('vdi-repeat').classList.add('vdi-hidden'); }
         $('vdi-repeat').classList.remove('vdi-active', 'vdi-repeat-one');
         var p = NATIVE_SVGS[platform] ? platform : (platform === 'ytmusic' ? 'youtube' : 'other');
         var repOffSvg = NATIVE_SVGS[p].repeatOff || NATIVE_SVGS[p].repeat;
@@ -1276,11 +1276,17 @@ VDI.UI = (function() {
 
       $('vdi-pip-main-btn').addEventListener('click', function(e) {
         e.stopPropagation();
-        if (!opts.isVivaldi && typeof VDI !== 'undefined' && VDI.Core && VDI.Core.togglePiP) {
-          var success = VDI.Core.togglePiP();
-          if (!success && platform.requestPiP) {
-            platform.requestPiP(state.tabId);
-          }
+        // Only attempt local togglePiP if we ARE on the media tab (YouTube video page).
+        // On any other tab (Twitter, Reddit, GitHub, etc.), local videos would hijack PiP.
+        // Always delegate to background script for cross-tab teleport.
+        var isOnMediaTab = false;
+        try {
+          var h = window.location.hostname;
+          isOnMediaTab = (h.includes('youtube.com') && !h.includes('music.youtube.com'));
+        } catch(ex) {}
+
+        if (isOnMediaTab && !opts.isVivaldi && typeof VDI !== 'undefined' && VDI.Core && VDI.Core.togglePiP) {
+          VDI.Core.togglePiP();
         } else if (platform.requestPiP) {
           platform.requestPiP(state.tabId);
         }

@@ -90,56 +90,42 @@ VDI.Platform.ChromeExt = (function() {
       chrome.tabs.query({ audible: true }, function(tabs) {
         var tab = (tabs && tabs.length) ? tabs[0] : null;
 
-        if (!tab) {
-          if (S.tabId !== null) {
-            execInTab(S.tabId, VDI.Core.getTabMediaState, [], function(res) {
-              if (!res) {
-                S.hasMedia = false;
-                broadcastState();
-                return;
-              }
-              S.title = res.title || S.title;
-              S.artist = res.artist || S.artist;
-              S.artwork = res.artwork || S.artwork;
-              S.isPlaying = res.isPlaying;
-              S.duration = res.duration;
-              S.position = res.position;
-              S.supportsPiP = res.pipOk || false;
-              S.isFullscreen = res.isFullscreen || false;
-              S.isYouTubeVideo = res.isYouTubeVideo || false;
-              S.isMusicApp = res.isMusicApp || false;
-              S.shuffleOn = res.shuffleOn || false;
-              S.smartShuffleOn = res.smartShuffleOn || false;
-              S.repeatMode = res.repeatMode || 'off';
-              S.platform = res.platform || 'other';
-              if (!res.hasMedia) S.hasMedia = false;
-              broadcastState();
-            });
-          } else if (S.hasMedia) {
+        var targetTabId = tab ? tab.id : S.tabId;
+        if (!targetTabId) {
+          if (S.hasMedia) {
             S.hasMedia = false;
             broadcastState();
           }
           return;
         }
 
-        S.tabId = tab.id;
-        S.windowId = tab.windowId;
+        var isAM = false;
+        if (tab) {
+          isAM = tab.url && tab.url.includes('music.apple.com');
+          S.tabId = tab.id;
+          S.windowId = tab.windowId;
+        } else {
+          isAM = S.platform === 'apple';
+        }
 
-        execInTab(tab.id, VDI.Core.getTabMediaState, [], function(res) {
+        var cb = function(res) {
           if (!res) {
-            S.hasMedia = true;
-            broadcastState();
+            if (S.hasMedia) {
+              S.hasMedia = false;
+              broadcastState();
+            }
             return;
           }
 
           S.hasMedia = res.hasMedia !== undefined ? res.hasMedia : true;
           S.isPlaying = res.isPlaying;
-          S.title = res.title || tab.title || '';
-          S.artist = res.artist || '';
-          S.artwork = res.artwork || null;
+          S.title = res.title || (tab ? tab.title : S.title) || '';
+          S.artist = res.artist || S.artist || '';
+          S.artwork = res.artwork || S.artwork || null;
           S.duration = res.duration || 0;
           S.position = res.position || 0;
           S.supportsPiP = res.pipOk || false;
+          S.isFullscreen = res.isFullscreen || false;
           S.isYouTubeVideo = res.isYouTubeVideo || false;
           S.isMusicApp = res.isMusicApp || false;
           S.shuffleOn = res.shuffleOn || false;
@@ -148,7 +134,67 @@ VDI.Platform.ChromeExt = (function() {
           S.platform = res.platform || 'other';
 
           broadcastState();
-        });
+        };
+
+        if (isAM) {
+          execInTab(targetTabId, function() {
+            try {
+              if (window.MusicKit && window.MusicKit.getInstance) {
+                var mk = window.MusicKit.getInstance();
+                if (mk) {
+                  var ni = mk.nowPlayingItem;
+                  var uiCur = mk.currentPlaybackTime || 0;
+                  var uiDur = (ni && ni.playbackDuration) ? ni.playbackDuration / 1000 : 0;
+                  var isPlaying = !!mk.isPlaying;
+                  var shuffleOn = (mk.shuffleMode !== 0 && mk.shuffleMode !== undefined);
+                  var rm = mk.repeatMode;
+                  var repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
+                  
+                  try {
+                    var repDomBtn = document.querySelector('.button--repeat, amp-playback-controls-repeat');
+                    if (repDomBtn) {
+                      var rc = repDomBtn.className || '';
+                      var rl = (repDomBtn.getAttribute('aria-label') || repDomBtn.getAttribute('title') || '').toLowerCase();
+                      if (rl.includes('one') || rc.includes('mode--2')) repeatMode = 'one';
+                      else if (rl.includes('all') || rc.includes('mode--1')) repeatMode = 'all';
+                      else if (rc.includes('mode--0')) repeatMode = 'off';
+                    }
+                  } catch(e) {}
+                  
+                  var finalTitle = '', finalArtist = '', art = null;
+                  if (ni) {
+                    finalTitle = ni.title || (ni.attributes && ni.attributes.name) || '';
+                    finalArtist = ni.artistName || (ni.attributes && ni.attributes.artistName) || '';
+                    if (ni.artwork && window.MusicKit.formatArtworkURL) {
+                      try { art = window.MusicKit.formatArtworkURL(ni.artwork, 600, 600); } catch(e) {}
+                    }
+                  }
+                  return {
+                    title: finalTitle,
+                    artist: finalArtist,
+                    artwork: art,
+                    isPlaying: isPlaying,
+                    duration: uiDur,
+                    position: uiCur,
+                    hasMedia: !!(finalTitle || uiDur > 0),
+                    volume: 1,
+                    pipOk: false,
+                    isFullscreen: !!document.fullscreenElement,
+                    isYouTubeVideo: false,
+                    isMusicApp: true,
+                    platform: 'apple',
+                    shuffleOn: shuffleOn,
+                    repeatMode: repeatMode,
+                    timestamp: Date.now()
+                  };
+                }
+              }
+            } catch(e) {}
+            return null;
+          }, [], cb, 'MAIN');
+        } else {
+          execInTab(targetTabId, VDI.Core.getTabMediaState, [], cb);
+        }
       });
     }
 
@@ -220,11 +266,9 @@ VDI.Platform.ChromeExt = (function() {
             returnTabId = null;
             returnWinId = null;
           }
-        } else if (msg.act === 'VDI_TELEPORT_BACK') {
-          if (msg.val && msg.val.source) {
-            if (msg.val.source.tabId) chrome.tabs.update(msg.val.source.tabId, { active: true });
-            if (msg.val.source.winId) chrome.windows.update(msg.val.source.winId, { focused: true });
-          }
+        // VDI_TELEPORT_BACK was previously handled here but the message uses
+        // type: 'VDI_TELEPORT_BACK' (not act), so it never matched. Moved to
+        // top-level handler below.
         } else if (msg.act === 'openShortcuts') {
           var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
           if (isFirefox && typeof browser !== 'undefined' && browser.commands && browser.commands.openShortcutSettings) {
@@ -280,6 +324,12 @@ VDI.Platform.ChromeExt = (function() {
           sendResponse(res);
         });
         return true;
+      } else if (msg.type === 'VDI_TELEPORT_BACK') {
+        // PiP teleport-back: core.js sends { type: 'VDI_TELEPORT_BACK', source: {tabId, winId} }
+        if (msg.source) {
+          if (msg.source.tabId) chrome.tabs.update(msg.source.tabId, { active: true });
+          if (msg.source.winId) chrome.windows.update(msg.source.winId, { focused: true });
+        }
       } else if (msg.type === 'VDI_BATCH_ROMANIZE') {
         VDI.Core.batchRomanize(msg.lines, function(result) {
           sendResponse(result);

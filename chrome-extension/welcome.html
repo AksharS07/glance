@@ -243,6 +243,30 @@
     #s-cta { min-height: 40vh; text-align: center; flex-direction: column; align-items: center; }
     .cta-btn { display: inline-block; padding: 16px 48px; background: #fff; color: #000; border-radius: 99px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: transform .3s var(--apple-ease), background .3s var(--apple-ease), box-shadow .3s var(--apple-ease), color .3s var(--apple-ease); }
     .cta-btn:hover { transform: scale(1.05); background: var(--vdi-accent); color: #fff; box-shadow: 0 0 40px var(--vdi-glow); }
+
+    .kofi-welcome-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.15), rgba(255, 195, 113, 0.15));
+      border: 1px solid rgba(255, 95, 109, 0.3);
+      border-radius: 14px;
+      color: #ffc371;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s var(--apple-ease);
+      margin-bottom: 20px;
+    }
+    .kofi-welcome-card:hover {
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.25), rgba(255, 195, 113, 0.25));
+      transform: scale(1.03);
+      border-color: rgba(255, 195, 113, 0.5);
+    }
+    .kofi-welcome-icon {
+      font-size: 20px;
+    }
     
     .footer-actions { display: flex; justify-content: center; gap: 16px; margin: 24px 0; flex-wrap: wrap; }
     .footer-actions a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 99px; background: rgba(255,255,255,0.05); transition: all 0.3s var(--apple-ease); }
@@ -400,6 +424,10 @@
       <div class="hero-eyebrow" style="margin-bottom: 16px;">You just installed it.</div>
       <h2 class="hero-title" style="font-size: clamp(36px, 6vw, 72px);">You're all set.</h2>
       <p class="hero-sub" style="margin-bottom: 40px;">Open any of the 4 supported apps and the island will find it. If you love it, consider dropping a review!</p>
+      <a href="https://ko-fi.com/aksharsrijan" target="_blank" rel="noopener" class="kofi-welcome-card" id="kofi-welcome-btn">
+        <span class="kofi-welcome-icon">☕</span>
+        <span class="kofi-welcome-label">Support on Ko-fi</span>
+      </a>
       <button class="cta-btn" id="close-btn">Got it, close this tab</button>
     </div>
   </section>
@@ -407,6 +435,7 @@
   <!-- FOOTER -->
   <footer>
     <div class="footer-actions">
+      <a href="https://ko-fi.com/aksharsrijan" target="_blank">☕ Support on Ko-fi</a>
       <a href="https://github.com/AksharS07/glance" target="_blank">⭐ Star on GitHub</a>
       <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/" target="_blank">📝 Review on Firefox</a>
       <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk" target="_blank">📝 Review on Edge</a>
