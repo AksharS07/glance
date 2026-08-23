@@ -103,10 +103,6 @@
     .tl-item:nth-child(2) { animation-delay: 0.15s; }
     .tl-item:nth-child(3) { animation-delay: 0.2s; }
     .tl-item:nth-child(4) { animation-delay: 0.25s; }
-    .tl-item:nth-child(5) { animation-delay: 0.3s; }
-    .tl-item:nth-child(6) { animation-delay: 0.35s; }
-    .tl-item:nth-child(7) { animation-delay: 0.4s; }
-    .tl-item:nth-child(8) { animation-delay: 0.45s; }
 
     @keyframes tl-enter {
       to { opacity: 1; transform: translateY(0); }
@@ -174,44 +170,6 @@
       color: var(--text-secondary);
     }
 
-    /* --- COLOR TASTER --- */
-    .taster {
-      text-align: center;
-      margin-bottom: 32px;
-      padding: 24px;
-      background: var(--surface);
-      border: 1px solid var(--border);
-      border-radius: 16px;
-    }
-    .taster-label {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.1em;
-      margin-bottom: 14px;
-    }
-    .taster-row {
-      display: flex;
-      justify-content: center;
-      gap: 10px;
-    }
-    .taster-card {
-      width: 52px;
-      height: 52px;
-      border-radius: 12px;
-      cursor: pointer;
-      background-size: cover;
-      background-position: center;
-      border: 1px solid var(--border);
-      transition: all 0.4s var(--apple-ease);
-      opacity: 0.6;
-    }
-    .taster-card:hover {
-      transform: scale(1.1);
-      opacity: 1;
-      border-color: var(--accent);
-      box-shadow: 0 0 20px var(--accent-glow);
-    }
 
     /* --- KO-FI --- */
     .kofi-row {
@@ -313,45 +271,19 @@
     <div class="timeline">
       <div class="tl-item major">
         <div class="tl-title">Shuffle & Repeat Controls <span class="tl-tag new">New</span></div>
-        <div class="tl-desc">Natively extracts and controls shuffle and repeat modes for Spotify, Apple Music, and YouTube Music — with platform-native icons.</div>
+        <div class="tl-desc">Native shuffle and repeat for Spotify, Apple Music, and YouTube Music with platform-specific icons.</div>
       </div>
       <div class="tl-item major">
         <div class="tl-title">Keyboard Shortcuts <span class="tl-tag new">New</span></div>
-        <div class="tl-desc">Global media keys — Play/Pause, Next, Previous — that work from any tab. Fully customizable in your browser's shortcut settings.</div>
+        <div class="tl-desc">Global Play/Pause, Next, and Previous hotkeys that work from any tab.</div>
       </div>
       <div class="tl-item">
-        <div class="tl-title">Quick Playlists <span class="tl-tag new">New</span></div>
-        <div class="tl-desc">Save up to 3 favorite playlists in the popup and launch them with one click.</div>
+        <div class="tl-title">AMOLED Mode & Lyrics Offset <span class="tl-tag new">New</span></div>
+        <div class="tl-desc">Pitch-black backgrounds for OLED screens and a ±0.5s manual lyrics sync stepper.</div>
       </div>
       <div class="tl-item">
-        <div class="tl-title">AMOLED Black Mode <span class="tl-tag new">New</span></div>
-        <div class="tl-desc">Pitch-black background with re-extracted accent colors. Saves battery on OLED screens.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-title">Manual Lyrics Offset <span class="tl-tag new">New</span></div>
-        <div class="tl-desc">A ±0.5s stepper to fine-tune lyrics sync for poorly timed tracks.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-title">Ultra-Precise Sync <span class="tl-tag improved">Improved</span></div>
-        <div class="tl-desc">Reduced drift tolerance to 400ms with sub-second syncing on Spotify for pixel-perfect lyrics.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-title">MV3 Architecture Polish <span class="tl-tag fix">Fix</span></div>
-        <div class="tl-desc">Rewrote Apple Music hooks for strict Manifest V3 sandboxing, routing controls through native DOM.</div>
-      </div>
-      <div class="tl-item">
-        <div class="tl-title">Fortified UI <span class="tl-tag fix">Fix</span></div>
-        <div class="tl-desc">Strict CSS specificity and debounce locks to eradicate crossfade desyncs and host CSS bleeding.</div>
-      </div>
-    </div>
-
-    <!-- COLOR TASTER -->
-    <div class="taster">
-      <div class="taster-label">✨ See the color engine in action</div>
-      <div class="taster-row">
-        <div class="taster-card" style="background-image: url('blinding_lights.png');" data-color="#d4820a" data-bg="#1a0a00"></div>
-        <div class="taster-card" style="background-image: url('arabic_kuthu.png');" data-color="#d4a820" data-bg="#180a00"></div>
-        <div class="taster-card" style="background-image: url('apna_bana_le.png');" data-color="#3a8ecc" data-bg="#0a1626"></div>
+        <div class="tl-title">Sync & Stability <span class="tl-tag improved">Improved</span></div>
+        <div class="tl-desc">Tighter 400ms drift tolerance, stricter MV3 sandboxing for Apple Music, and debounce locks to eliminate desyncs.</div>
       </div>
     </div>
 
