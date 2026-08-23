@@ -50,6 +50,11 @@
       height: 56px;
       margin-bottom: 16px;
       border-radius: 14px;
+      animation: logo-breathe 3s ease-in-out infinite;
+    }
+    @keyframes logo-breathe {
+      0%, 100% { filter: drop-shadow(0 0 0px transparent); }
+      50% { filter: drop-shadow(0 0 12px var(--accent-glow)); }
     }
     .eyebrow {
       font-size: 11px;
@@ -86,8 +91,13 @@
       top: 8px;
       bottom: 8px;
       width: 2px;
-      background: var(--timeline-line);
+      background: linear-gradient(180deg, var(--accent), rgba(99, 102, 241, 0.08));
       border-radius: 1px;
+      animation: line-glow 4s ease-in-out infinite;
+    }
+    @keyframes line-glow {
+      0%, 100% { opacity: 0.5; }
+      50% { opacity: 1; }
     }
 
     .tl-item {
@@ -108,7 +118,7 @@
       to { opacity: 1; transform: translateY(0); }
     }
 
-    /* Dot marker */
+    /* Dot marker — all filled with staggered pulse */
     .tl-item::before {
       content: '';
       position: absolute;
@@ -117,20 +127,26 @@
       width: 16px;
       height: 16px;
       border-radius: 50%;
-      background: var(--bg);
+      background: var(--accent);
       border: 2px solid var(--accent);
+      box-shadow: 0 0 8px var(--accent-glow);
       z-index: 1;
       transition: all 0.3s var(--apple-ease);
+      animation: dot-pulse 2.5s ease-in-out infinite;
+    }
+    .tl-item:nth-child(1)::before { animation-delay: 0s; }
+    .tl-item:nth-child(2)::before { animation-delay: 0.4s; }
+    .tl-item:nth-child(3)::before { animation-delay: 0.8s; }
+    .tl-item:nth-child(4)::before { animation-delay: 1.2s; }
+    @keyframes dot-pulse {
+      0%, 100% { box-shadow: 0 0 6px var(--accent-glow); transform: scale(1); }
+      50% { box-shadow: 0 0 16px var(--accent-glow); transform: scale(1.15); }
     }
     .tl-item:hover::before {
-      background: var(--accent);
-      box-shadow: 0 0 12px var(--accent-glow);
-    }
-
-    /* Highlight dot for major features */
-    .tl-item.major::before {
-      background: var(--accent);
-      box-shadow: 0 0 8px var(--accent-glow);
+      background: #fff;
+      border-color: #fff;
+      box-shadow: 0 0 18px rgba(255,255,255,0.3);
+      animation: none;
     }
 
     .tl-title {
@@ -155,14 +171,21 @@
     .tl-tag.new {
       background: rgba(52, 211, 153, 0.15);
       color: #34d399;
+      animation: tag-shimmer 3s ease-in-out infinite;
     }
     .tl-tag.improved {
       background: rgba(129, 140, 248, 0.15);
       color: #818cf8;
+      animation: tag-shimmer 3s ease-in-out 1s infinite;
     }
     .tl-tag.fix {
       background: rgba(251, 191, 36, 0.15);
       color: #fbbf24;
+      animation: tag-shimmer 3s ease-in-out 2s infinite;
+    }
+    @keyframes tag-shimmer {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.6; }
     }
     .tl-desc {
       font-size: 13px;
@@ -269,11 +292,11 @@
     </div>
 
     <div class="timeline">
-      <div class="tl-item major">
+      <div class="tl-item">
         <div class="tl-title">Shuffle & Repeat Controls <span class="tl-tag new">New</span></div>
         <div class="tl-desc">Native shuffle and repeat for Spotify, Apple Music, and YouTube Music with platform-specific icons.</div>
       </div>
-      <div class="tl-item major">
+      <div class="tl-item">
         <div class="tl-title">Keyboard Shortcuts <span class="tl-tag new">New</span></div>
         <div class="tl-desc">Global Play/Pause, Next, and Previous hotkeys that work from any tab.</div>
       </div>
