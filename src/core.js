@@ -473,7 +473,7 @@ VDI.Core = (function() {
       }
 
       var q = texts.join(' | ');
-      var url = 'https://translate.googleapis.com/translate_a/single?client=gtx&sl=auto&tl=en&dt=rm&q=' + encodeURIComponent(q);
+      var url = 'https://translate.googleapis.com/translate_a/single?client=dict-chrome-ex&sl=auto&tl=en&dt=rm&q=' + encodeURIComponent(q);
       
       fetch(url)
         .then(function(res) { return res.json(); })
