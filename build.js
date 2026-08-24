@@ -268,7 +268,7 @@ function buildZip() {
   manifest.background = { scripts: ["background.js"] };
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
   
-  const zipFirefox = path.join(__dirname, 'glance-extension-v1.6-firefox.zip');
+  const zipFirefox = path.join(__dirname, 'glance-extension-v1.6.1-firefox.zip');
   try {
     if (fs.existsSync(zipFirefox)) fs.unlinkSync(zipFirefox);
     if (process.platform === 'win32') {
@@ -287,7 +287,7 @@ function buildZip() {
   delete manifest.browser_specific_settings;
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
   
-  const zipChromium = path.join(__dirname, 'glance-extension-v1.6-chromium.zip');
+  const zipChromium = path.join(__dirname, 'glance-extension-v1.6.1-chromium.zip');
   try {
     if (fs.existsSync(zipChromium)) fs.unlinkSync(zipChromium);
     if (process.platform === 'win32') {

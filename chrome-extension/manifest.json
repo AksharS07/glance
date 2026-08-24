@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "Glance",
-  "version": "1.6",
+  "version": "1.6.1",
   "description": "An Apple-style Glance for your browser! Syncs with media, extracts album colors, shows live lyrics, and adds PiP controls.",
   "icons": {
     "128": "icon128.png"

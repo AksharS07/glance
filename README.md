@@ -1,4 +1,4 @@
-# Glance (V1.6) 
+# Glance (V1.6.1) 
 *(Cross-Browser Extension)*
 
 <p align="center">
@@ -35,7 +35,7 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 
 ---
 
-## What's New in V1.6 🚀
+## What's New in V1.6.1 🚀
 
 - **Shuffle & Repeat Support**: Natively extracts and controls Shuffle and Repeat modes for Spotify, Apple Music, and YouTube Music with platform-native icons.
 - **Keyboard Shortcuts**: Global media key support (Play/Pause, Next, Previous) that works from any tab. Fully customizable via the browser's shortcut settings.
@@ -100,7 +100,7 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 - **Google Chrome**: (Coming soon to the Chrome Web Store). In the meantime, use the manual installation below.
 
 ### Manual Installation (For Chrome, Brave, or Developers):
-1. Download the latest **`glance-extension-v1.6.zip`** release file.
+1. Download the latest **`glance-extension-v1.6.1.zip`** release file.
 2. Extract the folder to a safe location on your computer.
 3. Open `chrome://extensions` (or `edge://extensions` or `about:debugging` in Firefox/Zen).
 4. Enable **Developer Mode** using the toggle in the top right.
