@@ -4,26 +4,26 @@
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it from Microsoft Edge"></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
 </p>
 
 <p align="center">
   <img src="final_large_promo.jpg" alt="Glance Promo Logo" width="100%">
 </p>
 
-A beautifully animated, Apple-style Glance that lives natively in your browser. It supports Spotify Web, Apple Music, YouTube, & YouTube Music with a 60FPS Deep-Media Timer engine, Universal Picture-in-Picture teleportation, and live time-synced lyrics.
+A beautifully animated, Apple-style Media controller that lives natively in your browser. It supports Spotify Web, Apple Music, YouTube, & YouTube Music with a 60FPS Deep-Media Timer engine, Universal Picture-in-Picture teleportation, and live time-synced lyrics.
 
 Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium browser. Sits as a fixed overlay at the top of every webpage. Anyone can install it in 30 seconds without touching their browser's internals.
 
 ## In Action 🎬
 
-### YouTube & YouTube Music in Edge
+### YouTube & YouTube Music in Edge (v1.5)
 ![Edge Demo](edge-demo.gif)
 
-### Spotify Web
+### Spotify Web (v1.5)
 ![Spotify Demo](spotify_demo.gif)
 
-### Apple Music in Firefox
+### Apple Music in Firefox (v1.5)
 ![Apple Music Demo](apple_music_demo.gif)
 
 ## Screenshots 📸
