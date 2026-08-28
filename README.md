@@ -112,7 +112,7 @@ No build step, no dependencies, no account required.
 
 ## How this was actually built
 
-I am a 2nd-year CS/IoT/Cybersecurity engineering student. I do not enjoy frontend development. I did not write the HTML, CSS, or JS syntax for this project — that was handled by agentic AI (Google's Antigravity 2.0 and Claude).
+I am a 3nd-year CS/IoT/Cybersecurity engineering student. I do not enjoy frontend development. I did not write the HTML, CSS, or JS syntax for this project — that was handled by agentic AI (Google's Antigravity 2.0 and Claude).
 
 What I did do: defined the product, made every architectural decision, and acted as QA throughout. I caught bugs the AI missed repeatedly — a silent `ReferenceError` that was killing color theming entirely, a JavaScript closure bug that bound every lyrics click listener to the last line instead of the correct one, an infinite loop in the Apple Music metadata fetcher, and Chromium's strict User Gesture requirements that required a cross-tab navigation approach for PiP. The AI generated code; I decided what the code was supposed to do and whether it actually did it.
 
