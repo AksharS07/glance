@@ -140,12 +140,11 @@ document.addEventListener('DOMContentLoaded', function() {
       if (state.artwork) {
         art.src = state.artwork;
         
-        chrome.storage.local.get({ amoledBlack: false }, function(stg) {
-          chrome.runtime.sendMessage({ type: 'VDI_EXTRACT_COLOR', url: state.artwork, amoled: stg.amoledBlack }, function(colors) {
-            if (colors && colors.accent) {
-              document.documentElement.style.setProperty('--accent-color', colors.accent);
-            }
-          });
+        // Bug 6 fix: read cached accent from storage (service worker can't extract via DOM in Edge/Chrome MV3)
+        chrome.storage.local.get({ vdi_accent_color: null }, function(stg) {
+          if (stg.vdi_accent_color) {
+            document.documentElement.style.setProperty('--accent-color', stg.vdi_accent_color);
+          }
         });
       } else {
         art.src = '';

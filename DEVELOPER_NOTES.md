@@ -264,3 +264,16 @@ Here is the exact, pristine `NATIVE_SVGS` block containing all the updated icons
 **Smooth Pill-to-Dot Transitions:**
 - *The Problem:* The transition from the expanded "pill" shape (with track text) to the idle "dot" shape felt broken because elements were hidden using `display: none !important`. This caused the inner content to instantly vanish while the outer wrapper slowly shrunk over 0.6s, creating a squished snapping effect.
 - *The Fix:* `display: none` is no longer used for the `.vdi-idle` state. Instead, internal elements have their `max-width`, `opacity`, `margin`, and `padding` animated to `0` using Apple's fluid iOS spring curve (`cubic-bezier(0.32, 0.72, 0, 1)`). This allows the elements to gracefully dissolve as the island collapses around them.
+
+## 21. Teleport Architecture (August 30, 2026 Fix)
+- **The Problem:** The Island was hardcoded to fully expand whenever `visibilitychange` fired (i.e. whenever the user switched tabs). This caused an annoying "pop open and close" loop every time the user casually browsed tabs.
+- **The Solution:** The `visibilitychange` listener in `ui.js` now strictly calls `resetIdle()` to wake the island to the "pill" shape, but it does NOT expand it.
+- **The Teleport Edge Case:** When the user explicitly clicks the teleport button, they *expect* the island to be fully expanded upon arrival. To solve this, `background.js` (which handles the actual tab switch) broadcasts a `VDI_TELEPORT_ARRIVED` message directly to the target tab. The content wrapper (`chrome-ext.js`) catches this and fires a native `window.dispatchEvent(new CustomEvent('vdi-teleport-arrived'))`. `ui.js` listens for this specific event to force the expansion and trigger the 2-second auto-collapse timer. **Do not remove this custom event, or teleporting will result in a collapsed island!**
+
+## 22. Settings Panel Layout & Overflow
+- **The Problem:** The settings panel would cut off if placed near the top/bottom edges of a small browser window.
+- **The Solution:** Do not use `getBoundingClientRect()` to measure transitioning elements (`opacity: 0` / `transition: top`), as it will return glitched intermediate values mid-animation. Instead, use `offsetHeight`. The positioning logic (`updateSettingsPanelPosition`) now calculates an absolute `maxH` based on the available space above or below the island, and applies `max-height: maxH; overflow-y: auto;` to the panel. This guarantees it dynamically scales and scrolls if the window is too small, never overflowing the screen or overlapping the island.
+
+## 23. Font Rendering on Linux
+- **The Problem:** Linux distributions do not natively map `-apple-system` or `Segoe UI`, and sometimes the fallback `sans-serif` results in an ugly, thin, un-aliased font that ruins the premium aesthetic.
+- **The Solution:** Always prepend `system-ui` to the front of any `font-family` declarations (especially for the main `#vdi` container in `styles.js`). This ensures Firefox/Zen/Chrome gracefully map to the OS's native premium UI font (e.g., Ubuntu, Roboto, Cantarell).

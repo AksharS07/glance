@@ -74,7 +74,7 @@ VDI.UI = (function() {
           '<div id="vdi-artist">Open a media tab</div>' +
           '<div id="vdi-prog-row">' +
             '<span class="vdi-t" id="vdi-pos">0:00</span>' +
-            '<div id="vdi-prog"><div id="vdi-prog-fill"></div></div>' +
+            '<div id="vdi-prog"><div id="vdi-prog-fill"></div><div id="vdi-prog-knob"></div></div>' +
             '<span class="vdi-t" id="vdi-dur" style="text-align:right">0:00</span>' +
           '</div>' +
           '<div id="vdi-ctrl-row">' +
@@ -102,6 +102,12 @@ VDI.UI = (function() {
 
   function createSettingsPanel(opts) {
     opts = opts || {};
+    // Shadow DOM host for complete CSS isolation from host pages
+    var host = document.createElement('div');
+    host.id = 'vdi-settings-host';
+    host.style.cssText = 'position:fixed !important;top:0 !important;left:0 !important;width:0 !important;height:0 !important;overflow:visible !important;z-index:2147483647 !important;pointer-events:none !important;';
+    var shadow = host.attachShadow({ mode: 'open' });
+
     var panel = document.createElement('div');
     panel.id = 'vdi-settings-panel';
     panel.innerHTML =
@@ -114,9 +120,9 @@ VDI.UI = (function() {
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Black Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the glance instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Enable Lyrics Engine</span><span class="vdi-stg-sub">Fetch and display time-synced lyrics</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-enlyrics"><span class="vdi-slider"></span></label></div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Lyrics Time Offset</span><span class="vdi-stg-sub">Shift poorly synced lyrics</span></div><div style="display:flex;align-items:center;gap:8px;"><button id="vdi-stg-offset-dec" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">-</button><span id="vdi-stg-offset-val" style="color:#fff;font-size:12px;min-width:32px;text-align:center;user-select:none;">0.0s</span><button id="vdi-stg-offset-inc" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">+</button></div></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Lyrics Time Offset</span><span class="vdi-stg-sub">Shift poorly synced lyrics</span></div><div style="display:flex;align-items:center;gap:8px;"><button id="vdi-stg-offset-dec" class="vdi-offset-btn">-</button><span id="vdi-stg-offset-val" style="color:#fff;font-size:12px;min-width:32px;text-align:center;user-select:none;">0.0s</span><button id="vdi-stg-offset-inc" class="vdi-offset-btn">+</button></div></div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Free Placement</span><span class="vdi-stg-sub">Allow dragging anywhere on the screen</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-freeplace"><span class="vdi-slider"></span></label></div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Keyboard Shortcuts</span><span class="vdi-stg-sub">Manage global hotkeys for media controls</span></div><button id="vdi-stg-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;">Edit</button></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Keyboard Shortcuts</span><span class="vdi-stg-sub">Manage global hotkeys for media controls</span></div><button id="vdi-stg-shortcuts-btn" class="vdi-shortcuts-btn">Edit</button></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Presets</div>' +
       '<div class="vdi-stg-row" style="justify-content:space-between; margin-top:4px;">' +
         '<button class="vdi-preset-btn" id="vdi-stg-pos-t" title="Snap to Top Center">Top</button>' +
@@ -125,7 +131,45 @@ VDI.UI = (function() {
         '<button class="vdi-preset-btn" id="vdi-stg-pos-r" title="Snap to Right Edge">Right</button>' +
       '</div>' +
       '</div>';
-    return panel;
+
+    // Scoped styles inside shadow root — completely isolated from host CSS
+    var style = document.createElement('style');
+    style.textContent = [
+      ':host{all:initial !important;position:fixed !important;top:0 !important;left:0 !important;width:0 !important;height:0 !important;z-index:2147483647 !important;pointer-events:none !important;}',
+      '#vdi-settings-panel{',
+        'position:fixed;width:300px;padding:16px;box-sizing:border-box;',
+        'background:rgba(20,20,30,0.85);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);',
+        'border:1px solid rgba(255,255,255,0.1);border-radius:16px;box-shadow:0 10px 30px rgba(0,0,0,0.5);',
+        'display:flex;flex-direction:column;opacity:0;pointer-events:none;transition:all 0.3s cubic-bezier(0.4, 0, 0.2, 1);',
+        'z-index:2147483647;font-family:system-ui,-apple-system,sans-serif;font-size:13px;',
+        'color:#fff;line-height:normal;letter-spacing:normal;text-align:left;',
+      '}',
+      '#vdi-settings-panel::-webkit-scrollbar{width:6px;}',
+      '#vdi-settings-panel::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.2);border-radius:3px;}',
+      '#vdi-settings-panel.show{opacity:1;pointer-events:all;}',
+      '.vdi-stg-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}',
+      '.vdi-stg-label{color:rgba(255,255,255,0.9);font-size:13px;font-weight:500;}',
+      '.vdi-new-tag{background:#ff4757;color:#fff;font-size:8px;padding:2px 4px;border-radius:4px;font-weight:bold;margin-left:6px;letter-spacing:0.5px;vertical-align:middle;}',
+      '.vdi-stg-sub{font-size:10px;color:rgba(255,255,255,0.5);margin-top:2px;}',
+      '.vdi-switch{position:relative;display:inline-block;width:36px;height:20px;flex-shrink:0;}',
+      '.vdi-switch input{opacity:0;width:0;height:0;}',
+      '.vdi-slider{position:absolute;cursor:pointer;top:0;left:0;right:0;bottom:0;background-color:rgba(255,255,255,0.1);transition:.3s;border-radius:20px;border:1px solid rgba(255,255,255,0.1);}',
+      '.vdi-slider:before{position:absolute;content:"";height:14px;width:14px;left:2px;bottom:2px;background-color:rgba(255,255,255,0.6);transition:.3s;border-radius:50%;}',
+      '.vdi-switch input:checked + .vdi-slider{background-color:var(--vdi-accent, #6366f1);border-color:transparent;}',
+      '.vdi-switch input:checked + .vdi-slider:before{transform:translateX(16px);background-color:#fff;}',
+      '.vdi-stg-header{font-size:11px;text-transform:uppercase;letter-spacing:1px;color:var(--vdi-accent, #6366f1);margin-bottom:4px;font-weight:600;opacity:0.8;}',
+      '.vdi-preset-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:4px 0;width:22%;border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;transition:all 0.2s;}',
+      '.vdi-preset-btn:hover{background:var(--vdi-accent, #6366f1);color:#fff;border-color:transparent;}',
+      '.vdi-offset-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;font-family:inherit;}',
+      '.vdi-shortcuts-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;font-family:inherit;}'
+    ].join('');
+    shadow.appendChild(style);
+    shadow.appendChild(panel);
+
+    // Expose shadow root for external access
+    host._shadow = shadow;
+    host._panel = panel;
+    return host;
   }
 
   function createSettingsTooltip() {
@@ -148,16 +192,15 @@ VDI.UI = (function() {
         '</svg>' +
       '</button>' +
       '<button id="vdi-resume-scroll-btn">Resume Autoscroll</button>' +
-      '<div id="vdi-lyrics-scroll"></div>' +
-      '<div id="vdi-prov-menu">' +
-        '<div class="vdi-prov-btn" id="vdi-prov-lp"><span class="vdi-prov-dot"></span> LyricsPlus</div>' +
-        '<div class="vdi-prov-btn" id="vdi-prov-lrc"><span class="vdi-prov-dot"></span> LRCLib</div>' +
-      '</div>';
+      '<div id="vdi-lyrics-scroll"></div>';
     return panel;
   }
 
   function createController(island, lyrPanel, stgPanel, platform, opts) {
     opts = opts || {};
+    var stgShadow = stgPanel && stgPanel._shadow ? stgPanel._shadow : null;
+    var stgInner = stgPanel && stgPanel._panel ? stgPanel._panel : stgPanel;
+    function stg$(id) { return stgShadow ? stgShadow.getElementById(id) : document.getElementById(id); }
     var isVivaldi = opts.isVivaldi || false;
 
     var state = {
@@ -230,6 +273,10 @@ VDI.UI = (function() {
           return;
         }
         state.lastExtractedColor = c;
+        // Bug 6 fix: cache accent color for popup (service worker can't extract via DOM)
+        if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+          chrome.storage.local.set({ 'vdi_accent_color': c.accent || null });
+        }
       }
       c = c || state.lastExtractedColor;
 
@@ -244,17 +291,21 @@ VDI.UI = (function() {
       island.style.setProperty('--vdi-glow', glow);
       
       if (typeof stgPanel !== 'undefined' && stgPanel) {
-        stgPanel.style.setProperty('--vdi-accent', accent);
-        stgPanel.style.setProperty('--vdi-grad', grad);
-        stgPanel.style.setProperty('--vdi-dark', dark);
-        stgPanel.style.setProperty('--vdi-glow', glow);
+        stgInner.style.setProperty('--vdi-accent', accent);
+        stgInner.style.setProperty('--vdi-grad', grad);
+        stgInner.style.setProperty('--vdi-dark', dark);
+        stgInner.style.setProperty('--vdi-glow', glow);
       }
     }
 
+    var isDraggingProg = false;
     // Update progress bar
     function refreshProgress() {
+      if (isDraggingProg) return;
       var pct = state.duration > 0 ? Math.min(100, (state.position / state.duration) * 100) : 0;
       $('vdi-prog-fill').style.width = pct + '%';
+      if ($('vdi-prog-knob')) $('vdi-prog-knob').style.left = pct + '%';
+      if ($('vdi-prog')) $('vdi-prog').style.setProperty('--vdi-pct', pct + '%');
       $('vdi-pos').textContent = VDI.Core.formatTime(state.position);
       $('vdi-dur').textContent = VDI.Core.formatTime(state.duration);
 
@@ -277,6 +328,8 @@ VDI.UI = (function() {
       var svg = VDI.Core.getPlayIcon(playing);
       if ($('vdi-pp')) $('vdi-pp').innerHTML = svg;
       if ($('vdi-col-icon')) $('vdi-col-icon').innerHTML = svg;
+      if (playing) island.classList.add('vdi-is-playing');
+      else island.classList.remove('vdi-is-playing');
     }
 
     // Main UI update
@@ -476,22 +529,39 @@ VDI.UI = (function() {
     }
 
     function updateSettingsPanelPosition() {
-      var stgPanel = $('vdi-settings-panel');
+      var stgPanel = stgInner;
       if (!stgPanel || !stgPanel.classList.contains('show')) return;
       var r = island.getBoundingClientRect();
       var ch = window.innerHeight;
+      var cw = window.innerWidth;
       var expH = 152;
+      var panelW = 300;
       var islandTop = r.top;
       
-      if (islandTop > ch / 2 - (expH / 2)) {
-        stgPanel.style.top = 'auto';
-        stgPanel.style.bottom = (ch - islandTop + 16) + 'px';
+      var isFlipped = (islandTop > ch / 2 - (expH / 2));
+      var maxH;
+      
+      if (isFlipped) {
+        // Place above
+        stgPanel.style.setProperty('bottom', (ch - islandTop + 16) + 'px', 'important');
+        stgPanel.style.setProperty('top', 'auto', 'important');
+        maxH = islandTop - 32;
       } else {
+        // Place below
         var islandBottom = islandTop + expH;
-        stgPanel.style.bottom = 'auto';
-        stgPanel.style.top = (islandBottom + 16) + 'px';
+        stgPanel.style.setProperty('top', (islandBottom + 16) + 'px', 'important');
+        stgPanel.style.setProperty('bottom', 'auto', 'important');
+        maxH = ch - islandBottom - 32;
       }
-      stgPanel.style.left = (r.left + r.width / 2) + 'px';
+      
+      stgPanel.style.setProperty('max-height', Math.max(150, maxH) + 'px', 'important');
+      stgPanel.style.setProperty('overflow-y', 'auto', 'important');
+      
+      // Clamp horizontal position to viewport
+      var centeredLeft = (r.left + r.width / 2) - (panelW / 2);
+      centeredLeft = Math.max(8, Math.min(centeredLeft, cw - panelW - 8));
+      stgPanel.style.setProperty('left', centeredLeft + 'px', 'important');
+      stgPanel.style.setProperty('transform', 'none', 'important');
     }
 
     // Lyrics handling
@@ -503,7 +573,7 @@ VDI.UI = (function() {
       state.lyricsSynced = false;
       state.hasLyrics = undefined;
       state.multiLyrics = null;
-      if (!state.selectedProvider) state.selectedProvider = 'lyricsplus';
+      if (!state.selectedProvider) state.selectedProvider = 'lrclib';
 
       $('vdi-lyr-btn').classList.add('loading');
       $('vdi-lyr-btn').style.pointerEvents = 'auto'; // Reset
@@ -602,14 +672,6 @@ VDI.UI = (function() {
         state.lyricsLines = lines;
         state.lyricsSynced = synced;
         state.hasWords = provData ? provData.hasWords : false;
-
-        // Update provider menu UI
-        var btnLp = $('vdi-prov-lp');
-        var btnLrc = $('vdi-prov-lrc');
-        if (btnLp && btnLrc) {
-          btnLp.className = 'vdi-prov-btn' + (m.lyricsplus ? ' has-lyr' : '') + (state.selectedProvider === 'lyricsplus' ? ' active' : '');
-          btnLrc.className = 'vdi-prov-btn' + (m.lrclib ? ' has-lyr' : '') + (state.selectedProvider === 'lrclib' ? ' active' : '');
-        }
         
         // Detect if any lines have non-Latin script
         var anyNonLatin = false;
@@ -839,7 +901,7 @@ VDI.UI = (function() {
         if (!state.hasMedia) return;
         if (state.lyricsOn) return; // Never collapse if lyrics are open
         
-        var sp = $('vdi-settings-panel');
+        var sp = stgInner;
         if (sp && sp.classList.contains('show')) return; // Never collapse if settings are open
         
         state.isIdle = true;
@@ -885,7 +947,7 @@ VDI.UI = (function() {
       clearTimeout(ttTimer);
       colTimer = setTimeout(function() {
         island.classList.remove('vdi-expanded');
-        var sp = $('vdi-settings-panel');
+        var sp = stgInner;
         if (sp) sp.classList.remove('show');
         if ($('vdi-stg-tooltip')) {
           $('vdi-stg-tooltip').classList.remove('show');
@@ -900,7 +962,7 @@ VDI.UI = (function() {
           lyrPanel.classList.remove('show');
         }
       }, collapseDelay);
-      resetIdle();
+      if (!state.isIdle) resetIdle(); // Bug 2 fix: don't un-idle on leave triggered by idle shrink
     }
 
     // Event binding
@@ -1005,10 +1067,6 @@ VDI.UI = (function() {
             'vdi_transform': island.style.transform,
             'activePreset': null
           });
-        } else {
-          localStorage.setItem('vdi_loc_x', island.style.left);
-          localStorage.setItem('vdi_loc_y', island.style.top);
-          localStorage.setItem('vdi_transform', island.style.transform);
         }
       });
       // -----------------------
@@ -1041,6 +1099,22 @@ VDI.UI = (function() {
         if (isDragging) {
           isDragging = false;
           if ($('vdi-snap-zones')) $('vdi-snap-zones').classList.remove('active');
+        }
+      });
+      // Bug 7 fix: wake island when tab becomes visible (teleport/tab switch)
+      document.addEventListener('visibilitychange', function() {
+        if (document.visibilityState === 'visible' && state.hasMedia) {
+          clearTimeout(colTimer);
+          resetIdle();
+        }
+      });
+      document.addEventListener('vdi-teleport-arrived', function() {
+        if (state.hasMedia) {
+          setTimeout(function() {
+            resetIdle();
+            island.classList.add('vdi-expanded');
+            handleMouseLeave(); // Ensures it auto-collapses if mouse is not over it
+          }, 50);
         }
       });
 
@@ -1096,34 +1170,34 @@ VDI.UI = (function() {
       if (stgBtn && stgPanel) {
         stgBtn.addEventListener('click', function(e) {
           e.stopPropagation();
-          if (state.lyricsOn && !stgPanel.classList.contains('show')) {
+          if (state.lyricsOn && !stgInner.classList.contains('show')) {
             $('vdi-lyr-btn').click(); // close lyrics
           }
-          stgPanel.classList.toggle('show');
-          if (stgPanel.classList.contains('show')) {
+          stgInner.classList.toggle('show');
+          if (stgInner.classList.contains('show')) {
             updateSettingsPanelPosition();
           }
           // Sync UI state
-          $('vdi-stg-hideyt').checked = settings.hideYouTube;
-          $('vdi-stg-hideytm').checked = settings.hideYouTubeMusic;
-          $('vdi-stg-amoled').checked = settings.amoledBlack;
-          $('vdi-stg-hidespotify').checked = settings.hideSpotify;
-          $('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
-          $('vdi-stg-enlyrics').checked = settings.enableLyrics;
-          $('vdi-stg-freeplace').checked = settings.freePlacement;
+          stg$('vdi-stg-hideyt').checked = settings.hideYouTube;
+          stg$('vdi-stg-hideytm').checked = settings.hideYouTubeMusic;
+          stg$('vdi-stg-amoled').checked = settings.amoledBlack;
+          stg$('vdi-stg-hidespotify').checked = settings.hideSpotify;
+          stg$('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
+          stg$('vdi-stg-enlyrics').checked = settings.enableLyrics;
+          stg$('vdi-stg-freeplace').checked = settings.freePlacement;
         });
 
-        stgPanel.addEventListener('mouseleave', function() {
+        stgInner.addEventListener('mouseleave', function() {
           handleMouseLeave();
         });
-        stgPanel.addEventListener('mouseenter', function() {
+        stgInner.addEventListener('mouseenter', function() {
           handleMouseEnter();
         });
 
 
         document.addEventListener('click', function(e) {
-          if (!island.contains(e.target) && !stgPanel.contains(e.target)) {
-            stgPanel.classList.remove('show');
+          if (!island.contains(e.target) && !(stgPanel.contains(e.target) || (stgShadow && stgShadow.contains && e.composedPath().some(function(el){ return el === stgInner; })))) {
+            stgInner.classList.remove('show');
           }
         });
         
@@ -1155,7 +1229,7 @@ VDI.UI = (function() {
         }
 
         var bindStg = function(id, key) {
-          var el = $(id);
+          var el = stg$(id);
           if (el) {
             el.addEventListener('change', function(e) {
               settings[key] = e.target.checked;
@@ -1175,7 +1249,7 @@ VDI.UI = (function() {
         bindStg('vdi-stg-hideytm', 'hideYouTubeMusic');
         bindStg('vdi-stg-amoled', 'amoledBlack');
         // Immediately force a theme re-extraction when amoled changes
-        $('vdi-stg-amoled').addEventListener('change', function() {
+        stg$('vdi-stg-amoled').addEventListener('change', function() {
           if (state.artwork) {
             VDI.Core.extractVibrant(state.artwork, settings.amoledBlack, applyTheme);
           }
@@ -1186,8 +1260,8 @@ VDI.UI = (function() {
         bindStg('vdi-stg-freeplace', 'freePlacement');
 
         var updateOffsetVal = function() {
-          if ($('vdi-stg-offset-val')) {
-            $('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
+          if (stg$('vdi-stg-offset-val')) {
+            stg$('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
           }
         };
         updateOffsetVal();
@@ -1201,22 +1275,22 @@ VDI.UI = (function() {
           }
         };
 
-        if ($('vdi-stg-offset-dec')) {
-          $('vdi-stg-offset-dec').addEventListener('click', function(e) {
+        if (stg$('vdi-stg-offset-dec')) {
+          stg$('vdi-stg-offset-dec').addEventListener('click', function(e) {
             e.stopPropagation();
             settings.lyricsOffset = parseFloat((settings.lyricsOffset - 0.5).toFixed(1));
             saveOffset();
           });
         }
-        if ($('vdi-stg-offset-inc')) {
-          $('vdi-stg-offset-inc').addEventListener('click', function(e) {
+        if (stg$('vdi-stg-offset-inc')) {
+          stg$('vdi-stg-offset-inc').addEventListener('click', function(e) {
             e.stopPropagation();
             settings.lyricsOffset = parseFloat((settings.lyricsOffset + 0.5).toFixed(1));
             saveOffset();
           });
         }
 
-        var scBtn = $('vdi-stg-shortcuts-btn');
+        var scBtn = stg$('vdi-stg-shortcuts-btn');
         if (scBtn) {
           scBtn.addEventListener('click', function(e) {
             e.stopPropagation();
@@ -1232,20 +1306,16 @@ VDI.UI = (function() {
           island.style.setProperty('transform', transform, 'important');
           if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             chrome.storage.local.set({ 'vdi_loc_x': left, 'vdi_loc_y': top, 'vdi_transform': transform });
-          } else {
-            localStorage.setItem('vdi_loc_x', left);
-            localStorage.setItem('vdi_loc_y', top);
-            localStorage.setItem('vdi_transform', transform);
           }
           if (state.lyricsOn) updateLyricsPanelPosition();
           updateSettingsPanelPosition();
           updateTooltipPosition();
         };
 
-        if ($('vdi-stg-pos-t')) $('vdi-stg-pos-t').addEventListener('click', function(e) { e.stopPropagation(); updatePos('50%', '10px', 'translateX(-50%)'); });
-        if ($('vdi-stg-pos-b')) $('vdi-stg-pos-b').addEventListener('click', function(e) { e.stopPropagation(); updatePos('50%', (window.innerHeight - 152 - 10) + 'px', 'translateX(-50%)'); });
-        if ($('vdi-stg-pos-l')) $('vdi-stg-pos-l').addEventListener('click', function(e) { e.stopPropagation(); updatePos('210px', (window.innerHeight / 2 - 76) + 'px', 'translateX(-50%)'); });
-        if ($('vdi-stg-pos-r')) $('vdi-stg-pos-r').addEventListener('click', function(e) { e.stopPropagation(); updatePos((window.innerWidth - 210) + 'px', (window.innerHeight / 2 - 76) + 'px', 'translateX(-50%)'); });
+        if (stg$('vdi-stg-pos-t')) stg$('vdi-stg-pos-t').addEventListener('click', function(e) { e.stopPropagation(); updatePos('50%', '10px', 'translateX(-50%)'); });
+        if (stg$('vdi-stg-pos-b')) stg$('vdi-stg-pos-b').addEventListener('click', function(e) { e.stopPropagation(); updatePos('50%', (window.innerHeight - 152 - 10) + 'px', 'translateX(-50%)'); });
+        if (stg$('vdi-stg-pos-l')) stg$('vdi-stg-pos-l').addEventListener('click', function(e) { e.stopPropagation(); updatePos('210px', (window.innerHeight / 2 - 76) + 'px', 'translateX(-50%)'); });
+        if (stg$('vdi-stg-pos-r')) stg$('vdi-stg-pos-r').addEventListener('click', function(e) { e.stopPropagation(); updatePos((window.innerWidth - 210) + 'px', (window.innerHeight / 2 - 76) + 'px', 'translateX(-50%)'); });
       }
 
       var lastPlayClick = 0;
@@ -1266,13 +1336,38 @@ VDI.UI = (function() {
         platform.sendAction(state.tabId, 'toggle');
       });
 
-      $('vdi-prog').addEventListener('click', function(e) {
+      var dragProgTarget = 0;
+      $('vdi-prog').addEventListener('mousedown', function(e) {
         e.stopPropagation();
         if (!state.duration) return;
-        var r = e.currentTarget.getBoundingClientRect();
-        var targetPos = ((e.clientX - r.left) / r.width) * state.duration;
-        performSeek(targetPos);
+        isDraggingProg = true;
+        island.classList.add('vdi-is-dragging');
+        updateDrag(e);
       });
+      
+      document.addEventListener('mousemove', function(e) {
+        if (!isDraggingProg) return;
+        updateDrag(e);
+      });
+      
+      document.addEventListener('mouseup', function(e) {
+        if (isDraggingProg) {
+          isDraggingProg = false;
+          island.classList.remove('vdi-is-dragging');
+          performSeek(dragProgTarget);
+        }
+      });
+      
+      function updateDrag(e) {
+        var r = $('vdi-prog').getBoundingClientRect();
+        var pct = Math.max(0, Math.min(1, (e.clientX - r.left) / r.width));
+        dragProgTarget = pct * state.duration;
+        var pctStr = (pct * 100) + '%';
+        $('vdi-prog-fill').style.width = pctStr;
+        if ($('vdi-prog-knob')) $('vdi-prog-knob').style.left = pctStr;
+        if ($('vdi-prog')) $('vdi-prog').style.setProperty('--vdi-pct', pctStr);
+        $('vdi-pos').textContent = VDI.Core.formatTime(dragProgTarget);
+      }
 
       $('vdi-pip-main-btn').addEventListener('click', function(e) {
         e.stopPropagation();
@@ -1294,8 +1389,8 @@ VDI.UI = (function() {
 
       $('vdi-lyr-btn').addEventListener('click', function(e) {
         e.stopPropagation();
-        if (typeof stgPanel !== 'undefined' && stgPanel && stgPanel.classList.contains('show')) {
-          stgPanel.classList.remove('show');
+        if (typeof stgPanel !== 'undefined' && stgPanel && stgInner.classList.contains('show')) {
+          stgInner.classList.remove('show');
         }
         state.lyricsOn = !state.lyricsOn;
         $('vdi-lyr-btn').classList.toggle('active', state.lyricsOn);
@@ -1341,22 +1436,6 @@ VDI.UI = (function() {
             var cur = $('vdi-lyr-' + state.lyricsIdx);
             if (cur) cur.scrollIntoView({ behavior: 'smooth', block: 'center' });
           }
-        });
-      }
-
-      var provLp = $('vdi-prov-lp');
-      if (provLp) {
-        provLp.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (window.vdiSwitchProvider) window.vdiSwitchProvider('lyricsplus');
-        });
-      }
-
-      var provLrc = $('vdi-prov-lrc');
-      if (provLrc) {
-        provLrc.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (window.vdiSwitchProvider) window.vdiSwitchProvider('lrclib');
         });
       }
     }
@@ -1544,13 +1623,13 @@ VDI.UI = (function() {
           if (res.freePlacement !== undefined) settings.freePlacement = res.freePlacement;
           if (res.vdi_cfg_seenTooltip3 !== undefined) settings.seenTooltip = res.vdi_cfg_seenTooltip3;
 
-          $('vdi-stg-hideyt').checked = settings.hideYouTube;
-          $('vdi-stg-hideytm').checked = settings.hideYouTubeMusic;
-          $('vdi-stg-amoled').checked = settings.amoledBlack;
-          $('vdi-stg-hidespotify').checked = settings.hideSpotify;
-          $('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
-          $('vdi-stg-enlyrics').checked = settings.enableLyrics;
-          $('vdi-stg-freeplace').checked = settings.freePlacement;
+          stg$('vdi-stg-hideyt').checked = settings.hideYouTube;
+          stg$('vdi-stg-hideytm').checked = settings.hideYouTubeMusic;
+          stg$('vdi-stg-amoled').checked = settings.amoledBlack;
+          stg$('vdi-stg-hidespotify').checked = settings.hideSpotify;
+          stg$('vdi-stg-hideapplemusic').checked = settings.hideAppleMusic;
+          stg$('vdi-stg-enlyrics').checked = settings.enableLyrics;
+          stg$('vdi-stg-freeplace').checked = settings.freePlacement;
 
           // Start loop after settings load to prevent visual glitches
           bindEvents();
@@ -1574,7 +1653,7 @@ VDI.UI = (function() {
             if (changes.enableLyrics) settings.enableLyrics = changes.enableLyrics.newValue;
             if (changes.lyricsOffset) {
               settings.lyricsOffset = changes.lyricsOffset.newValue;
-              if ($('vdi-stg-offset-val')) $('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
+              if (stg$('vdi-stg-offset-val')) stg$('vdi-stg-offset-val').textContent = (settings.lyricsOffset > 0 ? '+' : '') + settings.lyricsOffset.toFixed(1) + 's';
             }
             if (changes.freePlacement) settings.freePlacement = changes.freePlacement.newValue;
             

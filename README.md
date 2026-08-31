@@ -1,4 +1,4 @@
-# Glance (V1.6.1) 
+# Glance
 *(Cross-Browser Extension)*
 
 <p align="center">
@@ -17,14 +17,14 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 
 ## In Action 🎬
 
-### YouTube & YouTube Music in Edge (v1.5)
-![Edge Demo](edge-demo.gif)
+### Welcome Page (v1.6)
+![Welcome Page Demo](welcome_page_demo_v1.6.gif)
 
-### Spotify Web (v1.5)
-![Spotify Demo](spotify_demo.gif)
+### Lyrics Panel Teleport (v1.6)
+![Lyrics Panel Teleport](lyricspanel_teleport_v1.6.gif)
 
-### Apple Music in Firefox (v1.5)
-![Apple Music Demo](apple_music_demo.gif)
+### AMOLED Black Mode (v1.6)
+![AMOLED Black Mode](amoled_black_mode_v1.6.gif)
 
 ## Screenshots 📸
 
@@ -35,8 +35,12 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 
 ---
 
-## What's New in V1.6.1 🚀
+## What's New in V1.6.2 (The Polish Update) 🚀
 
+*This release includes the massive v1.6 overhaul, plus new v1.6.2 hotfixes for stability and interaction.*
+
+- **Draggable Progress Bar (New in 1.6.2)**: You can now click and drag the dot on the progress bar to smoothly seek through your music! The dot cleanly hides itself when you aren't hovering.
+- **Teleport & Settings Fixes (New in 1.6.2)**: Fixed a bug where the Teleport button would sometimes cause the island to glitch or close, and resolved an issue where settings toggles wouldn't save correctly.
 - **Shuffle & Repeat Support**: Natively extracts and controls Shuffle and Repeat modes for Spotify, Apple Music, and YouTube Music with platform-native icons.
 - **Keyboard Shortcuts**: Global media key support (Play/Pause, Next, Previous) that works from any tab. Fully customizable via the browser's shortcut settings.
 - **Quick Playlists**: Save up to 3 favorite playlists in the popup and launch them with one click.
@@ -100,7 +104,7 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 - **Google Chrome**: (Coming soon to the Chrome Web Store). In the meantime, use the manual installation below.
 
 ### Manual Installation (For Chrome, Brave, or Developers):
-1. Download the latest **`glance-extension-v1.6.1.zip`** release file.
+1. Download the latest release zip from the repository.
 2. Extract the folder to a safe location on your computer.
 3. Open `chrome://extensions` (or `edge://extensions` or `about:debugging` in Firefox/Zen).
 4. Enable **Developer Mode** using the toggle in the top right.

@@ -42,6 +42,8 @@ VDI.Platform.ChromeExt = (function() {
     chrome.runtime.onMessage.addListener(function(msg) {
       if (msg.type === 'VDI_UPDATE') {
         callback(msg.state);
+      } else if (msg.type === 'VDI_TELEPORT_ARRIVED') {
+        document.dispatchEvent(new CustomEvent('vdi-teleport-arrived'));
       }
     });
   }
@@ -269,6 +271,7 @@ VDI.Platform.ChromeExt = (function() {
             if (returnTabId !== null) {
               chrome.tabs.update(returnTabId, { active: true });
               if (returnWinId !== null) chrome.windows.update(returnWinId, { focused: true });
+              chrome.tabs.sendMessage(returnTabId, { type: 'VDI_TELEPORT_ARRIVED' });
               returnTabId = null;
               returnWinId = null;
             }
@@ -281,6 +284,7 @@ VDI.Platform.ChromeExt = (function() {
             if (S.tabId !== null) {
               chrome.tabs.update(S.tabId, { active: true });
               if (S.windowId !== null) chrome.windows.update(S.windowId, { focused: true });
+              chrome.tabs.sendMessage(S.tabId, { type: 'VDI_TELEPORT_ARRIVED' });
             }
           }
         // VDI_TELEPORT_BACK was previously handled here but the message uses

@@ -268,7 +268,7 @@ function buildZip() {
   manifest.background = { scripts: ["background.js"] };
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
   
-  const zipFirefox = path.join(__dirname, 'glance-extension-v1.6.1-firefox.zip');
+  const zipFirefox = path.join(__dirname, 'glance-extension-v1.6.2-firefox.zip');
   try {
     if (fs.existsSync(zipFirefox)) fs.unlinkSync(zipFirefox);
     if (process.platform === 'win32') {
@@ -287,7 +287,7 @@ function buildZip() {
   delete manifest.browser_specific_settings;
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
   
-  const zipChromium = path.join(__dirname, 'glance-extension-v1.6.1-chromium.zip');
+  const zipChromium = path.join(__dirname, 'glance-extension-v1.6.2-chromium.zip');
   try {
     if (fs.existsSync(zipChromium)) fs.unlinkSync(zipChromium);
     if (process.platform === 'win32') {
@@ -312,12 +312,12 @@ buildVivaldi();
 buildChromeContent();
 buildChromeBackground();
 
-console.log('Minifying files using terser...');
+console.log('Skipping minification for debugging...');
 try {
   // execSync('npx terser dynamic-island.js -c -m -o dynamic-island.js', { cwd: __dirname });
-  execSync('npx terser chrome-extension/dynamic-island.js -c -m -o chrome-extension/dynamic-island.js', { cwd: __dirname });
-  execSync('npx terser chrome-extension/background.js -c -m -o chrome-extension/background.js', { cwd: __dirname });
-  console.log('  -> Minification successful!');
+  // execSync('npx terser chrome-extension/dynamic-island.js -c -m -o chrome-extension/dynamic-island.js', { cwd: __dirname });
+  // execSync('npx terser chrome-extension/background.js -c -m -o chrome-extension/background.js', { cwd: __dirname });
+  console.log('  -> Minification skipped!');
 } catch (e) {
   console.error('  -> Minification failed. Proceeding without minification.', e.message);
 }
