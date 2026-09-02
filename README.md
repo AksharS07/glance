@@ -12,14 +12,15 @@
 </p>
 
 <p align="center">
-  <img src="final_large_promo.jpg" alt="Glance Promo Logo" width="100%">
+  <a href="https://ko-fi.com/aksharsrijan"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a>
 </p>
-
+<p align="center">
+  
 A beautifully animated, Apple-style Media controller that lives natively in your browser. It supports Spotify Web, Apple Music, YouTube, & YouTube Music with a 60FPS Deep-Media Timer engine, Universal Picture-in-Picture teleportation, and live time-synced lyrics.
 
 Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium browser. Sits as a fixed overlay at the top of every webpage. Anyone can install it in 30 seconds without touching their browser's internals.
 
-## In Action 🎬
+## In Action 
 
 ### Welcome Page (v1.6)
 ![Welcome Page Demo](welcome_page_demo_v1.6.gif)
@@ -30,7 +31,7 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 ### AMOLED Black Mode (v1.6)
 ![AMOLED Black Mode](amoled_black_mode_v1.6.gif)
 
-## Screenshots 📸
+## Screenshots (V1.5) 📸
 
 <p align="center">
   <img src="edge working image.png" width="48%">
