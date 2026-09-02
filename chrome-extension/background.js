@@ -948,9 +948,27 @@ VDI.Core = (function() {
         }
       }
 
+        var finalTitle = (ms && ms.metadata && ms.metadata.title) || '';
+        var finalArtist = (ms && ms.metadata && ms.metadata.artist) || '';
+
+        // YOUTUBE MUSIC DOM FALLBACK (Bypasses KDE Plasma Integration Hijack)
+        if (isYTMusic && (!finalTitle || !finalArtist || !art || finalArtist === 'Unknown Artist')) {
+          var ytTitleEl = deepQueryOne('yt-formatted-string.title');
+          var ytArtistEl = deepQueryOne('span.subtitle, .subtitle.ytmusic-player-bar .yt-formatting-string, .byline.ytmusic-player-bar');
+          var thumbnailContainer = document.querySelector('.thumbnail.ytmusic-player-bar') || document;
+          var ytArtEl = deepQueryOne('img#img, img.ytmusic-player-bar', thumbnailContainer);
+
+          if (ytTitleEl) finalTitle = ytTitleEl.getAttribute('title') || ytTitleEl.textContent || finalTitle;
+          if (ytArtistEl) finalArtist = ytArtistEl.getAttribute('title') || ytArtistEl.textContent || finalArtist;
+          if (ytArtEl && ytArtEl.src) {
+             var highResSrc = ytArtEl.src.replace(/w\d+-h\d+/, 'w600-h600');
+             if (highResSrc.indexOf('data:image') !== 0) art = highResSrc;
+          }
+        }
+
         return {
-          title: (ms && ms.metadata && ms.metadata.title) || '',
-          artist: (ms && ms.metadata && ms.metadata.artist) || '',
+          title: finalTitle,
+          artist: finalArtist,
           artwork: art,
           isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
           duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
