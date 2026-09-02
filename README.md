@@ -8,6 +8,10 @@
 </p>
 
 <p align="center">
+  <a href="https://ko-fi.com/aksharsrijan"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a>
+</p>
+
+<p align="center">
   <img src="final_large_promo.jpg" alt="Glance Promo Logo" width="100%">
 </p>
 
