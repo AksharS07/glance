@@ -73,7 +73,7 @@ function buildVivaldi() {
   var ctrl = VDI.UI.createController(island, lyrPanel, stgPanel, platform, {
     isVivaldi: true,
     tickInterval: 1000,
-    idleDelay: 9000,
+    idleDelay: 4000,
     collapseDelay: 500
   });
 
@@ -204,7 +204,7 @@ function buildChromeContent() {
   var ctrl = VDI.UI.createController(island, lyrPanel, stgPanel, platform, {
     isVivaldi: false,
     tickInterval: 1000,
-    idleDelay: 9000,
+    idleDelay: 4000,
     collapseDelay: 500
   });
 
@@ -215,12 +215,26 @@ function buildChromeContent() {
     ctrl.setState(newState);
   });
 
+  if (VDI.Platform.ChromeExt.onFocusUpdate) {
+    VDI.Platform.ChromeExt.onFocusUpdate(function(newFocus) {
+      ctrl.setFocusState(newFocus);
+    });
+  }
+
   // Request initial state
   VDI.Platform.ChromeExt.requestState(function(state) {
     if (state) {
       ctrl.setState(state);
     }
   });
+
+  if (VDI.Platform.ChromeExt.requestFocusState) {
+    VDI.Platform.ChromeExt.requestFocusState(function(focus) {
+      if (focus) {
+        ctrl.setFocusState(focus);
+      }
+    });
+  }
 
 })();
 `
@@ -250,7 +264,19 @@ function buildChromeBackground() {
 
   const output = parts.join('\n\n');
   fs.writeFileSync(DEST_CHROME_BG, output, 'utf8');
+  fs.copyFileSync(path.join('src', 'blocked.html'), path.join(__dirname, 'chrome-extension', 'blocked.html'));
+  fs.copyFileSync(path.join('src', 'blocked.js'), path.join(__dirname, 'chrome-extension', 'blocked.js'));
+  fs.copyFileSync(path.join('src', 'options.html'), path.join(__dirname, 'chrome-extension', 'options.html'));
+  fs.copyFileSync(path.join('src', 'options.js'), path.join(__dirname, 'chrome-extension', 'options.js'));
+  
+  const extras = ['patch_notes.html', 'patch_notes.js', 'welcome.html', 'welcome.js'];
+  for (const f of extras) {
+    if (fs.existsSync(path.join('src', f))) {
+      fs.copyFileSync(path.join('src', f), path.join(__dirname, 'chrome-extension', f));
+    }
+  }
   console.log('  -> ' + DEST_CHROME_BG);
+  console.log('  -> ' + path.join(__dirname, 'chrome-extension', 'blocked.html'));
 }
 
 const { execSync } = require('child_process');
@@ -268,7 +294,7 @@ function buildZip() {
   manifest.background = { scripts: ["background.js"] };
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
   
-  const zipFirefox = path.join(__dirname, 'glance-extension-v1.6.2-firefox.zip');
+  const zipFirefox = path.join(__dirname, 'glance-extension-v1.7.0-firefox.zip');
   try {
     if (fs.existsSync(zipFirefox)) fs.unlinkSync(zipFirefox);
     if (process.platform === 'win32') {
@@ -287,7 +313,7 @@ function buildZip() {
   delete manifest.browser_specific_settings;
   fs.writeFileSync(manifestPath, JSON.stringify(manifest, null, 2), 'utf8');
   
-  const zipChromium = path.join(__dirname, 'glance-extension-v1.6.2-chromium.zip');
+  const zipChromium = path.join(__dirname, 'glance-extension-v1.7.0-chromium.zip');
   try {
     if (fs.existsSync(zipChromium)) fs.unlinkSync(zipChromium);
     if (process.platform === 'win32') {

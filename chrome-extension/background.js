@@ -1456,6 +1456,16 @@ VDI.Platform.ChromeExt = (function() {
     }
   }
 
+  function requestFocusState(callback) {
+    try {
+      chrome.runtime.sendMessage({ type: 'VDI_FOCUS_REQUEST' }, function(focus) {
+        if (callback) callback(focus);
+      });
+    } catch (e) {
+      if (callback) callback(null);
+    }
+  }
+
   function onStateUpdate(callback) {
     chrome.runtime.onMessage.addListener(function(msg) {
       if (msg.type === 'VDI_UPDATE') {
@@ -1466,10 +1476,31 @@ VDI.Platform.ChromeExt = (function() {
     });
   }
 
+  function onFocusUpdate(callback) {
+    chrome.runtime.onMessage.addListener(function(msg) {
+      if (msg.type === 'VDI_FOCUS_UPDATE') {
+        callback(msg.focus);
+      }
+    });
+  }
+
   /* Background Script Side (for background.js) */
 
   function createBackgroundWorker() {
     var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, smartShuffleOn: false, repeatMode: 'off' };
+    var F = {
+      phase: 'idle', // 'work' | 'shortBreak' | 'longBreak' | 'idle' | 'waiting'
+      endTime: 0,
+      totalMs: 0,
+      running: false,
+      workMin: 25,
+      shortBreakMin: 5,
+      longBreakMin: 15,
+      sessionsCompleted: 0,
+      strictMode: true,
+      bypassedSites: [],
+      waitingTimeoutId: null
+    };
     var pollInterval = 1000;
     var returnTabId = null;
     var returnWinId = null;
@@ -1503,6 +1534,53 @@ VDI.Platform.ChromeExt = (function() {
             if (chrome.runtime.lastError) {} // suppress "no listener" errors
           });
         }
+      });
+    }
+
+    function broadcastFocusState() {
+      chrome.tabs.query({}, function(tabs) {
+        for (var i = 0; i < tabs.length; i++) {
+          chrome.tabs.sendMessage(tabs[i].id, { type: 'VDI_FOCUS_UPDATE', focus: F }, function() {
+            if (chrome.runtime.lastError) {}
+          });
+        }
+      });
+    }
+
+    // Site Blocker — Dynamic Rule Management
+    function updateBlockRules(blocklist, enable) {
+      if (typeof chrome.declarativeNetRequest === 'undefined') return;
+      chrome.declarativeNetRequest.getDynamicRules(function(existing) {
+        var removeIds = [];
+        for (var i = 0; i < existing.length; i++) {
+          if (existing[i].id >= 1000) removeIds.push(existing[i].id);
+        }
+
+        var rules = [];
+        if (enable && blocklist && blocklist.length > 0) {
+          var activeBlocks = blocklist.filter(function(s) { return F.bypassedSites.indexOf(s) === -1; });
+          for (var j = 0; j < activeBlocks.length; j++) {
+            rules.push({
+              id: 1000 + j,
+              priority: 1,
+              action: {
+                type: 'redirect',
+                redirect: {
+                  extensionPath: '/blocked.html?site=' + encodeURIComponent(activeBlocks[j])
+                }
+              },
+              condition: {
+                urlFilter: '||' + activeBlocks[j],
+                resourceTypes: ['main_frame']
+              }
+            });
+          }
+        }
+
+        chrome.declarativeNetRequest.updateDynamicRules({
+          removeRuleIds: removeIds,
+          addRules: rules
+        });
       });
     }
 
@@ -1708,6 +1786,8 @@ VDI.Platform.ChromeExt = (function() {
         // VDI_TELEPORT_BACK was previously handled here but the message uses
         // type: 'VDI_TELEPORT_BACK' (not act), so it never matched. Moved to
         // top-level handler below.
+        } else if (msg.act === 'openOptions') {
+          chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
         } else if (msg.act === 'openShortcuts') {
           var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
           if (isFirefox && typeof browser !== 'undefined' && browser.commands && browser.commands.openShortcutSettings) {
@@ -1774,7 +1854,155 @@ VDI.Platform.ChromeExt = (function() {
           sendResponse(result);
         });
         return true;
+      } else if (msg.type === 'VDI_FOCUS_REQUEST') {
+        sendResponse(F);
+      } else if (msg.type === 'VDI_FOCUS_START') {
+        F.workMin = msg.workMin || F.workMin;
+        F.shortBreakMin = msg.shortBreakMin || F.shortBreakMin;
+        F.longBreakMin = msg.longBreakMin || F.longBreakMin;
+        F.strictMode = msg.strictMode !== undefined ? msg.strictMode : F.strictMode;
+        
+        if (msg.phase) F.phase = msg.phase;
+        else if (F.phase === 'idle' || F.phase === 'waiting') F.phase = 'work';
+        
+        F.running = true;
+        
+        if (F.phase === 'work') {
+          F.bypassedSites = [];
+          F.bypassLimits = {};
+          chrome.storage.local.get({ glance_focus_blocklist: [] }, function(res) {
+            updateBlockRules(res.glance_focus_blocklist, true);
+          });
+        }
+        
+        var durationMin = F.phase === 'work' ? F.workMin : (F.phase === 'longBreak' ? F.longBreakMin : F.shortBreakMin);
+        F.totalMs = durationMin * 60 * 1000;
+        // Check if we passed a specific duration (e.g., from +5m/-5m)
+        if (msg.durationMs) F.totalMs = msg.durationMs;
+        
+        F.endTime = Date.now() + F.totalMs;
+        F.running = true;
+        if (F.phase === 'work') F.bypassedSites = [];
+        
+        if (F.waitingTimeoutId) {
+          clearTimeout(F.waitingTimeoutId);
+          F.waitingTimeoutId = null;
+        }
+
+        // Apply rules if working
+        if (F.phase === 'work') {
+          chrome.storage.local.get({ glance_focus_blocklist: [] }, function(res) {
+            updateBlockRules(res.glance_focus_blocklist, true);
+          });
+        } else {
+          updateBlockRules([], false);
+        }
+
+        broadcastFocusState();
+        
+        // Setup timeout to trigger completion
+        F.waitingTimeoutId = setTimeout(function() {
+          handleFocusComplete();
+        }, F.totalMs);
+
+      } else if (msg.type === 'VDI_FOCUS_STOP') {
+        if (F.waitingTimeoutId) clearTimeout(F.waitingTimeoutId);
+        F.phase = 'idle';
+        F.running = false;
+        F.endTime = 0;
+        F.totalMs = 0;
+        F.bypassLimits = {};
+        F.bypassedSites = [];
+        updateBlockRules([], false);
+        broadcastFocusState();
+      } else if (msg.type === 'VDI_FOCUS_PAUSE') {
+        if (F.running) {
+          if (F.waitingTimeoutId) {
+             clearTimeout(F.waitingTimeoutId);
+             F.waitingTimeoutId = null;
+          }
+          F.running = false;
+          F.remainingPauseMs = Math.max(0, F.endTime - Date.now());
+          broadcastFocusState();
+        }
+      } else if (msg.type === 'VDI_FOCUS_RESUME') {
+        if (!F.running && F.phase !== 'idle' && F.phase !== 'waiting') {
+          F.running = true;
+          F.endTime = Date.now() + (F.remainingPauseMs || 0);
+          F.waitingTimeoutId = setTimeout(function() {
+            handleFocusComplete();
+          }, F.remainingPauseMs || 0);
+          broadcastFocusState();
+        }
+      } else if (msg.type === 'VDI_FOCUS_BYPASS') {
+        if (msg.site) {
+          if (F.bypassedSites.indexOf(msg.site) === -1) {
+            F.bypassedSites.push(msg.site);
+            chrome.storage.local.get({ glance_focus_blocklist: [] }, function(res) {
+              updateBlockRules(res.glance_focus_blocklist, true);
+            });
+          }
+          
+          if (!F.bypassLimits) F.bypassLimits = {};
+          F.bypassLimits[msg.site] = (F.bypassLimits[msg.site] || 0) + 1;
+
+          chrome.alarms.create('vdi_bypass_' + msg.site, { delayInMinutes: 5 });
+        }
+        if (sendResponse) sendResponse();
+      } else if (msg.type === 'VDI_FOCUS_SKIP') {
+        if (F.waitingTimeoutId) clearTimeout(F.waitingTimeoutId);
+        handleFocusComplete();
+      } else if (msg.type === 'VDI_FOCUS_WAIT') {
+        // Enters the 5 second waiting phase
+        F.phase = 'waiting';
+        F.nextPhase = msg.nextPhase || 'work';
+        F.running = false;
+        F.totalMs = 5000; // 5 sec wait
+        F.endTime = Date.now() + 5000;
+        updateBlockRules([], false);
+        broadcastFocusState();
+        
+        if (F.waitingTimeoutId) clearTimeout(F.waitingTimeoutId);
+        F.waitingTimeoutId = setTimeout(function() {
+          // Auto advance to properly calculated next phase
+          handleMessage({ type: 'VDI_FOCUS_START', phase: F.nextPhase }, sender, function(){});
+        }, 5000);
       }
+    }
+
+    function handleFocusComplete() {
+      if (F.phase === 'work') {
+        F.sessionsCompleted++;
+        // Notification
+        if (chrome.notifications) {
+          chrome.notifications.create('vdi_focus', {
+            type: 'basic',
+            iconUrl: 'icon128.png',
+            title: 'Session Complete!',
+            message: 'Great job! Time for a break.'
+          });
+        }
+        // Save stats
+        chrome.storage.local.get({ glance_focus_stats: { currentStreak: 0, lastActiveDate: '', sessionsCompleted: 0 } }, function(res) {
+          var stats = res.glance_focus_stats;
+          stats.sessionsCompleted++;
+          var today = new Date().toDateString();
+          if (stats.lastActiveDate !== today) {
+            var yesterday = new Date(Date.now() - 86400000).toDateString();
+            if (stats.lastActiveDate === yesterday) stats.currentStreak++;
+            else stats.currentStreak = 1;
+            stats.lastActiveDate = today;
+          }
+          chrome.storage.local.set({ glance_focus_stats: stats });
+        });
+      }
+      
+      var nextP = 'work';
+      if (F.phase === 'work') {
+        nextP = (F.sessionsCompleted % 4 === 0 && F.sessionsCompleted > 0) ? 'longBreak' : 'shortBreak';
+      }
+      
+      handleMessage({ type: 'VDI_FOCUS_WAIT', nextPhase: nextP }, null, function(){});
     }
 
     function start() {
@@ -1782,8 +2010,24 @@ VDI.Platform.ChromeExt = (function() {
       poll();
 
       chrome.runtime.onMessage.addListener(handleMessage);
+      // Expose for console testing & internal use (alarms, storage triggers)
+      self._vdiHandleMessage = handleMessage;
       chrome.tabs.onActivated.addListener(function() { poll(); });
       chrome.windows.onFocusChanged.addListener(function() { poll(); });
+
+      
+      chrome.alarms.onAlarm.addListener(function(alarm) {
+        if (alarm.name.startsWith('vdi_bypass_')) {
+          var site = alarm.name.substring(11); // remove 'vdi_bypass_'
+          var idx = F.bypassedSites.indexOf(site);
+          if (idx !== -1) {
+            F.bypassedSites.splice(idx, 1);
+            chrome.storage.local.get({ glance_focus_blocklist: [] }, function(res) {
+              updateBlockRules(res.glance_focus_blocklist, true);
+            });
+          }
+        }
+      });
 
       chrome.commands.onCommand.addListener(function(command) {
         chrome.storage.local.get({ enableShortcuts: true }, function(res) {
@@ -1815,7 +2059,9 @@ VDI.Platform.ChromeExt = (function() {
     jumpToTab: jumpToTab,
     requestPiP: requestPiP,
     requestState: requestState,
+    requestFocusState: requestFocusState,
     onStateUpdate: onStateUpdate,
+    onFocusUpdate: onFocusUpdate,
 
     // Background script factory
     createBackgroundWorker: createBackgroundWorker

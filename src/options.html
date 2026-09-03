@@ -1,0 +1,637 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Focus Mode – Glance</title>
+  <link rel="icon" href="icon128.png" type="image/png" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&display=swap" rel="stylesheet" />
+  <style>
+    /* ── Reset & Variables ── */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    :root {
+      --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --bg: #0b0b10;
+      --surface: rgba(255, 255, 255, 0.02);
+      --surface-hover: rgba(255, 255, 255, 0.04);
+      --border: rgba(255, 255, 255, 0.06);
+      --border-hover: rgba(255, 255, 255, 0.12);
+      --text-primary: #f5f5f7;
+      --text-secondary: rgba(255, 255, 255, 0.5);
+      --accent: #818cf8;
+      --accent-glow: rgba(129, 140, 248, 0.25);
+    }
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: radial-gradient(circle at 15% 50%, rgba(129, 140, 248, 0.04), transparent 50%),
+                  radial-gradient(circle at 85% 30%, rgba(225, 29, 72, 0.03), transparent 50%),
+                  var(--bg);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      padding: 40px 24px 100px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    /* ── Animations (exact match to welcome.html) ── */
+    @keyframes fadeUp {
+      0% {
+        opacity: 0;
+        transform: translateY(20px) scale(0.96);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+    @keyframes glowPulse {
+      0%,
+      100% {
+        opacity: 0.3;
+        transform: scale(1);
+      }
+      50% {
+        opacity: 0.6;
+        transform: scale(1.05);
+      }
+    }
+    @keyframes shimmer {
+      0% {
+        background-position: 200% 0;
+      }
+      100% {
+        background-position: -200% 0;
+      }
+    }
+
+    .reveal {
+      opacity: 0;
+      animation: fadeUp 0.7s var(--apple-ease) forwards;
+    }
+    .delay-1 {
+      animation-delay: 0.05s;
+    }
+    .delay-2 {
+      animation-delay: 0.10s;
+    }
+    .delay-3 {
+      animation-delay: 0.15s;
+    }
+    .delay-4 {
+      animation-delay: 0.20s;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: 60px 20px 40px;
+      overflow: hidden;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: -100px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 600px;
+      height: 300px;
+      background: radial-gradient(ellipse at center, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+      animation: glowPulse 8s ease-in-out infinite;
+      z-index: 0;
+    }
+    .hero-content {
+      position: relative;
+      z-index: 1;
+    }
+    .hero-eyebrow {
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      margin-bottom: 12px;
+      background: linear-gradient(to right, #3b82f6, #8b5cf6, #d946ef, #3b82f6);
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      animation: shimmer 4s linear infinite;
+      display: inline-block;
+    }
+    .hero h1 {
+      font-size: clamp(36px, 5vw, 56px);
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.1;
+      margin-bottom: 12px;
+      color: #fff;
+    }
+    .hero p {
+      color: var(--text-secondary);
+      font-size: 16px;
+      line-height: 1.6;
+      max-width: 520px;
+      margin: 0 auto;
+    }
+
+    /* ── Strict Mode Panel ── */
+    
+    .strict-panel {
+      background: linear-gradient(145deg, var(--surface), rgba(129, 140, 248, 0.05));
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid var(--border);
+      border-top: 1px solid rgba(129, 140, 248, 0.2);
+      border-radius: 24px;
+      padding: 24px 32px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 48px;
+      transition: all 0.4s var(--apple-ease);
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5), inset 0 1px 0 rgba(255,255,255,0.05);
+    }
+
+    .strict-panel:hover {
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.6);
+    }
+    .strict-text h3 {
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+      letter-spacing: -0.01em;
+      margin-bottom: 4px;
+    }
+    .strict-text p {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    /* ── Apple Switch ── */
+    .apple-switch {
+      position: relative;
+      width: 50px;
+      height: 28px;
+      flex-shrink: 0;
+      cursor: pointer;
+    }
+    .apple-switch input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+      position: absolute;
+    }
+    .apple-slider {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: rgba(255, 255, 255, 0.1);
+      transition: 0.4s var(--apple-ease);
+      border-radius: 30px;
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+    }
+    .apple-slider::before {
+      content: '';
+      position: absolute;
+      height: 22px;
+      width: 22px;
+      left: 3px;
+      bottom: 3px;
+      background-color: #fff;
+      transition: 0.4s var(--apple-ease);
+      border-radius: 50%;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+    }
+    input:checked + .apple-slider {
+      background-color: var(--accent);
+    }
+    input:checked + .apple-slider::before {
+      transform: translateX(22px);
+    }
+
+    /* ── Categories ── */
+    .category-sec {
+      margin-bottom: 48px;
+    }
+    .cat-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-end;
+      margin-bottom: 20px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+    }
+    .cat-header h2 {
+      font-size: 18px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: #fff;
+    }
+    .cat-actions {
+      display: flex;
+      gap: 16px;
+    }
+    .cat-actions button {
+      background: none;
+      border: none;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      cursor: pointer;
+      color: var(--text-secondary);
+      transition: all 0.2s;
+      padding: 4px 0;
+    }
+    .cat-actions button:hover {
+      color: #fff;
+      transform: translateY(-1px);
+    }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+      gap: 12px;
+    }
+
+    /* ── Block Card ── */
+    .block-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 14px 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      transition: all 0.35s var(--apple-ease);
+      position: relative;
+    }
+    .block-card:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.4);
+    }
+    .block-card.active {
+      background: var(--card-bg, rgba(129, 140, 248, 0.05));
+      border-color: var(--card-accent, #818cf8);
+      box-shadow: 0 0 24px var(--card-glow, rgba(129, 140, 248, 0.15));
+    }
+
+    .card-left {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      pointer-events: none;
+    }
+    .card-icon {
+      width: 36px;
+      height: 36px;
+      border-radius: 10px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border);
+      transition: all 0.35s var(--apple-ease);
+      flex-shrink: 0;
+    }
+    .card-icon svg {
+      width: 20px;
+      height: 20px;
+      fill: rgba(255, 255, 255, 0.4);
+      transition: fill 0.35s var(--apple-ease);
+    }
+    /* ✨ The magic: lights up with brand colour when active */
+    .block-card.active .card-icon {
+      background: var(--card-accent, #818cf8);
+      border-color: var(--card-accent, #818cf8);
+      box-shadow: 0 0 12px var(--card-glow, rgba(129, 140, 248, 0.2));
+    }
+    .block-card.active .card-icon svg {
+      fill: #ffffff;
+    }
+
+    .card-name {
+      font-weight: 600;
+      font-size: 14px;
+      color: rgba(255, 255, 255, 0.85);
+      transition: color 0.35s var(--apple-ease);
+    }
+    .block-card.active .card-name {
+      color: #fff;
+    }
+    .card-domain {
+      font-size: 11px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    /* ── Custom Sites ── */
+    .custom-box {
+      background: var(--surface);
+      border: 1px dashed var(--border-hover);
+      border-radius: 20px;
+      padding: 32px 24px;
+      text-align: center;
+      transition: all 0.4s var(--apple-ease);
+    }
+    .custom-box:hover {
+      border-color: rgba(255, 255, 255, 0.2);
+      background: var(--surface-hover);
+    }
+
+    .custom-input-row {
+      display: flex;
+      gap: 12px;
+      max-width: 480px;
+      margin: 0 auto 20px;
+    }
+    .custom-input-row input {
+      flex: 1;
+      background: rgba(0, 0, 0, 0.4);
+      border: 1px solid var(--border);
+      color: #fff;
+      padding: 12px 18px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 500;
+      font-family: inherit;
+      outline: none;
+      transition: all 0.3s var(--apple-ease);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4);
+    }
+    .custom-input-row input:focus {
+      border-color: var(--accent);
+      box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.4), 0 0 0 3px var(--accent-glow);
+    }
+    .custom-input-row input::placeholder {
+      color: rgba(255, 255, 255, 0.2);
+    }
+    .custom-input-row button {
+      background: #fff;
+      color: #000;
+      border: none;
+      padding: 0 24px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: all 0.3s var(--apple-ease);
+    }
+    .custom-input-row button:hover {
+      transform: scale(1.04);
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 20px var(--accent-glow);
+    }
+
+    .custom-tags {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: center;
+      gap: 10px;
+    }
+    .tag {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      padding: 6px 14px 6px 18px;
+      border-radius: 99px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #fff;
+      transition: all 0.3s var(--apple-ease);
+      animation: fadeUp 0.4s var(--apple-ease) forwards;
+    }
+    .tag:hover {
+      background: rgba(255, 255, 255, 0.08);
+      transform: translateY(-2px);
+      border-color: var(--border-hover);
+    }
+    .tag button {
+      background: rgba(255, 255, 255, 0.08);
+      border: none;
+      color: #fff;
+      cursor: pointer;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      transition: all 0.2s;
+    }
+    .tag button:hover {
+      background: #ef4444;
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(239, 68, 68, 0.3);
+    }
+
+    /* ── Responsive ── */
+    @media (max-width: 640px) {
+      .strict-panel {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 16px;
+        padding: 20px;
+      }
+      .strict-text {
+        text-align: center;
+      }
+      .apple-switch {
+        align-self: center;
+      }
+      .card-grid {
+        grid-template-columns: 1fr;
+      }
+      .cat-header {
+        flex-direction: column;
+        align-items: stretch;
+        gap: 8px;
+      }
+      .cat-actions {
+        justify-content: flex-start;
+      }
+      .custom-input-row {
+        flex-direction: column;
+      }
+      .custom-input-row button {
+        padding: 12px;
+      }
+    }
+    @media (max-width: 480px) {
+      body {
+        padding: 20px 16px 60px;
+      }
+      .hero {
+        padding: 40px 10px 30px;
+      }
+      .block-card {
+        padding: 12px 14px;
+      }
+    }
+    
+    /* Exit Button */
+    .close-btn {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: rgba(255,255,255,0.6);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 100;
+    }
+    .close-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+      transform: scale(1.05);
+    }
+    .close-btn svg {
+      width: 20px;
+      height: 20px;
+    }
+  
+    /* Focus Mode Lock Overlay */
+    #lock-overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(11, 11, 16, 0.85);
+      backdrop-filter: blur(10px);
+      -webkit-backdrop-filter: blur(10px);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s var(--apple-ease);
+    }
+    #lock-overlay.active {
+      opacity: 1;
+      pointer-events: all;
+    }
+    .lock-icon {
+      width: 64px;
+      height: 64px;
+      margin-bottom: 24px;
+      animation: glowPulse 4s infinite;
+    }
+    .lock-text {
+      font-size: 24px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 8px;
+    }
+    .lock-sub {
+      font-size: 15px;
+      color: var(--text-secondary);
+      max-width: 400px;
+      text-align: center;
+      line-height: 1.5;
+    }
+
+  
+    .block-card:not(.active) .card-icon {
+      filter: grayscale(100%) opacity(0.6);
+      transition: filter 0.4s var(--apple-ease);
+    }
+    .block-card.active .card-icon {
+      filter: grayscale(0%) opacity(1);
+      transition: filter 0.4s var(--apple-ease);
+    }
+
+    .block-card.active .card-icon img.invert-on-active {
+      filter: brightness(0) invert(1) !important;
+    }
+</style>
+</head>
+<body>
+
+  <div id="lock-overlay">
+    <svg class="lock-icon" viewBox="0 0 24 24" fill="none" stroke="var(--accent)" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+    </svg>
+    <div class="lock-text">Settings Locked</div>
+    <div class="lock-sub">You cannot modify the blocklist or strict mode while a Focus session is active.</div>
+  </div>
+
+  <button class="close-btn" id="close-options-btn" title="Return to Previous Tab" style="background: rgba(255,255,255,0.1); border-color: rgba(255,255,255,0.2); box-shadow: 0 4px 12px rgba(0,0,0,0.3);">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+  </button>
+  <div class="container">
+    <!-- HERO -->
+    <div class="hero">
+      <div class="hero-content">
+        <div class="hero-eyebrow">Productivity Engine</div>
+        <h1 class="reveal delay-1">Total isolation.</h1>
+        <p class="reveal delay-2">Silence the digital noise. Select exactly which apps and websites to block during Focus Mode. Strictly enforced, beautifully managed.</p>
+      </div>
+    </div>
+
+    <!-- STRICT MODE -->
+    <div class="strict-panel reveal delay-3">
+      <div class="strict-text">
+        <h3>Strict Mode</h3>
+        <p>Disables the "Bypass" button during Focus Mode. Locked apps stay locked until the timer ends.</p>
+      </div>
+      <label class="apple-switch">
+        <input type="checkbox" id="strict-mode-cb" />
+        <span class="apple-slider"></span>
+      </label>
+    </div>
+
+    <!-- CATEGORIES (rendered by JS) -->
+    <div id="categories-container"></div>
+
+    <!-- CUSTOM RULES -->
+    <div class="category-sec reveal" style="animation-delay: 0.5s;">
+      <div class="cat-header">
+        <h2>Custom Rules</h2>
+      </div>
+      <div class="custom-box">
+        <div class="custom-input-row">
+          <input type="text" id="custom-domain-input" placeholder="e.g., ycombinator.com" autocomplete="off" />
+          <button id="add-custom-btn">Block</button>
+        </div>
+        <div class="custom-tags" id="custom-tags"></div>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>

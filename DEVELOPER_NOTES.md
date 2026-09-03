@@ -277,3 +277,35 @@ Here is the exact, pristine `NATIVE_SVGS` block containing all the updated icons
 ## 23. Font Rendering on Linux
 - **The Problem:** Linux distributions do not natively map `-apple-system` or `Segoe UI`, and sometimes the fallback `sans-serif` results in an ugly, thin, un-aliased font that ruins the premium aesthetic.
 - **The Solution:** Always prepend `system-ui` to the front of any `font-family` declarations (especially for the main `#vdi` container in `styles.js`). This ensures Firefox/Zen/Chrome gracefully map to the OS's native premium UI font (e.g., Ubuntu, Roboto, Cantarell).
+
+## 24. Study Mode Layout & CSS Specificity Bugs (September 2026)
+**1. CSS Specificity overriding collapse states:**
+- *The Problem:* The Study Mode toggle panel and Timer track panel share the same space via crossfading, while the 74px progress ring sits on the left. When fading to the toggle setup phase, the ring was assigned a `.vdi-ring-hide` class (`width: 0 !important`). However, the toggle remained stubbornly pushed 74px to the right.
+- *The Root Cause:* The base ring container used an ID selector (`#vdi-focus-ring-container`), which has a higher CSS specificity (1,0,0) than the class selector `.vdi-ring-hide` (0,1,0). The width never actually collapsed.
+- *The Fix:* Always chain the hide class to the ID selector (`#vdi-focus-ring-container.vdi-ring-hide`) to guarantee it overrides the base styles.
+
+**2. Absolute Positioning vs Flexbox Centering:**
+- *The Problem:* When stacking the setup/track panels using `position: absolute`, the content (`Study Mode` toggle) snapped to the top of the panel, ignoring `justify-content: center`.
+- *The Root Cause:* Absolute positioned flex containers collapse their height to fit their content unless explicitly sized.
+- *The Fix:* Must add `height: 100% !important; top: 0; left: 0;` to the absolute flex containers so they span the parent and can properly center their children vertically.
+
+## 25. Timer & Progress Ring Math (September 2026)
+**1. The Countdown Math Glitch:**
+- *The Problem:* The progress ring for the timer appeared as a static red dot for the first several minutes of a session.
+- *The Root Cause:* The progress variable was calculated as `1 - (remaining / totalMs)`, meaning a brand new 25-minute block evaluated to `0.0` (0% full). `conic-gradient` drew an empty circle that slowly filled up as time passed, which is the behavior of an *elapsed time* visualizer, not a countdown.
+- *The Fix:* Countdown timers must evaluate purely to `(remaining / totalMs)` so they start at `1.0` (360 degrees, 100% full) and deplete counter-clockwise down to `0.0`.
+
+**2. The 0s Waiting Phase Bug:**
+- *The Problem:* When a Pomodoro block completes, the extension enters a 5-second `waiting` grace period, but the UI timer instantly snapped to `0s` and the progress ring emptied immediately.
+- *The Root Cause:* The background worker sets `F.running = false` during the waiting phase. The UI's `remaining` time calculation assumed `!focusState.running` meant the timer was paused, skipping the `endTime - Date.now()` calculation entirely.
+- *The Fix:* The UI calculation `remaining` must explicitly check `(focusState.running || focusState.phase === 'waiting')` before falling back to `remainingPauseMs`.
+
+## 26. Extension Context Invalidation (Orphaned Scripts)
+- *The Problem:* After reloading the unpacked ZIP extension in Chrome/Zen, the Dynamic Island on existing tabs would refuse to open on hover, and the UI would completely freeze (e.g. music showing paused when playing).
+- *The Root Cause:* When a Manifest V3 extension reloads, the background worker is destroyed and rebuilt. However, Content Scripts running in active tabs are *not* automatically injected or refreshed. They become "orphaned" and lose their messaging ports. Any call to `chrome.runtime.sendMessage` silently throws `Extension context invalidated`, halting Javascript execution.
+- *The Rule:* You MUST instruct the user to physically refresh (`F5` / `Ctrl+R`) the YouTube Music tab after installing a new `.zip` build to load the new DOM and establish a fresh background connection.
+
+## 27. Focus Mode Phase Progression Logic
+- *The Problem:* When a user skipped a break (or a break naturally finished) and let the 5-second "Continue session?" waiting grace period expire, the timer would incorrectly loop *back* into another Break instead of returning to Work mode.
+- *The Root Cause:* The `VDI_FOCUS_WAIT` handler in `background.js` previously hardcoded the assumption that the preceding phase was *always* a work block. It only checked `F.sessionsCompleted` and unconditionally pushed the user into `shortBreak` or `longBreak` when the 5-second timeout finished. 
+- *The Fix:* Phase progression logic is now calculated inside `handleFocusComplete()` *before* entering the waiting phase. The calculated `nextPhase` is passed directly in the `VDI_FOCUS_WAIT` message (`F.nextPhase`), ensuring the waiting timeout always correctly alternates between Work and Break, regardless of how the waiting phase was triggered.

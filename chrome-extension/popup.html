@@ -46,31 +46,55 @@
     </p>
   </div>
 
+  
   <div class="section card">
-    <h3>General</h3>
+    <h3 style="color:var(--accent-color, #818cf8); font-size:11px; letter-spacing:1px; margin-bottom:12px; text-transform:uppercase;">Focus Mode</h3>
+    <div class="setting-row" style="margin-bottom: 0;">
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="vdi-focus-blocklist-btn" style="margin-bottom:2px;">Site Blocklist</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Manage blocked websites and strict mode</span>
+      </div>
+      <button id="vdi-focus-blocklist-btn" style="background:var(--accent-color, #818cf8);border:none;color:#fff;padding:6px 16px;border-radius:12px;font-size:11px;cursor:pointer;font-weight:600;margin-top:2px;">Manage</button>
+    </div>
+  </div>
+
+  <div class="section card">
+    <h3 style="color:var(--accent-color, #818cf8); font-size:11px; letter-spacing:1px; margin-bottom:12px; text-transform:uppercase;">General</h3>
     <div class="setting-row">
-      <label for="hideYouTube">Hide on YouTube</label>
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="hideYouTube" style="margin-bottom:2px;">Hide on YouTube</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Hides the glance completely while on YouTube</span>
+      </div>
       <label class="switch">
         <input type="checkbox" id="hideYouTube">
         <span class="slider"></span>
       </label>
     </div>
     <div class="setting-row">
-      <label for="hideYouTubeMusic">Hide on YT Music</label>
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="hideYouTubeMusic" style="margin-bottom:2px;">Hide on YT Music</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Hides the glance completely while on YT Music</span>
+      </div>
       <label class="switch">
         <input type="checkbox" id="hideYouTubeMusic">
         <span class="slider"></span>
       </label>
     </div>
     <div class="setting-row">
-      <label for="hideSpotify">Hide on Spotify</label>
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="hideSpotify" style="margin-bottom:2px;">Hide on Spotify</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Hides the glance completely while on Spotify</span>
+      </div>
       <label class="switch">
         <input type="checkbox" id="hideSpotify">
         <span class="slider"></span>
       </label>
     </div>
-    <div class="setting-row">
-      <label for="hideAppleMusic">Hide on Apple Music</label>
+    <div class="setting-row" style="margin-bottom: 0;">
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="hideAppleMusic" style="margin-bottom:2px;">Hide on Apple Music</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Hides the glance completely on Apple Music</span>
+      </div>
       <label class="switch">
         <input type="checkbox" id="hideAppleMusic">
         <span class="slider"></span>
@@ -79,82 +103,75 @@
   </div>
 
   <div class="section card">
-    <h3>Features</h3>
+    <h3 style="color:var(--accent-color, #818cf8); font-size:11px; letter-spacing:1px; margin-bottom:12px; text-transform:uppercase;">Features</h3>
     <div class="setting-row">
       <div style="display:flex;flex-direction:column;justify-content:center;">
-        <label for="vdi-popup-shortcuts-btn" style="margin-bottom:2px;">Keyboard Shortcuts</label>
-        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Manage global hotkeys</span>
+        <label for="amoledBlack" style="margin-bottom:2px;">AMOLED Dark Mode <span style="background:#ff4757;color:#fff;font-size:8px;padding:2px 4px;border-radius:4px;font-weight:bold;margin-left:6px;vertical-align:middle;">NEW</span></label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Use pure pitch black background for the glance</span>
       </div>
-      <button id="vdi-popup-shortcuts-btn" style="background:var(--accent-color, rgba(255,255,255,0.1));border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;font-weight:600;margin-top:2px;">Edit</button>
+      <label class="switch">
+        <input type="checkbox" id="amoledBlack">
+        <span class="slider"></span>
+      </label>
     </div>
-    <div class="setting-row" style="margin-bottom: 0;">
-      <label for="enableLyrics">Enable Lyrics Engine</label>
+    <div class="setting-row">
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="enableLyrics" style="margin-bottom:2px;">Enable Lyrics Engine</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Fetch and display time-synced lyrics</span>
+      </div>
       <label class="switch">
         <input type="checkbox" id="enableLyrics">
         <span class="slider"></span>
       </label>
     </div>
-  </div>
-
-  <div class="section card">
-    <h3>Quick Playlists</h3>
-    <div id="playlists-container">
-      <div class="playlist-row">
-        <input type="text" id="pl-name-0" placeholder="Name" class="pl-input name">
-        <input type="text" id="pl-url-0" placeholder="URL" class="pl-input url">
-        <button id="pl-go-0" class="pl-btn">↗</button>
+    <div class="setting-row">
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label style="margin-bottom:2px;">Lyrics Time Offset</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Shift poorly synced lyrics</span>
       </div>
-      <div class="playlist-row">
-        <input type="text" id="pl-name-1" placeholder="Name" class="pl-input name">
-        <input type="text" id="pl-url-1" placeholder="URL" class="pl-input url">
-        <button id="pl-go-1" class="pl-btn">↗</button>
-      </div>
-      <div class="playlist-row">
-        <input type="text" id="pl-name-2" placeholder="Name" class="pl-input name">
-        <input type="text" id="pl-url-2" placeholder="URL" class="pl-input url">
-        <button id="pl-go-2" class="pl-btn">↗</button>
+      <div style="display:flex;align-items:center;gap:8px;">
+        <button id="vdi-popup-offset-dec" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">-</button>
+        <span id="vdi-popup-offset-val" style="color:#fff;font-size:12px;min-width:32px;text-align:center;">0.0s</span>
+        <button id="vdi-popup-offset-inc" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;">+</button>
       </div>
     </div>
-    <button id="save-playlists" class="save-btn">Save</button>
-  </div>
-
-  <div class="section card">
-    <h3>Position Presets</h3>
     <div class="setting-row">
-      <label for="freePlacement">Free Placement (Drag anywhere)</label>
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="freePlacement" style="margin-bottom:2px;">Free Placement</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Allow dragging anywhere on the screen</span>
+      </div>
       <label class="switch">
         <input type="checkbox" id="freePlacement">
         <span class="slider"></span>
       </label>
     </div>
-    <div class="setting-row" style="margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 12px;">
-      <label for="presetPlacement">Preset Placement Mode</label>
-      <label class="switch">
-        <input type="checkbox" id="presetPlacement">
-        <span class="slider"></span>
-      </label>
+    <div class="setting-row" style="margin-bottom: 0;">
+      <div style="display:flex;flex-direction:column;justify-content:center;">
+        <label for="vdi-popup-shortcuts-btn" style="margin-bottom:2px;">Keyboard Shortcuts</label>
+        <span style="font-size: 10.5px; color: rgba(255,255,255,0.5); line-height: 1;">Manage global hotkeys for media controls</span>
+      </div>
+      <button id="vdi-popup-shortcuts-btn" style="background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;font-weight:600;margin-top:2px;">Edit</button>
     </div>
+  </div>
+
+  <div class="section card">
+    <h3 style="color:var(--accent-color, #818cf8); font-size:11px; letter-spacing:1px; margin-bottom:12px; text-transform:uppercase;">Presets</h3>
     <div class="preset-grid">
       <button class="preset-btn" id="preset-top" title="Top Center">
-        <div class="preset-icon"><div class="dot top"></div></div>
         Top
       </button>
       <button class="preset-btn" id="preset-bottom" title="Bottom Center">
-        <div class="preset-icon"><div class="dot bottom"></div></div>
         Bottom
       </button>
       <button class="preset-btn" id="preset-left" title="Left Center">
-        <div class="preset-icon"><div class="dot left"></div></div>
         Left
       </button>
       <button class="preset-btn" id="preset-right" title="Right Center">
-        <div class="preset-icon"><div class="dot right"></div></div>
         Right
       </button>
     </div>
   </div>
-
-  <div class="section card kofi-card">
+<div class="section card kofi-card">
     <div class="kofi-content">
       <div class="kofi-icon">☕</div>
       <div class="kofi-text">

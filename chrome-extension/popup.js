@@ -15,6 +15,10 @@ document.addEventListener('DOMContentLoaded', function() {
   const tglSpotify = document.getElementById('hideSpotify');
   const tglAppleMusic = document.getElementById('hideAppleMusic');
   const tglLyrics = document.getElementById('enableLyrics');
+  const tglAmoled = document.getElementById('amoledBlack');
+  const offsetVal = document.getElementById('vdi-popup-offset-val');
+  const offsetDec = document.getElementById('vdi-popup-offset-dec');
+  const offsetInc = document.getElementById('vdi-popup-offset-inc');
   const tglShortcuts = document.getElementById('enableShortcuts');
   const tglFree = document.getElementById('freePlacement');
   const tglPreset = document.getElementById('presetPlacement');
@@ -25,7 +29,7 @@ document.addEventListener('DOMContentLoaded', function() {
   if (!localStorage.getItem('vdi_seen_popup_onboarding')) {
     onboardingBanner.style.display = 'block';
   }
-  dismissBtn.addEventListener('click', function() {
+  dismissBtn?.addEventListener('click', function() {
     localStorage.setItem('vdi_seen_popup_onboarding', 'true');
     onboardingBanner.style.display = 'none';
   });
@@ -37,6 +41,8 @@ document.addEventListener('DOMContentLoaded', function() {
     hideSpotify: false,
     hideAppleMusic: false,
     enableLyrics: true,
+    amoledBlack: false,
+    lyricsOffset: 0.0,
     enableShortcuts: true,
     freePlacement: true,
     presetPlacement: false,
@@ -47,9 +53,12 @@ document.addEventListener('DOMContentLoaded', function() {
     tglSpotify.checked = res.hideSpotify;
     tglAppleMusic.checked = res.hideAppleMusic;
     tglLyrics.checked = res.enableLyrics;
+    if (tglAmoled) tglAmoled.checked = res.amoledBlack;
+    if (offsetVal) offsetVal.textContent = (res.lyricsOffset > 0 ? '+' : '') + parseFloat(res.lyricsOffset || 0).toFixed(1) + 's';
+    window._vdiOffset = parseFloat(res.lyricsOffset || 0);
     if (tglShortcuts) tglShortcuts.checked = res.enableShortcuts !== false;
     tglFree.checked = res.freePlacement;
-    tglPreset.checked = res.presetPlacement;
+    if (tglPreset) tglPreset.checked = res.presetPlacement;
     
     updatePresetUI(res.presetPlacement, res.activePreset);
   });
@@ -62,32 +71,54 @@ document.addEventListener('DOMContentLoaded', function() {
       hideSpotify: tglSpotify.checked,
       hideAppleMusic: tglAppleMusic.checked,
       enableLyrics: tglLyrics.checked,
+      amoledBlack: tglAmoled ? tglAmoled.checked : false,
+      lyricsOffset: window._vdiOffset || 0.0,
       enableShortcuts: tglShortcuts ? tglShortcuts.checked : true,
       freePlacement: tglFree.checked,
-      presetPlacement: tglPreset.checked
+      presetPlacement: tglPreset ? tglPreset.checked : !tglFree.checked
     });
   }
 
-  tglYouTube.addEventListener('change', saveSettings);
-  tglYouTubeMusic.addEventListener('change', saveSettings);
-  tglSpotify.addEventListener('change', saveSettings);
-  tglAppleMusic.addEventListener('change', saveSettings);
-  tglLyrics.addEventListener('change', saveSettings);
+  tglYouTube?.addEventListener('change', saveSettings);
+  tglYouTubeMusic?.addEventListener('change', saveSettings);
+  tglSpotify?.addEventListener('change', saveSettings);
+  tglAppleMusic?.addEventListener('change', saveSettings);
+  tglLyrics?.addEventListener('change', saveSettings);
+  if (tglAmoled) tglAmoled.addEventListener('change', saveSettings);
+
+  if (offsetDec) offsetDec.addEventListener('click', function() {
+    window._vdiOffset = parseFloat((window._vdiOffset - 0.5).toFixed(1));
+    offsetVal.textContent = (window._vdiOffset > 0 ? '+' : '') + window._vdiOffset.toFixed(1) + 's';
+    saveSettings();
+  });
+  if (offsetInc) offsetInc.addEventListener('click', function() {
+    window._vdiOffset = parseFloat((window._vdiOffset + 0.5).toFixed(1));
+    offsetVal.textContent = (window._vdiOffset > 0 ? '+' : '') + window._vdiOffset.toFixed(1) + 's';
+    saveSettings();
+  });
   if (tglShortcuts) tglShortcuts.addEventListener('change', saveSettings);
 
-  tglFree.addEventListener('change', function() {
-    if (tglFree.checked) tglPreset.checked = false;
-    else tglPreset.checked = true;
+  
+  tglFree?.addEventListener('change', function() {
+    if (tglPreset) {
+      if (tglFree.checked) tglPreset.checked = false;
+      else tglPreset.checked = true;
+    }
     saveSettings();
-    updatePresetUI(tglPreset.checked);
+    updatePresetUI(!tglFree.checked);
   });
 
-  tglPreset.addEventListener('change', function() {
-    if (tglPreset.checked) tglFree.checked = false;
-    else tglFree.checked = true;
-    saveSettings();
-    updatePresetUI(tglPreset.checked);
-  });
+
+  
+  if (tglPreset) {
+    tglPreset?.addEventListener('change', function() {
+      if (tglPreset.checked) tglFree.checked = false;
+      else tglFree.checked = true;
+      saveSettings();
+      updatePresetUI(tglPreset.checked);
+    });
+  }
+
 
   function updatePresetUI(isPresetMode, activeId) {
     Object.keys(presets).forEach(id => {
@@ -109,8 +140,8 @@ document.addEventListener('DOMContentLoaded', function() {
   };
 
   Object.keys(presets).forEach(id => {
-    document.getElementById(id).addEventListener('click', function() {
-      if (!tglPreset.checked) return;
+    document.getElementById(id)?.addEventListener('click', function() {
+      if (tglFree.checked) return;
       
       const p = presets[id];
       chrome.storage.local.set({
@@ -161,7 +192,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
   });
 
-  document.getElementById('np-playpause').addEventListener('click', function() {
+  document.getElementById('np-playpause')?.addEventListener('click', function() {
     chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'toggle' });
     this.textContent = this.textContent === '⏸' ? '▶' : '⏸';
   });
@@ -174,14 +205,14 @@ document.addEventListener('DOMContentLoaded', function() {
         document.getElementById(`pl-name-${i}`).value = lists[i].name || '';
         document.getElementById(`pl-url-${i}`).value = lists[i].url || '';
       }
-      document.getElementById(`pl-go-${i}`).addEventListener('click', function() {
+      document.getElementById(`pl-go-${i}`)?.addEventListener('click', function() {
         const url = document.getElementById(`pl-url-${i}`).value;
         if (url) chrome.tabs.create({url: url});
       });
     }
   });
 
-  document.getElementById('save-playlists').addEventListener('click', function() {
+  document.getElementById('save-playlists')?.addEventListener('click', function() {
     const lists = [];
     for (let i=0; i<3; i++) {
       lists.push({
@@ -240,6 +271,13 @@ document.addEventListener('DOMContentLoaded', function() {
     e.preventDefault();
     if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.sendMessage) {
       chrome.runtime.sendMessage({ type: 'VDI_ACTION', act: 'openShortcuts' });
+    }
+  });
+
+  document.getElementById('vdi-focus-blocklist-btn')?.addEventListener('click', function(e) {
+    e.preventDefault();
+    if (typeof chrome !== 'undefined' && chrome.runtime && chrome.runtime.getURL) {
+      chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
     }
   });
 

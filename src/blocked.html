@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Site Blocked - Glance</title>
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      background-color: #09090b;
+      color: #fff;
+      font-family: system-ui, -apple-system, sans-serif;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      min-height: 100vh;
+      text-align: center;
+    }
+    .container {
+      max-width: 400px;
+      padding: 40px;
+      background: #18181b;
+      border-radius: 24px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+    }
+    .icon {
+      width: 64px;
+      height: 64px;
+      margin: 0 auto 24px auto;
+      color: #ff3366; /* default accent */
+      animation: pulse 2s infinite;
+    }
+    .icon svg {
+      width: 100%;
+      height: 100%;
+    }
+    h1 {
+      margin: 0 0 8px 0;
+      font-size: 24px;
+      font-weight: 600;
+    }
+    p {
+      color: #a1a1aa;
+      margin: 0 0 32px 0;
+      line-height: 1.5;
+    }
+    .site-name {
+      color: #fff;
+      font-weight: 600;
+    }
+    .btn-row {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .btn {
+      padding: 12px 24px;
+      border-radius: 12px;
+      border: none;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    .btn-primary {
+      background: #fff;
+      color: #09090b;
+    }
+    .btn-primary:hover {
+      background: #e4e4e7;
+      transform: translateY(-2px);
+    }
+    .btn-secondary {
+      background: transparent;
+      color: #71717a;
+    }
+    .btn-secondary:hover {
+      color: #a1a1aa;
+    }
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); }
+      50% { transform: scale(1.05); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="icon" id="accent-icon">
+      <svg viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zm6 10v8H6v-8h12zm-9-2V7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9z"/>
+      </svg>
+    </div>
+    <h1>Focus Mode Active</h1>
+    <p>You blocked <span class="site-name" id="site-display">this site</span> to stay productive.</p>
+    
+    <div class="btn-row">
+      <button class="btn btn-primary" id="btn-close">Close Tab</button>
+      <button class="btn btn-secondary" id="btn-bypass" style="display:none;">I need this for work (Bypass)</button>
+    </div>
+  </div>
+
+  <script src="blocked.js"></script>
+</body>
+</html>
