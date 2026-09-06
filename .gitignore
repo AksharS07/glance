@@ -1,7 +1,8 @@
 node_modules/
 .env
 *.mp4
-*.png
+edge working image.png
+yt-video screenshot.png
 generate_promos.js
 DEVELOPER_NOTES.md
 .agents/
