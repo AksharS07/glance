@@ -124,7 +124,7 @@ VDI.Styles = (function() {
 
     // Track Info
     rules.push('#vdi-track{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0;}');
-    rules.push('#vdi-title-row{display:flex;align-items:center;gap:6px;min-width:0;}');
+    rules.push('#vdi-title-row{display:flex;align-items:center;gap:6px;min-width:0;padding-right:62px;box-sizing:border-box;}');
     rules.push('#vdi-title{flex:1;font-size:13px;font-weight:600;color:#fff;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}');
 
     rules.push('#vdi-artist{font-size:11px;color:rgba(255,255,255,.38);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}');
