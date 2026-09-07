@@ -51,7 +51,7 @@ VDI.Platform.ChromeExt = (function() {
   /* Background Script Side (for background.js) */
 
   function createBackgroundWorker() {
-    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, smartShuffleOn: false, repeatMode: 'off' };
+    var S = { tabId: null, windowId: null, hasMedia: false, isPlaying: false, title: '', artist: '', artwork: '', duration: 0, position: 0, supportsPiP: false, isYouTubeVideo: false, isMusicApp: false, shuffleOn: false, smartShuffleOn: false, repeatMode: 'off', sources: [] };
     var pollInterval = 1000;
     var returnTabId = null;
     var returnWinId = null;
@@ -90,7 +90,7 @@ VDI.Platform.ChromeExt = (function() {
 
     function poll() {
       var SUPPORTED_HOSTS = ['youtube.com', 'music.youtube.com', 'spotify.com', 'open.spotify.com', 'music.apple.com'];
-      chrome.tabs.query({ audible: true }, function(tabs) {
+      chrome.tabs.query({}, function(tabs) {
         // Filter to only supported media platforms
         var mediaTabs = [];
         if (tabs && tabs.length) {
@@ -108,113 +108,141 @@ VDI.Platform.ChromeExt = (function() {
             }
           }
         }
-        var tab = mediaTabs.length ? mediaTabs[0] : null;
-
-        var targetTabId = tab ? tab.id : S.tabId;
-        if (!targetTabId) {
+        
+        if (mediaTabs.length === 0) {
           if (S.hasMedia) {
             S.hasMedia = false;
+            S.sources = [];
             broadcastState();
           }
           return;
         }
 
-        var isAM = false;
-        if (tab) {
-          isAM = tab.url && tab.url.includes('music.apple.com');
-          S.tabId = tab.id;
-          S.windowId = tab.windowId;
-        } else {
-          isAM = S.platform === 'apple';
-        }
+        var resultsCount = 0;
+        var validSources = [];
 
-        var cb = function(res) {
-          if (!res) {
-            if (S.hasMedia) {
-              S.hasMedia = false;
-              broadcastState();
+        var checkDone = function() {
+          if (resultsCount === mediaTabs.length) {
+            validSources.sort(function(a, b) { return a.tabId - b.tabId; });
+            
+            if (validSources.length === 0) {
+              if (S.hasMedia) {
+                S.hasMedia = false;
+                S.sources = [];
+                broadcastState();
+              }
+              return;
             }
-            return;
-          }
 
-          S.hasMedia = res.hasMedia !== undefined ? res.hasMedia : true;
-          S.isPlaying = res.isPlaying;
-          S.title = res.title || (tab ? tab.title : S.title) || '';
-          S.artist = res.artist || S.artist || '';
-          S.artwork = res.artwork || S.artwork || null;
-          S.duration = res.duration || 0;
-          S.position = res.position || 0;
-          S.supportsPiP = res.pipOk || false;
-          S.isFullscreen = res.isFullscreen || false;
-          S.isYouTubeVideo = res.isYouTubeVideo || false;
-          S.isMusicApp = res.isMusicApp || false;
-          S.shuffleOn = res.shuffleOn || false;
-          S.smartShuffleOn = res.smartShuffleOn || false;
-          S.repeatMode = res.repeatMode || 'off';
-          S.platform = res.platform || 'other';
-
-          broadcastState();
-        };
-
-        if (isAM) {
-          execInTab(targetTabId, function() {
-            try {
-              if (window.MusicKit && window.MusicKit.getInstance) {
-                var mk = window.MusicKit.getInstance();
-                if (mk) {
-                  var ni = mk.nowPlayingItem;
-                  var uiCur = mk.currentPlaybackTime || 0;
-                  var uiDur = (ni && ni.playbackDuration) ? ni.playbackDuration / 1000 : 0;
-                  var isPlaying = !!mk.isPlaying;
-                  var shuffleOn = (mk.shuffleMode !== 0 && mk.shuffleMode !== undefined);
-                  var rm = mk.repeatMode;
-                  var repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
-                  
-                  try {
-                    var repDomBtn = document.querySelector('.button--repeat, amp-playback-controls-repeat');
-                    if (repDomBtn) {
-                      var rc = repDomBtn.className || '';
-                      var rl = (repDomBtn.getAttribute('aria-label') || repDomBtn.getAttribute('title') || '').toLowerCase();
-                      if (rl.includes('one') || rc.includes('mode--2')) repeatMode = 'one';
-                      else if (rl.includes('all') || rc.includes('mode--1')) repeatMode = 'all';
-                      else if (rc.includes('mode--0')) repeatMode = 'off';
-                    }
-                  } catch(e) {}
-                  
-                  var finalTitle = '', finalArtist = '', art = null;
-                  if (ni) {
-                    finalTitle = ni.title || (ni.attributes && ni.attributes.name) || '';
-                    finalArtist = ni.artistName || (ni.attributes && ni.attributes.artistName) || '';
-                    if (ni.artwork && window.MusicKit.formatArtworkURL) {
-                      try { art = window.MusicKit.formatArtworkURL(ni.artwork, 600, 600); } catch(e) {}
-                    }
-                  }
-                  return {
-                    title: finalTitle,
-                    artist: finalArtist,
-                    artwork: art,
-                    isPlaying: isPlaying,
-                    duration: uiDur,
-                    position: uiCur,
-                    hasMedia: !!(finalTitle || uiDur > 0),
-                    volume: 1,
-                    pipOk: false,
-                    isFullscreen: !!document.fullscreenElement,
-                    isYouTubeVideo: false,
-                    isMusicApp: true,
-                    platform: 'apple',
-                    shuffleOn: shuffleOn,
-                    repeatMode: repeatMode,
-                    timestamp: Date.now()
-                  };
+            var selected = null;
+            if (S.tabId) {
+              for (var i = 0; i < validSources.length; i++) {
+                if (validSources[i].tabId === S.tabId) {
+                  selected = validSources[i];
+                  break;
                 }
               }
-            } catch(e) {}
-            return null;
-          }, [], cb, 'MAIN');
-        } else {
-          execInTab(targetTabId, VDI.Core.getTabMediaState, [], cb);
-        }
+            }
+            if (!selected) {
+              selected = validSources[0];
+            }
+
+            S.hasMedia = true;
+            S.isPlaying = selected.isPlaying;
+            S.title = selected.title || '';
+            S.artist = selected.artist || '';
+            S.artwork = selected.artwork || null;
+            S.duration = selected.duration || 0;
+            S.position = selected.position || 0;
+            S.supportsPiP = selected.pipOk || false;
+            S.isFullscreen = selected.isFullscreen || false;
+            S.isYouTubeVideo = selected.isYouTubeVideo || false;
+            S.isMusicApp = selected.isMusicApp || false;
+            S.shuffleOn = selected.shuffleOn || false;
+            S.smartShuffleOn = selected.smartShuffleOn || false;
+            S.repeatMode = selected.repeatMode || 'off';
+            S.platform = selected.platform || 'other';
+            S.tabId = selected.tabId;
+            S.windowId = selected.windowId;
+            S.sources = validSources.map(function(src) { return { tabId: src.tabId, title: src.title }; });
+
+            broadcastState();
+          }
+        };
+
+        mediaTabs.forEach(function(tab) {
+          var isAM = tab.url && tab.url.includes('music.apple.com');
+          var cb = function(res) {
+            resultsCount++;
+            if (res && res.hasMedia) {
+              res.tabId = tab.id;
+              res.windowId = tab.windowId;
+              res.title = res.title || tab.title || '';
+              validSources.push(res);
+            }
+            checkDone();
+          };
+
+          if (isAM) {
+            execInTab(tab.id, function() {
+              try {
+                if (window.MusicKit && window.MusicKit.getInstance) {
+                  var mk = window.MusicKit.getInstance();
+                  if (mk) {
+                    var ni = mk.nowPlayingItem;
+                    var uiCur = mk.currentPlaybackTime || 0;
+                    var uiDur = (ni && ni.playbackDuration) ? ni.playbackDuration / 1000 : 0;
+                    var isPlaying = !!mk.isPlaying;
+                    var shuffleOn = (mk.shuffleMode !== 0 && mk.shuffleMode !== undefined);
+                    var rm = mk.repeatMode;
+                    var repeatMode = (rm === 2) ? 'all' : ((rm === 1) ? 'one' : 'off');
+                    
+                    try {
+                      var repDomBtn = document.querySelector('.button--repeat, amp-playback-controls-repeat');
+                      if (repDomBtn) {
+                        var rc = repDomBtn.className || '';
+                        var rl = (repDomBtn.getAttribute('aria-label') || repDomBtn.getAttribute('title') || '').toLowerCase();
+                        if (rl.includes('one') || rc.includes('mode--2')) repeatMode = 'one';
+                        else if (rl.includes('all') || rc.includes('mode--1')) repeatMode = 'all';
+                        else if (rc.includes('mode--0')) repeatMode = 'off';
+                      }
+                    } catch(e) {}
+                    
+                    var finalTitle = '', finalArtist = '', art = null;
+                    if (ni) {
+                      finalTitle = ni.title || (ni.attributes && ni.attributes.name) || '';
+                      finalArtist = ni.artistName || (ni.attributes && ni.attributes.artistName) || '';
+                      if (ni.artwork && window.MusicKit.formatArtworkURL) {
+                        try { art = window.MusicKit.formatArtworkURL(ni.artwork, 600, 600); } catch(e) {}
+                      }
+                    }
+                    return {
+                      title: finalTitle,
+                      artist: finalArtist,
+                      artwork: art,
+                      isPlaying: isPlaying,
+                      duration: uiDur,
+                      position: uiCur,
+                      hasMedia: !!(finalTitle || uiDur > 0),
+                      volume: 1,
+                      pipOk: false,
+                      isFullscreen: !!document.fullscreenElement,
+                      isYouTubeVideo: false,
+                      isMusicApp: true,
+                      platform: 'apple',
+                      shuffleOn: shuffleOn,
+                      repeatMode: repeatMode,
+                      timestamp: Date.now()
+                    };
+                  }
+                }
+              } catch(e) {}
+              return null;
+            }, [], cb, 'MAIN');
+          } else {
+            execInTab(tab.id, VDI.Core.getTabMediaState, [], cb);
+          }
+        });
       });
     }
 
@@ -290,6 +318,22 @@ VDI.Platform.ChromeExt = (function() {
         // VDI_TELEPORT_BACK was previously handled here but the message uses
         // type: 'VDI_TELEPORT_BACK' (not act), so it never matched. Moved to
         // top-level handler below.
+        } else if (msg.act === 'next-source') {
+          if (S.sources && S.sources.length > 1) {
+            var currentIndex = -1;
+            for (var i = 0; i < S.sources.length; i++) {
+              if (S.sources[i].tabId === S.tabId) {
+                currentIndex = i;
+                break;
+              }
+            }
+            if (currentIndex !== -1) {
+              var nextIndex = (currentIndex + 1) % S.sources.length;
+              S.tabId = S.sources[nextIndex].tabId;
+              // Rapid poll to apply new selection immediately
+              poll();
+            }
+          }
         } else if (msg.act === 'openShortcuts') {
           var isFirefox = navigator.userAgent.toLowerCase().includes('firefox');
           if (isFirefox && typeof browser !== 'undefined' && browser.commands && browser.commands.openShortcutSettings) {
