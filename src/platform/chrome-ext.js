@@ -110,7 +110,7 @@ VDI.Platform.ChromeExt = (function() {
         }
         
         if (mediaTabs.length === 0) {
-          if (S.hasMedia) {
+          if (S.hasMedia || S.sources.length) {
             S.hasMedia = false;
             S.sources = [];
             broadcastState();
@@ -126,7 +126,7 @@ VDI.Platform.ChromeExt = (function() {
             validSources.sort(function(a, b) { return a.tabId - b.tabId; });
             
             if (validSources.length === 0) {
-              if (S.hasMedia) {
+              if (S.hasMedia || S.sources.length) {
                 S.hasMedia = false;
                 S.sources = [];
                 broadcastState();
