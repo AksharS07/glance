@@ -34,10 +34,17 @@ VDI.Styles = (function() {
         'background:var(--vdi-dark,' + dark + ') !important;',
         'box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 40px rgba(0,0,0,.8),0 0 80px var(--vdi-glow,rgba(99,102,241,.18)) !important;',
         'opacity:0 !important;pointer-events:none !important;',
-        'font-family:system-ui,-apple-system,Inter,Segoe UI,sans-serif !important;',
+        'font-family:"Inter",-apple-system,system-ui,"Segoe UI",sans-serif !important;',
         '-webkit-font-smoothing:antialiased !important;-moz-osx-font-smoothing:grayscale !important;text-rendering:optimizeLegibility !important;letter-spacing:normal !important;line-height:normal !important;',
         'transition:width .5s cubic-bezier(0.32, 0.72, 0, 1),height .5s cubic-bezier(0.32, 0.72, 0, 1),',
           'border-radius .5s cubic-bezier(0.32, 0.72, 0, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease !important;',
+      '}'
+    );
+    rules.push(
+      '#vdi.vdi-swallowed{',
+        'top: 50% !important;',
+        'transform: translate(-50%, -50%) scale(2.5) !important;',
+        'box-shadow: 0 0 0 1px rgba(255,255,255,.05), 0 30px 100px rgba(0,0,0,1), 0 0 160px var(--vdi-glow,rgba(99,102,241,.18)) !important;',
       '}'
     );
     // Bug 8 fix: force all island children to inherit font-family, blocking host CSS overrides
@@ -62,6 +69,76 @@ VDI.Styles = (function() {
     rules.push('#vdi.vdi-expanded #vdi-col{opacity:0 !important;pointer-events:none !important;}');
     rules.push('#vdi.vdi-idle #vdi-col{justify-content:center;padding:0;width:28px;height:28px;gap:0 !important;transition:gap .3s cubic-bezier(0.32, 0.72, 0, 1) !important;}');
     rules.push('#vdi.vdi-idle #vdi-col-text, #vdi.vdi-idle #vdi-col-btn{max-width:0 !important;opacity:0 !important;margin:0 !important;padding:0 !important;pointer-events:none !important;border:none !important;}');
+    rules.push('#vdi-col-media, #vdi-col-focus{display:flex;align-items:center !important;justify-content:center !important;position:relative !important;width:18px !important;height:18px !important;flex-shrink:0 !important;}');
+
+    // ═══════════════════════════════════════════════════════════
+    // Detached Focus Bubble (anchored to island via JS)
+    // ═══════════════════════════════════════════════════════════
+    rules.push(
+      '#vdi-focus-bubble{',
+        'position:fixed !important;top:' + islandTop + 'px !important;',
+        'z-index:2147483646 !important;border-radius:17px !important;overflow:hidden !important;user-select:none !important;cursor:default !important;',
+        'height:34px !important;',
+        'background:var(--vdi-dark,' + dark + ') !important;',
+        'backdrop-filter:blur(40px) !important;-webkit-backdrop-filter:blur(40px) !important;',
+        'box-shadow:0 0 0 1px rgba(255,255,255,.08),0 10px 40px rgba(0,0,0,.8),0 0 80px var(--vdi-glow,rgba(99,102,241,.18)) !important;',
+        'opacity:0 !important;pointer-events:none !important;',
+        'font-family:"Inter",-apple-system,system-ui,"Segoe UI",sans-serif !important;',
+        '-webkit-font-smoothing:antialiased !important;-moz-osx-font-smoothing:grayscale !important;text-rendering:optimizeLegibility !important;',
+        'display:flex !important;align-items:center !important;justify-content:center !important;padding:0 10px !important;gap:6px !important;box-sizing:border-box !important;',
+        'width:auto !important;max-width:0 !important;',
+        'transition:max-width .5s cubic-bezier(0.32, 0.72, 0, 1),opacity .3s ease,',
+          'background .7s ease,box-shadow .7s ease,padding .3s cubic-bezier(0.32, 0.72, 0, 1) !important;',
+      '}'
+    );
+    rules.push('#vdi-focus-bubble *{font-family:inherit !important;}');
+    // Visible: compact pill with ring + time
+    rules.push('#vdi-focus-bubble.vdi-visible{max-width:80px !important;opacity:1 !important;pointer-events:all !important;}');
+    // Expanded: show controls
+    rules.push('#vdi-focus-bubble.vdi-expanded{max-width:200px !important;}');
+
+    // Progress ring — matches island accent
+    rules.push(
+      '.vdi-progress-ring{',
+        '--progress:0;',
+        'width:20px !important;height:20px !important;border-radius:50% !important;flex-shrink:0 !important;',
+        'background:conic-gradient(var(--vdi-accent,' + accent + ') calc(var(--progress) * 360deg), rgba(255,255,255,0.12) 0deg) !important;',
+        '-webkit-mask:radial-gradient(closest-side, transparent 78%, #000 80%) !important;',
+        'mask:radial-gradient(closest-side, transparent 78%, #000 80%) !important;',
+      '}'
+    );
+
+    // Timer text — matches island typography
+    rules.push(
+      '#vdi-focus-time{',
+        'font-size:12px !important;font-weight:700 !important;color:rgba(255,255,255,0.9) !important;',
+        'letter-spacing:0.3px !important;white-space:nowrap !important;',
+      '}'
+    );
+
+    // Action buttons container — hidden until hover
+    rules.push(
+      '#vdi-focus-actions{',
+        'display:flex !important;gap:4px !important;opacity:0 !important;max-width:0 !important;overflow:hidden !important;',
+        'transition:opacity .2s ease,max-width .3s cubic-bezier(0.32, 0.72, 0, 1) !important;',
+      '}'
+    );
+    rules.push('#vdi-focus-bubble.vdi-expanded #vdi-focus-actions{opacity:1 !important;max-width:100px !important;}');
+
+    // Action buttons — same style as island buttons
+    rules.push(
+      '#vdi-focus-actions button{',
+        'background:rgba(255,255,255,0.08) !important;border:none !important;color:rgba(255,255,255,0.8) !important;',
+        'border-radius:10px !important;font-size:10px !important;font-weight:600 !important;',
+        'padding:4px 8px !important;cursor:pointer !important;font-family:inherit !important;',
+        'white-space:nowrap !important;transition:background .2s ease,color .2s ease !important;',
+      '}'
+    );
+    rules.push('#vdi-focus-actions button:hover{background:rgba(255,255,255,0.15) !important;color:#fff !important;}');
+    rules.push('#vdi-focus-btn-stop{color:#ff4757 !important;}');
+    rules.push('#vdi-focus-btn-stop:hover{background:rgba(255,60,60,0.2) !important;}');
+
+
 
     // EQ Visualizer
     rules.push(
@@ -80,29 +157,97 @@ VDI.Styles = (function() {
     );
 
     // Track text
-    rules.push('#vdi-col-text{flex:1;overflow:hidden;white-space:nowrap;max-width:200px;transition:max-width 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease,margin 0.3s ease;}');
-    rules.push(
-      '#vdi-col-inner{',
-        'display:inline-block;font-size:11px;font-weight:500;color:rgba(255,255,255,.82);',
-        'animation:vdi-scroll 9s linear infinite;',
-      '}'
-    );
-    rules.push('@keyframes vdi-scroll{0%,28%{transform:translateX(0)}72%{transform:translateX(-55%)}100%{transform:translateX(0)}}');
-    rules.push('#vdi-col-btn{width:18px !important;height:18px !important;max-width:18px !important;border-radius:50% !important;background:rgba(255,255,255,.1) !important;display:flex !important;align-items:center !important;justify-content:center !important;flex-shrink:0 !important;overflow:hidden !important;transition:max-width 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease,margin 0.3s ease,background .2s !important;}');
+    rules.push('#vdi-col-text{flex:1 !important;display:flex !important;align-items:center !important;overflow:hidden !important;margin:0 10px !important;min-width:0 !important;}');
+    rules.push('#vdi-col-inner{font-family:"Inter",-apple-system,system-ui,"Segoe UI",sans-serif !important;font-size:13px !important;font-weight:600 !important;color:#fff !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;transition:transform 0.3s cubic-bezier(0.32, 0.72, 0, 1),opacity 0.2s ease !important;transform:translateX(0);opacity:1;}');
+    rules.push('#vdi:hover #vdi-col-inner{transform:translateX(10px) !important;opacity:0 !important;}');
 
     // ═══════════════════════════════════════════════════════════
-    // Expanded View
+    // Expanded View & Pager
     // ═══════════════════════════════════════════════════════════
     rules.push(
       '#vdi-exp{',
         'position:absolute !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) scale(.9) !important;',
         'width:400px !important;height:152px !important;box-sizing:border-box !important;',
-        'display:flex !important;align-items:center !important;padding:14px 15px !important;gap:13px !important;',
-        'opacity:0 !important;',
+        'opacity:0 !important;overflow:hidden !important;border-radius:26px !important;',
         'transition:opacity .35s ease .1s,transform .4s cubic-bezier(0.32, 0.72, 0, 1) !important;pointer-events:none !important;',
       '}'
     );
     rules.push('#vdi.vdi-expanded #vdi-exp{opacity:1 !important;transform:translate(-50%,-50%) scale(1) !important;pointer-events:all !important;}');
+    rules.push('#vdi.vdi-expanded.vdi-has-study-hint{height:172px !important;}');
+    rules.push('#vdi.vdi-expanded.vdi-has-study-hint #vdi-exp{height:172px !important;}');
+    rules.push('#vdi-study-hint{position:absolute !important;bottom:6px !important;left:50% !important;transform:translateX(-50%) !important;display:none !important;flex-direction:column !important;align-items:center !important;gap:3px !important;pointer-events:none !important;z-index:10 !important;}');
+    rules.push('#vdi.vdi-expanded.vdi-has-study-hint #vdi-study-hint{display:flex !important;}');
+    
+    // Pager Container
+    // Pager Container
+    rules.push(
+      '#vdi-pages{',
+        'position:relative !important;width:100% !important;height:100% !important;overflow:hidden !important;',
+      '}'
+    );
+    // Page Layout
+    rules.push(
+      '.vdi-page{',
+        'position:absolute !important;top:0 !important;left:0 !important;',
+        'width:100% !important;height:100% !important;box-sizing:border-box !important;',
+        'display:flex !important;align-items:center !important;padding:14px 15px !important;gap:13px !important;',
+        'transition:transform 0.3s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.25s ease !important;opacity:0 !important;pointer-events:none !important;',
+      '}'
+    );
+    rules.push('.vdi-page.active{opacity:1 !important;transform:translateX(0) !important;pointer-events:all !important;}');
+    rules.push('.vdi-no-transition{transition:none !important;}');
+    // ═══════════════════════════════════════════════════════════
+    // Focus Timer Page
+    // ═══════════════════════════════════════════════════════════
+    rules.push('#vdi-page-focus{gap:0 !important;}');
+    rules.push(
+      '#vdi-focus-ring-container{',
+        'width:74px !important;height:74px !important;min-width:74px !important;min-height:74px !important;',
+        'border-radius:14px !important;flex-shrink:0 !important;position:relative !important;',
+        'display:flex;align-items:center !important;justify-content:center !important;',
+        'margin-right:13px !important;',
+        'transition:width 0.4s cubic-bezier(0.32, 0.72, 0, 1), min-width 0.4s cubic-bezier(0.32, 0.72, 0, 1), opacity 0.3s ease !important;',
+      '}'
+    );
+    rules.push(
+      '.vdi-progress-ring{',
+        '--progress:0;',
+        'border-radius:50% !important;',
+        'background:conic-gradient(var(--vdi-accent,' + accent + ') calc(var(--progress) * 360deg), rgba(255,255,255,0.1) 0deg) !important;',
+      '}'
+    );
+    // Large Ring (Expanded)
+    rules.push('.vdi-progress-ring.exp-ring{width:74px !important;height:74px !important;-webkit-mask:radial-gradient(closest-side, transparent 85%, #000 87%) !important;mask:radial-gradient(closest-side, transparent 85%, #000 87%) !important;position:absolute !important;inset:0 !important;}');
+    // Hourglass (Collapsed)
+    rules.push('@keyframes vdiHourglassDynamic{0%,100%{transform:rotate(0deg);} 10%{transform:rotate(-15deg);} 20%{transform:rotate(15deg);} 30%{transform:rotate(0deg);} 50%,95%{transform:rotate(180deg);}}');
+    rules.push('#vdi-hourglass{width:16px !important;height:16px !important;position:absolute !important;top:50% !important;left:50% !important;transform:translate(-50%,-50%) !important;color:var(--vdi-accent,' + accent + ') !important;}');
+    rules.push('#vdi-hourglass svg{width:100% !important;height:100% !important;display:block !important;transform-origin:center !important;}');
+    rules.push('#vdi-col-focus.running #vdi-hourglass svg{animation:vdiHourglassDynamic 2.5s cubic-bezier(0.4, 0, 0.2, 1) infinite !important;}');
+
+    rules.push('#vdi-focus-icon{position:absolute !important;color:var(--vdi-accent,' + accent + ') !important;opacity:0.7 !important;width:24px !important;height:24px !important;transition:opacity 0.3s ease !important;}');
+    
+    rules.push('#vdi-focus-inner-pages{flex:1 !important;position:relative !important;display:flex !important;align-items:center !important;justify-content:center !important;min-width:0 !important;align-self:stretch !important;}');
+    rules.push('#vdi-focus-setup, #vdi-focus-track{position:absolute !important;top:0 !important;left:0 !important;width:100% !important;height:100% !important;transition:opacity 0.3s ease, transform 0.3s ease !important;display:flex !important;flex-direction:column !important;align-items:center !important;justify-content:center !important;}');
+    rules.push('#vdi-focus-setup{gap:8px !important;}');
+    rules.push('.vdi-focus-setup-header{font-size:14px !important;font-weight:600 !important;color:#fff !important;margin:0 !important;line-height:1 !important;}');
+    
+    rules.push('#vdi-focus-track{justify-content:center !important;gap:5px !important;min-width:0 !important;}');
+    rules.push('.vdi-fade-out{opacity:0 !important;pointer-events:none !important;transform:translateY(10px) !important;}');
+    rules.push('#vdi-focus-ring-container.vdi-ring-hide{width:0 !important;min-width:0 !important;opacity:0 !important;margin:0 !important;padding:0 !important;pointer-events:none !important;}');
+    rules.push('#vdi-focus-title-row{display:flex !important;align-items:center !important;gap:6px !important;max-width:100% !important;min-width:0 !important;}');
+    rules.push('#vdi-focus-title{flex:1 !important;font-size:13px !important;font-weight:600 !important;color:#fff !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}');
+    rules.push('#vdi-focus-status{font-size:11px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:1px !important;color:var(--vdi-accent, #fff) !important;margin:4px 0 !important;text-align:center !important;}');
+    rules.push('#vdi-focus-time{font-size:24px !important;font-weight:700 !important;color:#fff !important;letter-spacing:1px !important;margin:4px 0 !important;font-variant-numeric: tabular-nums !important;}');
+    rules.push('#vdi-focus-ctrl-row{display:flex !important;align-items:center !important;gap:8px !important;}');
+
+    // Toggle switch
+    rules.push('.vdi-switch{position:relative !important;display:inline-block !important;width:42px !important;height:24px !important;}');
+    rules.push('.vdi-switch input{opacity:0 !important;width:0 !important;height:0 !important;}');
+    rules.push('.vdi-slider{position:absolute !important;cursor:pointer !important;top:0 !important;left:0 !important;right:0 !important;bottom:0 !important;background-color:rgba(255,255,255,0.2) !important;transition:.3s !important;border-radius:24px !important;}');
+    rules.push('.vdi-slider:before{position:absolute !important;content:"" !important;height:18px !important;width:18px !important;left:3px !important;bottom:3px !important;background-color:white !important;transition:.3s cubic-bezier(0.32, 0.72, 0, 1) !important;border-radius:50% !important;}');
+    rules.push('.vdi-switch input:checked + .vdi-slider{background-color:var(--vdi-accent,' + accent + ') !important;}');
+    rules.push('.vdi-switch input:checked + .vdi-slider:before{transform:translateX(18px) !important;}');
+
 
     rules.push('#vdi-teleport-btn{position:absolute !important;top:10px !important;right:40px !important;width:24px !important;height:24px !important;background:rgba(255,255,255,.08) !important;border:none !important;border-radius:50% !important;display:flex !important;align-items:center !important;justify-content:center !important;cursor:pointer !important;z-index:10 !important;color:rgba(255,255,255,.7) !important;}');
     rules.push('#vdi-teleport-btn svg{width:12px !important;height:12px !important;}');
@@ -219,6 +364,11 @@ VDI.Styles = (function() {
     rules.push('.vdi-loading-dots span{width:4px;height:4px;background:currentColor;border-radius:50%;animation:vdi-bounce 0.6s infinite alternate;}');
     rules.push('.vdi-loading-dots span:nth-child(2){animation-delay:0.2s;}');
     rules.push('.vdi-loading-dots span:nth-child(3){animation-delay:0.4s;}');
+    
+    rules.push('@keyframes vdiBreathe{0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.1);opacity:0.8;}}');
+    rules.push('@keyframes vdiSteam{0%,100%{opacity:0;transform:translateY(2px);} 50%{opacity:1;transform:translateY(-2px);}}');
+    rules.push('@keyframes vdiFlicker{0%,100%{transform:scale(1) rotate(0deg);opacity:1;} 25%{transform:scale(1.05) rotate(2deg);opacity:0.9;} 75%{transform:scale(0.95) rotate(-2deg);opacity:0.9;}}');
+    rules.push('@keyframes vdiWobble{0%,100%{transform:rotate(0deg);} 25%{transform:rotate(3deg);} 75%{transform:rotate(-3deg);}}');
     rules.push('@keyframes vdi-bounce{ 0%{transform:translateY(0);} 100%{transform:translateY(-3px);} }');
     rules.push('.vdi-icon-btn svg{width:15px;height:15px;pointer-events:none;}');
 
@@ -238,7 +388,35 @@ VDI.Styles = (function() {
     rules.push('#vdi-play svg{width:20px;height:20px;fill:currentColor !important;}');
 
     // ═══════════════════════════════════════════════════════════
-    // Lyrics Panel
+    // Lyrics Panel\n
+    rules.push(
+      '#vdi-tasks-panel{',
+        'position:fixed;left:50%;transform:translateX(-50%) translateY(-10px);',
+        'z-index:2147483646;width:340px;height:380px;border-radius:32px;overflow:hidden;',
+        'font-family:system-ui,-apple-system,Inter,Segoe UI,sans-serif;',
+        'background:rgba(0,0,0,0.5);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);',
+        'border:1px solid rgba(255,255,255,0.08);box-shadow:0 12px 40px rgba(0,0,0,0.6);',
+        'opacity:0;pointer-events:none;',
+        'transition:opacity 0.4s cubic-bezier(.32,.72,0,1), transform 0.4s cubic-bezier(.32,.72,0,1);',
+      '}'
+    );
+    rules.push('#vdi-tasks-panel.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all;}');
+    
+    // Custom task items CSS inside island
+    rules.push(
+      '.vdi-task-item { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px 12px; transition:all 0.2s; }',
+      '.vdi-task-item:hover { background:rgba(255,255,255,0.06); }',
+      '.vdi-task-item.completed { opacity: 0.5; }',
+      '.vdi-task-item.completed .vdi-task-text { text-decoration: line-through; }',
+      '.vdi-task-text { flex:1; font-size:12px; color:#fff; word-break:break-word; }',
+      '.vdi-task-checkbox { appearance:none; -webkit-appearance:none; width:16px; height:16px; border:1px solid rgba(255,255,255,0.4); border-radius:4px; cursor:pointer; position:relative; flex-shrink:0; }',
+      '.vdi-task-checkbox:checked { background:var(--vdi-accent); border-color:var(--vdi-accent); }',
+      '.vdi-task-checkbox:checked::after { content:""; position:absolute; top:2px; left:5px; width:3px; height:6px; border:solid white; border-width:0 2px 2px 0; transform:rotate(45deg); }',
+      '.vdi-task-prio { font-size:9px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; }',
+      '.vdi-task-del { background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:2px; transition:color 0.2s; }',
+      '.vdi-task-del:hover { color:#fff; }'
+    );
+
     // ═══════════════════════════════════════════════════════════
     rules.push(
       '#vdi-lyrics-panel{',
