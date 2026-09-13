@@ -34,7 +34,7 @@
     "scripting",
     "storage",
     "alarms",
-    "declarativeNetRequestWithHostAccess",
+    "declarativeNetRequest",
     "notifications"
   ],
   "host_permissions": [
