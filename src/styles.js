@@ -173,6 +173,10 @@ VDI.Styles = (function() {
       '}'
     );
     rules.push('#vdi.vdi-expanded #vdi-exp{opacity:1 !important;transform:translate(-50%,-50%) scale(1) !important;pointer-events:all !important;}');
+    rules.push('#vdi.vdi-expanded.vdi-has-study-hint{height:172px !important;}');
+    rules.push('#vdi.vdi-expanded.vdi-has-study-hint #vdi-exp{height:172px !important;}');
+    rules.push('#vdi-study-hint{position:absolute !important;bottom:6px !important;left:50% !important;transform:translateX(-50%) !important;display:none !important;flex-direction:column !important;align-items:center !important;gap:3px !important;pointer-events:none !important;z-index:10 !important;}');
+    rules.push('#vdi.vdi-expanded.vdi-has-study-hint #vdi-study-hint{display:flex !important;}');
     
     // Pager Container
     // Pager Container
