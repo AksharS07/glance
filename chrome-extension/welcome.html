@@ -334,27 +334,28 @@
   <section id="s-focus" style="padding: 0 24px 80px;">
     <div style="
       max-width: 760px; margin: 0 auto;
-      background: linear-gradient(135deg, rgba(129,140,248,0.08) 0%, rgba(99,102,241,0.04) 50%, rgba(129,140,248,0.06) 100%);
-      border: 1px solid rgba(129,140,248,0.25);
+      background: linear-gradient(135deg, color-mix(in srgb, var(--vdi-accent) 8%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--vdi-accent) 5%, transparent) 100%);
+      border: 1px solid color-mix(in srgb, var(--vdi-accent) 30%, transparent);
       border-radius: 28px;
       padding: 52px 48px;
       position: relative;
       overflow: hidden;
-      box-shadow: 0 0 80px rgba(129,140,248,0.08), inset 0 1px 0 rgba(255,255,255,0.06);
+      box-shadow: 0 0 80px var(--vdi-glow), inset 0 1px 0 rgba(255,255,255,0.05);
     ">
       <!-- Ambient glow blobs -->
-      <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(129,140,248,0.18) 0%,transparent 70%);pointer-events:none;"></div>
-      <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;background:radial-gradient(circle,rgba(99,102,241,0.12) 0%,transparent 70%);pointer-events:none;"></div>
+      <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle, var(--vdi-glow) 0%,transparent 70%);pointer-events:none;opacity:0.6;"></div>
+      <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;background:radial-gradient(circle, var(--vdi-glow) 0%,transparent 70%);pointer-events:none;opacity:0.4;"></div>
 
       <div class="reveal" style="text-align:center;position:relative;">
         <!-- Badge -->
         <div style="
           display:inline-flex;align-items:center;gap:6px;
-          background:rgba(129,140,248,0.15);border:1px solid rgba(129,140,248,0.35);
+          background:color-mix(in srgb, var(--vdi-accent) 15%, transparent);
+          border:1px solid color-mix(in srgb, var(--vdi-accent) 40%, transparent);
           border-radius:99px;padding:5px 14px;margin-bottom:22px;
-          font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:#818cf8;
+          font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--vdi-accent);
         ">
-          <span style="width:6px;height:6px;border-radius:50%;background:#818cf8;box-shadow:0 0 8px #818cf8;animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);box-shadow:0 0 8px var(--vdi-accent);animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
           New in v1.7
         </div>
 
@@ -367,18 +368,18 @@
 
         <!-- 3 feature cards -->
         <div class="reveal reveal-delay-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:left">
-          <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#818cf8;margin-bottom:6px">Countdown Ring</div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--vdi-accent);margin-bottom:6px">Countdown Ring</div>
             <div style="font-size:14px;font-weight:600;color:#f5f5f7;margin-bottom:6px">Live Focus Timer</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">A glowing SVG ring counts down in real time, colour matched to your album art.</div>
           </div>
-          <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#818cf8;margin-bottom:6px">Smart Redirect</div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--vdi-accent);margin-bottom:6px">Smart Redirect</div>
             <div style="font-size:14px;font-weight:600;color:#f5f5f7;margin-bottom:6px">Blocked Sites</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">Distraction sites redirect instantly. Already-open tabs are caught too.</div>
           </div>
-          <div style="background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
-            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#818cf8;margin-bottom:6px">One Tap</div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--vdi-accent);margin-bottom:6px">One Tap</div>
             <div style="font-size:14px;font-weight:600;color:#f5f5f7;margin-bottom:6px">Bypass Once</div>
             <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">Quick check needed? Bypass without stopping your timer. Hidden in strict mode.</div>
           </div>
@@ -386,6 +387,7 @@
       </div>
     </div>
   </section>
+
 
   <!-- HIGHLIGHTED DEMO: COLOR EXTRACTION ENGINE -->
   <section id="s-demo">
