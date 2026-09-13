@@ -40,6 +40,13 @@ VDI.Styles = (function() {
           'border-radius .5s cubic-bezier(0.32, 0.72, 0, 1),background .7s ease,box-shadow .7s ease,opacity .3s ease !important;',
       '}'
     );
+    rules.push(
+      '#vdi.vdi-swallowed{',
+        'top: 50% !important;',
+        'transform: translate(-50%, -50%) scale(2.5) !important;',
+        'box-shadow: 0 0 0 1px rgba(255,255,255,.05), 0 30px 100px rgba(0,0,0,1), 0 0 160px var(--vdi-glow,rgba(99,102,241,.18)) !important;',
+      '}'
+    );
     // Bug 8 fix: force all island children to inherit font-family, blocking host CSS overrides
     rules.push('#vdi *{font-family:inherit !important;}');
 
@@ -223,9 +230,9 @@ VDI.Styles = (function() {
     rules.push('#vdi-focus-track{justify-content:center !important;gap:5px !important;min-width:0 !important;}');
     rules.push('.vdi-fade-out{opacity:0 !important;pointer-events:none !important;transform:translateY(10px) !important;}');
     rules.push('#vdi-focus-ring-container.vdi-ring-hide{width:0 !important;min-width:0 !important;opacity:0 !important;margin:0 !important;padding:0 !important;pointer-events:none !important;}');
-    rules.push('#vdi-focus-title-row{display:flex !important;align-items:center !important;gap:6px !important;min-width:0 !important;}');
+    rules.push('#vdi-focus-title-row{display:flex !important;align-items:center !important;gap:6px !important;max-width:100% !important;min-width:0 !important;}');
     rules.push('#vdi-focus-title{flex:1 !important;font-size:13px !important;font-weight:600 !important;color:#fff !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}');
-    rules.push('#vdi-focus-status{font-size:11px !important;color:rgba(255,255,255,.38) !important;white-space:nowrap !important;overflow:hidden !important;text-overflow:ellipsis !important;}');
+    rules.push('#vdi-focus-status{font-size:11px !important;font-weight:600 !important;text-transform:uppercase !important;letter-spacing:1px !important;color:var(--vdi-accent, #fff) !important;margin:4px 0 !important;text-align:center !important;}');
     rules.push('#vdi-focus-time{font-size:24px !important;font-weight:700 !important;color:#fff !important;letter-spacing:1px !important;margin:4px 0 !important;font-variant-numeric: tabular-nums !important;}');
     rules.push('#vdi-focus-ctrl-row{display:flex !important;align-items:center !important;gap:8px !important;}');
 
@@ -352,6 +359,11 @@ VDI.Styles = (function() {
     rules.push('.vdi-loading-dots span{width:4px;height:4px;background:currentColor;border-radius:50%;animation:vdi-bounce 0.6s infinite alternate;}');
     rules.push('.vdi-loading-dots span:nth-child(2){animation-delay:0.2s;}');
     rules.push('.vdi-loading-dots span:nth-child(3){animation-delay:0.4s;}');
+    
+    rules.push('@keyframes vdiBreathe{0%,100%{transform:scale(1);opacity:1;} 50%{transform:scale(1.1);opacity:0.8;}}');
+    rules.push('@keyframes vdiSteam{0%,100%{opacity:0;transform:translateY(2px);} 50%{opacity:1;transform:translateY(-2px);}}');
+    rules.push('@keyframes vdiFlicker{0%,100%{transform:scale(1) rotate(0deg);opacity:1;} 25%{transform:scale(1.05) rotate(2deg);opacity:0.9;} 75%{transform:scale(0.95) rotate(-2deg);opacity:0.9;}}');
+    rules.push('@keyframes vdiWobble{0%,100%{transform:rotate(0deg);} 25%{transform:rotate(3deg);} 75%{transform:rotate(-3deg);}}');
     rules.push('@keyframes vdi-bounce{ 0%{transform:translateY(0);} 100%{transform:translateY(-3px);} }');
     rules.push('.vdi-icon-btn svg{width:15px;height:15px;pointer-events:none;}');
 
@@ -371,7 +383,35 @@ VDI.Styles = (function() {
     rules.push('#vdi-play svg{width:20px;height:20px;fill:currentColor !important;}');
 
     // ═══════════════════════════════════════════════════════════
-    // Lyrics Panel
+    // Lyrics Panel\n
+    rules.push(
+      '#vdi-tasks-panel{',
+        'position:fixed;left:50%;transform:translateX(-50%) translateY(-10px);',
+        'z-index:2147483646;width:340px;height:380px;border-radius:32px;overflow:hidden;',
+        'font-family:system-ui,-apple-system,Inter,Segoe UI,sans-serif;',
+        'background:rgba(0,0,0,0.5);backdrop-filter:blur(32px);-webkit-backdrop-filter:blur(32px);',
+        'border:1px solid rgba(255,255,255,0.08);box-shadow:0 12px 40px rgba(0,0,0,0.6);',
+        'opacity:0;pointer-events:none;',
+        'transition:opacity 0.4s cubic-bezier(.32,.72,0,1), transform 0.4s cubic-bezier(.32,.72,0,1);',
+      '}'
+    );
+    rules.push('#vdi-tasks-panel.show{opacity:1;transform:translateX(-50%) translateY(0);pointer-events:all;}');
+    
+    // Custom task items CSS inside island
+    rules.push(
+      '.vdi-task-item { display:flex; align-items:center; gap:8px; background:rgba(255,255,255,0.03); border:1px solid rgba(255,255,255,0.05); border-radius:8px; padding:8px 12px; transition:all 0.2s; }',
+      '.vdi-task-item:hover { background:rgba(255,255,255,0.06); }',
+      '.vdi-task-item.completed { opacity: 0.5; }',
+      '.vdi-task-item.completed .vdi-task-text { text-decoration: line-through; }',
+      '.vdi-task-text { flex:1; font-size:12px; color:#fff; word-break:break-word; }',
+      '.vdi-task-checkbox { appearance:none; -webkit-appearance:none; width:16px; height:16px; border:1px solid rgba(255,255,255,0.4); border-radius:4px; cursor:pointer; position:relative; flex-shrink:0; }',
+      '.vdi-task-checkbox:checked { background:var(--vdi-accent); border-color:var(--vdi-accent); }',
+      '.vdi-task-checkbox:checked::after { content:""; position:absolute; top:2px; left:5px; width:3px; height:6px; border:solid white; border-width:0 2px 2px 0; transform:rotate(45deg); }',
+      '.vdi-task-prio { font-size:9px; font-weight:700; text-transform:uppercase; padding:2px 6px; border-radius:4px; }',
+      '.vdi-task-del { background:none; border:none; color:rgba(255,255,255,0.4); cursor:pointer; padding:2px; transition:color 0.2s; }',
+      '.vdi-task-del:hover { color:#fff; }'
+    );
+
     // ═══════════════════════════════════════════════════════════
     rules.push(
       '#vdi-lyrics-panel{',

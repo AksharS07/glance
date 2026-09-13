@@ -1497,8 +1497,9 @@ VDI.Platform.ChromeExt = (function() {
       shortBreakMin: 5,
       longBreakMin: 15,
       sessionsCompleted: 0,
-      strictMode: true,
+      strictMode: false,
       bypassedSites: [],
+      bypassLimits: {},
       waitingTimeoutId: null
     };
     var pollInterval = 1000;
@@ -1538,12 +1539,18 @@ VDI.Platform.ChromeExt = (function() {
     }
 
     function broadcastFocusState() {
+      var msg = { type: 'VDI_FOCUS_UPDATE', focus: F };
+      // Send to content scripts in all normal tabs
       chrome.tabs.query({}, function(tabs) {
         for (var i = 0; i < tabs.length; i++) {
-          chrome.tabs.sendMessage(tabs[i].id, { type: 'VDI_FOCUS_UPDATE', focus: F }, function() {
+          chrome.tabs.sendMessage(tabs[i].id, msg, function() {
             if (chrome.runtime.lastError) {}
           });
         }
+      });
+      // Also send via runtime so extension pages (blocked.html) receive it
+      chrome.runtime.sendMessage(msg, function() {
+        if (chrome.runtime.lastError) {}
       });
     }
 
@@ -1849,6 +1856,10 @@ VDI.Platform.ChromeExt = (function() {
           if (msg.source.tabId) chrome.tabs.update(msg.source.tabId, { active: true });
           if (msg.source.winId) chrome.windows.update(msg.source.winId, { focused: true });
         }
+      } else if (msg.type === 'VDI_CLOSE_TAB') {
+        if (sender && sender.tab && sender.tab.id) {
+          chrome.tabs.remove(sender.tab.id);
+        }
       } else if (msg.type === 'VDI_BATCH_ROMANIZE') {
         VDI.Core.batchRomanize(msg.lines, function(result) {
           sendResponse(result);
@@ -1856,6 +1867,9 @@ VDI.Platform.ChromeExt = (function() {
         return true;
       } else if (msg.type === 'VDI_FOCUS_REQUEST') {
         sendResponse(F);
+      } else if (msg.type === 'VDI_GET_PREV_TAB') {
+        sendResponse({ tabId: lastNonBlockedTabId });
+        return true;
       } else if (msg.type === 'VDI_FOCUS_START') {
         F.workMin = msg.workMin || F.workMin;
         F.shortBreakMin = msg.shortBreakMin || F.shortBreakMin;
@@ -1893,6 +1907,25 @@ VDI.Platform.ChromeExt = (function() {
         if (F.phase === 'work') {
           chrome.storage.local.get({ glance_focus_blocklist: [] }, function(res) {
             updateBlockRules(res.glance_focus_blocklist, true);
+            // DNR only catches new navigations — redirect already-open blocked tabs too
+            var blocklist = res.glance_focus_blocklist || [];
+            if (blocklist.length === 0) return;
+            chrome.tabs.query({}, function(tabs) {
+              for (var i = 0; i < tabs.length; i++) {
+                var tab = tabs[i];
+                if (!tab.url) continue;
+                for (var j = 0; j < blocklist.length; j++) {
+                  if (tab.url.indexOf(blocklist[j]) !== -1 &&
+                      tab.url.indexOf('blocked.html') === -1 &&
+                      F.bypassedSites.indexOf(blocklist[j]) === -1) {
+                    chrome.tabs.update(tab.id, {
+                      url: chrome.runtime.getURL('blocked.html?site=' + encodeURIComponent(blocklist[j]))
+                    });
+                    break;
+                  }
+                }
+              }
+            });
           });
         } else {
           updateBlockRules([], false);
@@ -1951,7 +1984,12 @@ VDI.Platform.ChromeExt = (function() {
         if (sendResponse) sendResponse();
       } else if (msg.type === 'VDI_FOCUS_SKIP') {
         if (F.waitingTimeoutId) clearTimeout(F.waitingTimeoutId);
-        handleFocusComplete();
+        if (F.phase === 'waiting') {
+          // Already waiting — skip directly to the next phase
+          handleMessage({ type: 'VDI_FOCUS_START', phase: F.nextPhase || 'work' }, sender, function(){});
+        } else {
+          handleFocusComplete();
+        }
       } else if (msg.type === 'VDI_FOCUS_WAIT') {
         // Enters the 5 second waiting phase
         F.phase = 'waiting';
@@ -2000,19 +2038,43 @@ VDI.Platform.ChromeExt = (function() {
       var nextP = 'work';
       if (F.phase === 'work') {
         nextP = (F.sessionsCompleted % 4 === 0 && F.sessionsCompleted > 0) ? 'longBreak' : 'shortBreak';
+      } else {
+        nextP = 'work';
       }
       
       handleMessage({ type: 'VDI_FOCUS_WAIT', nextPhase: nextP }, null, function(){});
     }
 
     function start() {
+      // Clear any stale block rules from previous session
+      // DNR rules persist across browser restarts but F resets to idle,
+      // so we must always clear on startup and only re-add if session is restored
+      if (typeof chrome.declarativeNetRequest !== 'undefined') {
+        chrome.declarativeNetRequest.getDynamicRules(function(existing) {
+          var staleIds = existing.filter(function(r) { return r.id >= 1000; }).map(function(r) { return r.id; });
+          if (staleIds.length > 0) {
+            chrome.declarativeNetRequest.updateDynamicRules({ removeRuleIds: staleIds, addRules: [] });
+          }
+        });
+      }
+
       setInterval(poll, pollInterval);
       poll();
 
       chrome.runtime.onMessage.addListener(handleMessage);
       // Expose for console testing & internal use (alarms, storage triggers)
       self._vdiHandleMessage = handleMessage;
-      chrome.tabs.onActivated.addListener(function() { poll(); });
+      var lastNonBlockedTabId = null;
+      chrome.tabs.onActivated.addListener(function(info) {
+        poll();
+        // Track last non-blocked tab so blocked page can return to it
+        chrome.tabs.get(info.tabId, function(tab) {
+          if (chrome.runtime.lastError) return;
+          if (tab && tab.url && tab.url.indexOf('blocked.html') === -1) {
+            lastNonBlockedTabId = info.tabId;
+          }
+        });
+      });
       chrome.windows.onFocusChanged.addListener(function() { poll(); });
 
       

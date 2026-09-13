@@ -212,7 +212,7 @@
   
   function checkSession() {
     chrome.runtime.sendMessage({ type: 'VDI_FOCUS_REQUEST' }, (res) => {
-      if (res && res.active) {
+      if (res && res.phase && res.phase !== 'idle') {
         if (!sessionActive) {
           sessionActive = true;
           lockOverlay.classList.add('active');
@@ -257,7 +257,24 @@
     save();
   });
 
-  // ─── Load State ───
+  const topCloseBtn = document.getElementById('close-options-btn');
+  if (topCloseBtn) {
+    topCloseBtn.addEventListener('click', () => {
+      chrome.tabs.getCurrent((tab) => {
+        if (tab) chrome.tabs.remove(tab.id);
+      });
+    });
+  }
+
+  const bottomCloseBtn = document.getElementById('close-options-bottom-btn');
+  if (bottomCloseBtn) {
+    bottomCloseBtn.addEventListener('click', () => {
+      chrome.tabs.getCurrent((tab) => {
+        if (tab) chrome.tabs.remove(tab.id);
+      });
+    });
+  }
+
   chrome.storage.local.get(
     { glance_focus_blocklist: [], glance_focus_strict: true,  },
     (res) => {

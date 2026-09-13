@@ -511,7 +511,7 @@
       justify-content: center;
       cursor: pointer;
       transition: all 0.3s ease;
-      z-index: 100;
+      z-index: 10000;
     }
     .close-btn:hover {
       background: rgba(255,255,255,0.1);
@@ -576,7 +576,85 @@
     .block-card.active .card-icon img.invert-on-active {
       filter: brightness(0) invert(1) !important;
     }
-</style>
+
+    /* Tasks CSS */
+    .task-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 12px 16px;
+      transition: all 0.2s;
+    }
+    .task-item:hover {
+      background: var(--surface-hover);
+      border-color: var(--border-hover);
+    }
+    .task-item.completed {
+      opacity: 0.5;
+    }
+    .task-item.completed .task-text {
+      text-decoration: line-through;
+    }
+    .task-text {
+      flex: 1;
+      font-size: 14px;
+      color: var(--text-primary);
+    }
+    .task-checkbox {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      border: 2px solid var(--text-secondary);
+      border-radius: 6px;
+      cursor: pointer;
+      position: relative;
+      transition: all 0.2s;
+    }
+    .task-checkbox:checked {
+      background: var(--accent);
+      border-color: var(--accent);
+    }
+    .task-checkbox:checked::after {
+      content: '';
+      position: absolute;
+      top: 4px; left: 7px;
+      width: 4px; height: 8px;
+      border: solid white;
+      border-width: 0 2px 2px 0;
+      transform: rotate(45deg);
+    }
+    .task-priority-badge {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      padding: 4px 8px;
+      border-radius: 6px;
+      letter-spacing: 0.5px;
+    }
+    .task-priority-high { background: rgba(239, 68, 68, 0.15); color: #ef4444; border: 1px solid rgba(239, 68, 68, 0.3); }
+    .task-priority-medium { background: rgba(245, 158, 11, 0.15); color: #f59e0b; border: 1px solid rgba(245, 158, 11, 0.3); }
+    .task-priority-low { background: rgba(16, 185, 129, 0.15); color: #10b981; border: 1px solid rgba(16, 185, 129, 0.3); }
+    .task-delete-btn {
+      background: none;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      padding: 4px;
+      border-radius: 6px;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .task-delete-btn:hover {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+  </style>
 </head>
 <body>
 
@@ -614,6 +692,7 @@
       </label>
     </div>
 
+    
     <!-- CATEGORIES (rendered by JS) -->
     <div id="categories-container"></div>
 
@@ -629,6 +708,9 @@
         </div>
         <div class="custom-tags" id="custom-tags"></div>
       </div>
+    </div>
+    <div style="display: flex; justify-content: center; padding: 40px 0 20px;">
+      <button id="close-options-bottom-btn" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 99px; color: #fff; padding: 14px 32px; font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s;">Got it, close this tab</button>
     </div>
   </div>
 

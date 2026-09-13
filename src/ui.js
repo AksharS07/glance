@@ -109,12 +109,18 @@ VDI.UI = (function() {
             '</div>' +
             '<div id="vdi-focus-inner-pages">' +
               '<div id="vdi-focus-setup">' +
-                '<div class="vdi-focus-setup-header">Study Mode</div>' +
+                
+                '<div style="display:flex;align-items:center;gap:8px;">' +
+                  '<div class="vdi-focus-setup-header">Study Mode</div>' +
+                  '<button class="vdi-btn vdi-tasks-btn-el" title="Tasks & Goals" style="width:24px;height:24px;background:rgba(255,255,255,0.1);border-radius:50%;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></button>' +
+                '</div>' +
+
                 '<label class="vdi-switch"><input type="checkbox" id="vdi-focus-study-toggle"><span class="vdi-slider"></span></label>' +
               '</div>' +
               '<div id="vdi-focus-track" class="vdi-fade-out">' +
-                '<div id="vdi-focus-title-row">' +
+                '<div id="vdi-focus-title-row" style="display:flex;align-items:center;gap:8px;">' +
                   '<div id="vdi-focus-title">Focus Mode</div>' +
+                  '<button class="vdi-btn vdi-tasks-btn-el" title="Tasks & Goals" style="width:24px;height:24px;background:rgba(255,255,255,0.1);border-radius:50%;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="12" height="12"><polyline points="9 11 12 14 22 4"></polyline><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg></button>' +
                 '</div>' +
                 '<div id="vdi-focus-status">Ready to work</div>' +
                 '<div id="vdi-focus-time">25:00</div>' +
@@ -135,15 +141,13 @@ VDI.UI = (function() {
   
     function getCenterIcon(phase, isRunning) {
       if (!isRunning) {
-        // Paused state
-        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="opacity:0.5;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: vdiBreathe 3s infinite ease-in-out; transform-origin: center;"><rect x="6" y="4" width="4" height="16"></rect><rect x="14" y="4" width="4" height="16"></rect></svg>';
       }
       if (phase === 'shortBreak' || phase === 'longBreak') {
-        // Animated Coffee Cup
-        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4" style="animation: vdiSteam 2s infinite ease-in-out;"></line><line x1="10" y1="1" x2="10" y2="4" style="animation: vdiSteam 2s infinite ease-in-out 0.5s;"></line><line x1="14" y1="1" x2="14" y2="4" style="animation: vdiSteam 2s infinite ease-in-out 1s;"></line></svg>';
+        return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: vdiWobble 4s infinite ease-in-out; transform-origin: bottom center;"><path d="M18 8h1a4 4 0 0 1 0 8h-1"></path><path d="M2 8h16v9a4 4 0 0 1-4 4H6a4 4 0 0 1-4-4V8z"></path><line x1="6" y1="1" x2="6" y2="4" style="animation: vdiSteam 2s infinite ease-in-out;"></line><line x1="10" y1="1" x2="10" y2="4" style="animation: vdiSteam 2s infinite ease-in-out 0.5s;"></line><line x1="14" y1="1" x2="14" y2="4" style="animation: vdiSteam 2s infinite ease-in-out 1s;"></line></svg>';
       }
-      // Work Phase: Minimalist Target/Brain pulsing
-      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: vdiBreathe 3s infinite ease-in-out;"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="12" r="6"></circle><circle cx="12" cy="12" r="2"></circle></svg>';
+      // Work Phase: Flame
+      return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="animation: vdiFlicker 1.5s infinite ease-in-out; transform-origin: bottom center;"><path d="M8.5 14.5A2.5 2.5 0 0 0 11 12c0-1.38-.5-2-1-3-1.072-2.143-.224-4.054 2-6 .5 2.5 2 4.9 4 6.5 2 1.6 3 3.5 3 5.5a7 7 0 1 1-14 0c0-1.153.433-2.294 1-3a2.5 2.5 0 0 0 2.5 2.5z"></path></svg>';
     }
 
   function createSettingsPanel(opts) {
@@ -158,7 +162,7 @@ VDI.UI = (function() {
     panel.id = 'vdi-settings-panel';
     panel.innerHTML =
       '<div class="vdi-stg-header">Focus Mode</div>' +
-      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Site Blocklist</span><span class="vdi-stg-sub">Manage blocked websites and strict mode</span></div><button id="vdi-stg-focus-btn" class="vdi-shortcuts-btn" style="background:var(--vdi-accent, #818cf8);">Manage</button></div>' +
+      '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">Site Blocklist</span><span class="vdi-stg-sub">Manage blocked websites and strict mode</span></div><button id="vdi-stg-focus-btn" class="vdi-shortcuts-btn">Manage</button></div>' +
       '<div style="height:1px;background:rgba(255,255,255,0.1);margin:4px 0;"></div>' +
       '<div class="vdi-stg-header" style="margin-top:8px;">Features</div>' +
       '<div class="vdi-stg-row"><div style="display:flex;flex-direction:column;"><span class="vdi-stg-label">AMOLED Dark Mode <span class="vdi-new-tag">NEW</span></span><span class="vdi-stg-sub">Use pure pitch black background for the glance instead of matching the album color</span></div><label class="vdi-switch"><input type="checkbox" id="vdi-stg-amoled"><span class="vdi-slider"></span></label></div>' +
@@ -202,7 +206,8 @@ VDI.UI = (function() {
       '.vdi-preset-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:4px 0;width:22%;border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;font-weight:600;transition:all 0.2s;}',
       '.vdi-preset-btn:hover{background:var(--vdi-accent, #6366f1);color:#fff;border-color:transparent;}',
       '.vdi-offset-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:4px 8px;border-radius:6px;font-size:14px;cursor:pointer;font-family:inherit;}',
-      '.vdi-shortcuts-btn{background:rgba(255,255,255,0.1);border:none;color:#fff;padding:6px 12px;border-radius:12px;font-size:11px;cursor:pointer;font-family:inherit;}'
+      '.vdi-shortcuts-btn{background:rgba(255,255,255,0.1);border:1px solid rgba(255,255,255,0.2);color:rgba(255,255,255,0.8);padding:6px 16px;border-radius:8px;font-size:11px;font-weight:600;cursor:pointer;font-family:inherit;transition:all 0.2s;}',
+      '.vdi-shortcuts-btn:hover{background:var(--vdi-accent, #6366f1);color:#fff;border-color:transparent;}'
     ].join('');
     shadow.appendChild(style);
     shadow.appendChild(panel);
@@ -222,6 +227,26 @@ VDI.UI = (function() {
     return tt;
   }
 
+  
+  function createTasksPanel(opts) {
+    opts = opts || {};
+    var panel = document.createElement('div');
+    panel.id = 'vdi-tasks-panel';
+    panel.innerHTML = 
+      '<div style="padding: 16px; display: flex; flex-direction: column; height: 100%; box-sizing: border-box;">' +
+        '<div style="font-size: 13px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px; color: #fff; margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;">' +
+          '<span>Tasks & Goals</span>' +
+          '<button id="vdi-close-tasks" style="background:none; border:none; color:rgba(255,255,255,0.5); cursor:pointer; padding:4px;"><svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>' +
+        '</div>' +
+        '<div style="display: flex; gap: 8px; margin-bottom: 12px;">' +
+          '<input type="text" id="vdi-task-input" placeholder="New task..." style="flex: 1; background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; color: white; padding: 6px 10px; font-size: 12px; outline: none;">' +
+          '<button id="vdi-add-task-btn" style="background: var(--vdi-accent); border: none; border-radius: 8px; color: white; padding: 6px 12px; font-weight: 600; cursor: pointer;">Add</button>' +
+        '</div>' +
+        '<div id="vdi-tasks-list" style="flex: 1; overflow-y: auto; display: flex; flex-direction: column; gap: 8px; margin-bottom: 12px; padding-right: 4px;"></div>' +
+        '<div style="font-size: 10px; color: rgba(255,255,255,0.4); text-align: center; margin-top: auto; line-height: 1.4;">Right-click to change priority &middot; Middle-click to set active goal</div>' +
+      '</div>';
+    return panel;
+  }
   function createLyricsPanel(opts) {
     opts = opts || {};
     var panel = document.createElement('div');
@@ -243,6 +268,10 @@ VDI.UI = (function() {
     var stgInner = stgPanel && stgPanel._panel ? stgPanel._panel : stgPanel;
     function stg$(id) { return stgShadow ? stgShadow.getElementById(id) : document.getElementById(id); }
     var isVivaldi = opts.isVivaldi || false;
+    
+    var isTasksPanelOpen = false;
+    var toggleTasksPanel = null;
+    var currentActiveTaskText = '';
 
     var state = {
       isPlaying: false,
@@ -306,6 +335,7 @@ VDI.UI = (function() {
     var colTimer = null;
     var ttTimer = null;
     var isDragging = false;
+    var isMouseOverIsland = false;
     var tickInterval = opts.tickInterval || 1000;
     var idleDelay = opts.idleDelay || 9000;
     var collapseDelay = opts.collapseDelay || 500;
@@ -329,7 +359,10 @@ VDI.UI = (function() {
         state.lastExtractedColor = c;
         // Bug 6 fix: cache accent color for popup (service worker can't extract via DOM)
         if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-          chrome.storage.local.set({ 'vdi_accent_color': c.accent || null });
+          chrome.storage.local.set({
+            'vdi_accent_color': c.accent || null,
+            'vdi_glow_color':   c.glow   || null
+          });
         }
       }
       c = c || state.lastExtractedColor;
@@ -349,6 +382,23 @@ VDI.UI = (function() {
         stgInner.style.setProperty('--vdi-grad', grad);
         stgInner.style.setProperty('--vdi-dark', dark);
         stgInner.style.setProperty('--vdi-glow', glow);
+      }
+      var tp = $('vdi-tasks-panel');
+      if (tp) {
+        tp.style.setProperty('--vdi-accent', accent);
+        tp.style.setProperty('--vdi-grad', grad);
+        tp.style.setProperty('--vdi-dark', dark);
+        tp.style.setProperty('--vdi-glow', glow);
+      }
+      var lp = $('vdi-lyrics-panel');
+      if (lp) {
+        lp.style.setProperty('--vdi-accent', accent);
+      }
+      
+      var sp = document.getElementById('vdi-swallow-backdrop');
+      if (sp) {
+        sp.style.setProperty('--vdi-accent', accent);
+        sp.style.setProperty('--vdi-glow', glow);
       }
     }
 
@@ -382,6 +432,9 @@ VDI.UI = (function() {
       var svg = VDI.Core.getPlayIcon(playing);
       if ($('vdi-pp')) $('vdi-pp').innerHTML = svg;
       if ($('vdi-col-icon')) $('vdi-col-icon').innerHTML = svg;
+      
+
+
       if (playing) island.classList.add('vdi-is-playing');
       else island.classList.remove('vdi-is-playing');
     }
@@ -389,7 +442,14 @@ VDI.UI = (function() {
     // Main UI update
     var manuallyClosed = false;
 
+    var lastSavedActivePage = null;
     function updateUI() {
+      if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
+        if (state.activePage !== lastSavedActivePage) {
+          lastSavedActivePage = state.activePage;
+          chrome.storage.local.set({ 'vdi_active_page': state.activePage });
+        }
+      }
       var isBrowserFs = document.getElementById('browser') && document.getElementById('browser').classList.contains('fullscreen');
       
       var onYTM = opts.isVivaldi ? state.isMusicApp : window.location.hostname.includes('music.youtube.com');
@@ -474,6 +534,8 @@ VDI.UI = (function() {
       }
       $('vdi-title').textContent = state.title || 'Unknown Track';
       $('vdi-artist').textContent = state.artist || 'Unknown Artist';
+      
+
 
       if ($('vdi-shuffle')) {
         var canShuffle = (platform === 'apple' || platform === 'spotify' || platform === 'ytmusic');
@@ -590,31 +652,39 @@ VDI.UI = (function() {
     }
 
     function updateLyricsPanelPosition() {
-      var lyr = $('vdi-lyrics-panel');
-      if (!lyr || !state.lyricsOn) return;
-      
       var r = island.getBoundingClientRect();
       var islandTop = r.top;
       var islandLeft = r.left + (r.width / 2);
-      var expH = 152;
-      
       var ch = window.innerHeight;
-      
-      // Horizontal: center with island (left is already centered via transform)
-      lyr.style.left = islandLeft + 'px';
-      
-      // Vertical: flip based on screen half
-      if (islandTop > ch / 2 - (expH / 2)) {
-        // Bottom half: put above
-        lyr.style.top = 'auto';
-        lyr.style.bottom = (ch - islandTop + 16) + 'px';
-        lyr.style.maxHeight = Math.max(100, islandTop - 32) + 'px';
-      } else {
-        // Top half: put below the fully expanded island
-        var islandBottom = islandTop + expH;
-        lyr.style.bottom = 'auto';
-        lyr.style.top = (islandBottom + 16) + 'px';
-        lyr.style.maxHeight = Math.max(100, ch - islandBottom - 32) + 'px';
+      var expH = 152;
+      var isBottomHalf = (islandTop > ch / 2 - (expH / 2));
+
+      var lyr = $('vdi-lyrics-panel');
+      if (lyr && state.lyricsOn) {
+        lyr.style.left = islandLeft + 'px';
+        if (isBottomHalf) {
+          lyr.style.top = 'auto';
+          lyr.style.bottom = (ch - islandTop + 16) + 'px';
+          lyr.style.maxHeight = Math.max(100, islandTop - 32) + 'px';
+        } else {
+          var islandBottom = islandTop + expH;
+          lyr.style.bottom = 'auto';
+          lyr.style.top = (islandBottom + 16) + 'px';
+          lyr.style.maxHeight = Math.max(100, ch - islandBottom - 32) + 'px';
+        }
+      }
+
+      var tasksPanel = $('vdi-tasks-panel');
+      if (tasksPanel && tasksPanel.classList.contains('show')) {
+        tasksPanel.style.left = islandLeft + 'px';
+        if (isBottomHalf) {
+          tasksPanel.style.top = 'auto';
+          tasksPanel.style.bottom = (ch - islandTop + 16) + 'px';
+        } else {
+          var islandBottom2 = islandTop + expH;
+          tasksPanel.style.bottom = 'auto';
+          tasksPanel.style.top = (islandBottom2 + 16) + 'px';
+        }
       }
     }
 
@@ -1001,6 +1071,9 @@ VDI.UI = (function() {
         
         var sp = stgInner;
         if (sp && sp.classList.contains('show')) return; // Never collapse if settings are open
+
+        var tp = $('vdi-tasks-panel');
+        if (tp && tp.classList.contains('show')) return; // Never collapse if tasks are open
         
         state.isIdle = true;
         island.classList.add('vdi-idle');
@@ -1009,6 +1082,7 @@ VDI.UI = (function() {
 
     // Expand/collapse
     function handleMouseEnter() {
+      isMouseOverIsland = true;
       clearTimeout(colTimer);
       if (state.isIdle) {
         state.isIdle = false;
@@ -1040,6 +1114,7 @@ VDI.UI = (function() {
     }
 
     function handleMouseLeave() {
+      isMouseOverIsland = false;
       if (isDragging) return;
       clearTimeout(colTimer);
       clearTimeout(ttTimer);
@@ -1058,6 +1133,10 @@ VDI.UI = (function() {
           state.lyricsOn = false;
           $('vdi-lyr-btn').classList.remove('active');
           lyrPanel.classList.remove('show');
+        }
+        if (typeof isTasksPanelOpen !== 'undefined' && isTasksPanelOpen) {
+          if (typeof toggleTasksPanel === 'function') toggleTasksPanel(false);
+          else if ($('vdi-tasks-panel')) $('vdi-tasks-panel').classList.remove('show');
         }
         // Fallback to music if focus is idle
         if (!focusState || focusState.phase === 'idle') {
@@ -1162,9 +1241,7 @@ VDI.UI = (function() {
         island.style.setProperty('top', newTop + 'px', 'important');
         island.style.setProperty('transform', 'translateX(-50%)', 'important');
         
-        if (state.lyricsOn) {
-          updateLyricsPanelPosition();
-        }
+        updateLyricsPanelPosition();
         updateSettingsPanelPosition();
       });
 
@@ -1298,7 +1375,13 @@ VDI.UI = (function() {
         toggleStudy.addEventListener('change', function(e) {
           if (e.target.checked) {
              setTimeout(function() {
-                chrome.runtime.sendMessage({ type: 'VDI_FOCUS_START', workMin: 25, strictMode: false });
+                if (chrome && chrome.storage && chrome.storage.local) {
+                  chrome.storage.local.get({ glance_focus_strict: true }, function(res) {
+                    chrome.runtime.sendMessage({ type: 'VDI_FOCUS_START', workMin: 25, strictMode: res.glance_focus_strict });
+                  });
+                } else {
+                  chrome.runtime.sendMessage({ type: 'VDI_FOCUS_START', workMin: 25, strictMode: true });
+                }
                 // Ensure the toggle is reset in case we drop back to this view
                 e.target.checked = false;
              }, 300);
@@ -1314,7 +1397,13 @@ VDI.UI = (function() {
           } else if (focusState && !focusState.running && focusState.phase !== 'idle' && focusState.phase !== 'waiting') {
             chrome.runtime.sendMessage({ type: 'VDI_FOCUS_RESUME' });
           } else {
-            chrome.runtime.sendMessage({ type: 'VDI_FOCUS_START', workMin: 25, strictMode: false });
+            if (chrome && chrome.storage && chrome.storage.local) {
+              chrome.storage.local.get({ glance_focus_strict: true }, function(res) {
+                chrome.runtime.sendMessage({ type: 'VDI_FOCUS_START', workMin: 25, strictMode: res.glance_focus_strict });
+              });
+            } else {
+              chrome.runtime.sendMessage({ type: 'VDI_FOCUS_START', workMin: 25, strictMode: true });
+            }
           }
         });
       }
@@ -1369,8 +1458,9 @@ VDI.UI = (function() {
       if (stgBtn && stgPanel) {
         stgBtn.addEventListener('click', function(e) {
           e.stopPropagation();
-          if (state.lyricsOn && !stgInner.classList.contains('show')) {
-            $('vdi-lyr-btn').click(); // close lyrics
+          if (!stgInner.classList.contains('show')) {
+            if (state.lyricsOn) $('vdi-lyr-btn').click();
+            if (isTasksPanelOpen) toggleTasksPanel(false);
           }
           stgInner.classList.toggle('show');
           if (stgInner.classList.contains('show')) {
@@ -1475,7 +1565,7 @@ VDI.UI = (function() {
           if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
             chrome.storage.local.set({ 'vdi_loc_x': left, 'vdi_loc_y': top, 'vdi_transform': transform });
           }
-          if (state.lyricsOn) updateLyricsPanelPosition();
+          updateLyricsPanelPosition();
           updateSettingsPanelPosition();
           updateTooltipPosition();
         };
@@ -1557,13 +1647,18 @@ VDI.UI = (function() {
 
       $('vdi-lyr-btn').addEventListener('click', function(e) {
         e.stopPropagation();
-        if (typeof stgPanel !== 'undefined' && stgPanel && stgInner.classList.contains('show')) {
-          stgInner.classList.remove('show');
-        }
+        
         state.lyricsOn = !state.lyricsOn;
         $('vdi-lyr-btn').classList.toggle('active', state.lyricsOn);
 
         if (state.lyricsOn) {
+          if (typeof stgPanel !== 'undefined' && stgPanel && stgInner.classList.contains('show')) {
+            stgInner.classList.remove('show');
+          }
+          if (isTasksPanelOpen) {
+            toggleTasksPanel(false);
+          }
+          
           lyrPanel.classList.add('show');
           updateLyricsPanelPosition();
 
@@ -1629,6 +1724,7 @@ VDI.UI = (function() {
           var centerIcon = island.querySelector('#vdi-focus-icon');
           if (centerIcon && focusState.lastPhase !== focusState.phase + '_' + focusState.running) {
              centerIcon.innerHTML = getCenterIcon(focusState.phase, focusState.running);
+
              focusState.lastPhase = focusState.phase + '_' + focusState.running;
           }
 
@@ -1660,12 +1756,15 @@ VDI.UI = (function() {
             var sec = secs % 60;
             var t = min + ':' + ('0' + sec).slice(-2);
             
-            if (focusState.lastText !== t || focusState.lastPhaseText !== phaseText || focusState.lastTitleText !== titleText) {
+            var displayPhase = phaseText;
+            if (!displayPhase) displayPhase = currentActiveTaskText || 'Stay focused';
+            
+            if (focusState.lastText !== t || focusState.lastPhaseText !== displayPhase || focusState.lastTitleText !== titleText) {
               if (timeEl) timeEl.textContent = t;
-              if (statusEl) statusEl.textContent = phaseText;
+              if (statusEl) statusEl.textContent = displayPhase;
               if (titleEl) titleEl.textContent = titleText;
               focusState.lastText = t;
-              focusState.lastPhaseText = phaseText;
+              focusState.lastPhaseText = displayPhase;
               focusState.lastTitleText = titleText;
             }
 
@@ -1673,6 +1772,7 @@ VDI.UI = (function() {
             rings.forEach(function(r) { r.style.setProperty('--progress', progress); });
             var finalSubtitle = phaseText ? phaseText : titleText;
             displayText = t + ' \u2014 ' + finalSubtitle;
+
           }
 
           // If active page is focus, override the pill text dynamically
@@ -1752,7 +1852,34 @@ VDI.UI = (function() {
          else colFocus.classList.remove('running');
       }
       
+      var stgFocusBtn = stgPanel ? stgPanel.shadowRoot.getElementById('vdi-stg-focus-btn') : null;
+      if (stgFocusBtn) {
+        if (focusState.phase !== 'idle') {
+          stgFocusBtn.style.opacity = '0.4';
+          stgFocusBtn.style.pointerEvents = 'none';
+          stgFocusBtn.textContent = 'Locked';
+        } else {
+          stgFocusBtn.style.opacity = '1';
+          stgFocusBtn.style.pointerEvents = 'auto';
+          stgFocusBtn.textContent = 'Manage';
+        }
+      }
+      
       updateUI();
+      checkBlocking();
+      
+      // Guard: DOM changes above (outerHTML replacement of SVG icons) can trigger
+      // synthetic mouseleave events. If the mouse is still physically over the island,
+      // cancel any pending collapse and re-expand.
+      if (isMouseOverIsland) {
+        clearTimeout(colTimer);
+        island.classList.add('vdi-expanded');
+        if (state.isIdle) {
+          state.isIdle = false;
+          island.classList.remove('vdi-idle');
+        }
+        resetIdle();
+      }
     }
 
     function setState(newState) {
@@ -1819,6 +1946,197 @@ VDI.UI = (function() {
 
     // Initialize
     function init() {
+    // ─── TASKS PANEL LOGIC ───
+    var tasksPanel = document.getElementById('vdi-tasks-panel');
+    var tasksList = document.getElementById('vdi-tasks-list');
+    var tasksInput = document.getElementById('vdi-task-input');
+    var tasksAddBtn = document.getElementById('vdi-add-task-btn');
+    var closeTasksBtn = document.getElementById('vdi-close-tasks');
+
+    toggleTasksPanel = function(forceState) {
+      if (typeof forceState !== 'undefined') isTasksPanelOpen = forceState;
+      else isTasksPanelOpen = !isTasksPanelOpen;
+      
+      var tp = document.getElementById('vdi-tasks-panel');
+      
+      if (isTasksPanelOpen) {
+        if (state.lyricsOn) $('vdi-lyr-btn').click();
+        if (stgInner && stgInner.classList.contains('show')) $('vdi-settings-btn').click();
+        
+        loadIslandTasks();
+        if (tp) {
+          tp.classList.add('show');
+          // Delegate positioning to updateLyricsPanelPosition which handles
+          // vertical flip, maxHeight clamping, and scroll-independent placement
+          requestAnimationFrame(updateLyricsPanelPosition);
+        }
+        state.activePage = 'focus';
+        updateUI();
+      } else {
+        if (tp) tp.classList.remove('show');
+        if (!focusState.running) {
+          state.activePage = 'media';
+          updateUI();
+        }
+      }
+    };
+
+    function renderIslandTasks(tasks) {
+      if (!tasksList) return;
+      tasksList.innerHTML = '';
+      
+      // Update active task text for the focus timer
+      var activeTask = tasks.find(function(t) { return t.active && !t.completed; });
+      if (!activeTask) {
+        var uncompleted = tasks.filter(function(t) { return !t.completed; });
+        var w = {high:3, medium:2, low:1};
+        uncompleted.sort(function(a,b) { return w[b.priority] - w[a.priority]; });
+        if (uncompleted.length > 0) activeTask = uncompleted[0];
+      }
+      currentActiveTaskText = activeTask ? activeTask.text : '';
+
+      if (tasks.length === 0) {
+        tasksList.innerHTML = '<div style="color:rgba(255,255,255,0.4);font-size:12px;text-align:center;padding:20px 0;">No active tasks.</div>';
+        return;
+      }
+      const sorted = [...tasks].sort((a,b) => {
+        if(a.completed !== b.completed) return a.completed ? 1 : -1;
+        const w = {high:3, medium:2, low:1};
+        return w[b.priority] - w[a.priority];
+      });
+      sorted.forEach(t => {
+        var el = document.createElement('div');
+        el.className = 'vdi-task-item' + (t.completed ? ' completed' : '');
+        if (t === activeTask) el.style.border = '1px solid var(--vdi-accent)';
+        
+        var prioStyle = '';
+        if(t.priority==='high') prioStyle='color:#ef4444;background:rgba(239,68,68,0.15);';
+        else if(t.priority==='medium') prioStyle='color:#f59e0b;background:rgba(245,158,11,0.15);';
+        else prioStyle='color:#10b981;background:rgba(16,185,129,0.15);';
+        
+        el.innerHTML = `
+          <input type="checkbox" class="vdi-task-checkbox" ${t.completed ? 'checked' : ''} data-id="${t.id}">
+          <div class="vdi-task-text">${t.text}</div>
+          <div class="vdi-task-prio" style="${prioStyle}">${t.priority}</div>
+          <button class="vdi-task-del" data-id="${t.id}"><svg viewBox="0 0 24 24" width="12" height="12" fill="none" stroke="currentColor" stroke-width="2"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        `;
+        
+        el.querySelector('.vdi-task-checkbox').addEventListener('change', function(e) {
+          if (!chrome || !chrome.storage || !chrome.storage.local) return;
+          chrome.storage.local.get(['vdiTasks'], function(res) {
+            var curr = res.vdiTasks || [];
+            var target = curr.find(x => x.id === t.id);
+            if(target) { target.completed = e.target.checked; chrome.storage.local.set({vdiTasks: curr}, () => loadIslandTasks()); }
+          });
+        });
+        el.querySelector('.vdi-task-del').addEventListener('click', function() {
+          if (!chrome || !chrome.storage || !chrome.storage.local) return;
+          chrome.storage.local.get(['vdiTasks'], function(res) {
+            var curr = res.vdiTasks || [];
+            curr = curr.filter(x => x.id !== t.id);
+            chrome.storage.local.set({vdiTasks: curr}, () => loadIslandTasks());
+          });
+        });
+        
+        el.addEventListener('contextmenu', function(e) {
+          e.preventDefault();
+          if (!chrome || !chrome.storage || !chrome.storage.local) return;
+          chrome.storage.local.get(['vdiTasks'], function(res) {
+            var curr = res.vdiTasks || [];
+            var target = curr.find(x => x.id === t.id);
+            if(target) { 
+              const cycle = { low: 'medium', medium: 'high', high: 'low' };
+              target.priority = cycle[target.priority] || 'medium';
+              chrome.storage.local.set({vdiTasks: curr}, () => loadIslandTasks()); 
+            }
+          });
+        });
+
+        // Middle-click to Set Active
+        el.addEventListener('auxclick', function(e) {
+          if (e.button !== 1) return; // Only middle click
+          e.preventDefault();
+          if (!chrome || !chrome.storage || !chrome.storage.local) return;
+          chrome.storage.local.get(['vdiTasks'], function(res) {
+            var curr = res.vdiTasks || [];
+            curr.forEach(x => x.active = false);
+            var target = curr.find(x => x.id === t.id);
+            if(target) target.active = true;
+            chrome.storage.local.set({vdiTasks: curr}, () => loadIslandTasks());
+          });
+        });
+
+        
+        
+        tasksList.appendChild(el);
+      });
+    }
+
+    function loadIslandTasks() {
+      if (!chrome || !chrome.storage || !chrome.storage.local) return;
+      chrome.storage.local.get(['vdiTasks'], function(res) {
+        renderIslandTasks(res.vdiTasks || []);
+      });
+    }
+
+    var tasksBtns = document.querySelectorAll('.vdi-tasks-btn-el');
+    if (tasksBtns.length > 0) {
+      tasksBtns.forEach(btn => {
+        btn.addEventListener('click', function(e) {
+          e.stopPropagation();
+          toggleTasksPanel();
+        });
+      });
+    }
+    
+    if (closeTasksBtn && tasksPanel) {
+      closeTasksBtn.addEventListener('click', () => { toggleTasksPanel(false); });
+    }
+    
+    if (tasksPanel) {
+      tasksPanel.addEventListener('mouseenter', function() {
+        clearTimeout(colTimer);
+        resetIdle();
+        island.classList.add('vdi-expanded');
+      });
+      tasksPanel.addEventListener('mouseleave', function() {
+        handleMouseLeave();
+      });
+    }
+    
+    function addNewTask() {
+      if(!tasksInput) return;
+      var txt = tasksInput.value.trim();
+      if(!txt) return;
+      var n = { id: 'task_'+Date.now(), text: txt, completed: false, priority: 'medium' };
+      if (!chrome || !chrome.storage || !chrome.storage.local) return;
+      chrome.storage.local.get(['vdiTasks'], function(res) {
+        var curr = res.vdiTasks || [];
+        curr.push(n);
+        chrome.storage.local.set({vdiTasks: curr}, () => {
+          if(tasksInput) tasksInput.value = '';
+          loadIslandTasks();
+        });
+      });
+    }
+    if (tasksAddBtn) tasksAddBtn.addEventListener('click', addNewTask);
+    if (tasksInput) tasksInput.addEventListener('keydown', (e) => { if(e.key === 'Enter') addNewTask(); });
+
+    var stgTasksBtn = stgPanel ? stgPanel.shadowRoot.getElementById('vdi-stg-tasks-btn') : null;
+    if (stgTasksBtn) {
+      stgTasksBtn.addEventListener('click', function() {
+        if (stgPanel) stgPanel.classList.remove('show');
+        isSettingsOpen = false;
+        isTasksPanelOpen = true;
+        loadIslandTasks();
+        if (tasksPanel) {
+          tasksPanel.classList.add('show');
+          var r = island.getBoundingClientRect();
+          tasksPanel.style.top = (r.bottom + 12) + 'px';
+        }
+      });
+    }
+
       function applyPos(x, y, tf) {
         if (!x || !y) return;
         var midX = window.innerWidth / 2;
@@ -1870,14 +2188,15 @@ VDI.UI = (function() {
         island.style.setProperty('left', newLeftCenter + 'px', 'important');
         island.style.setProperty('top', newTop + 'px', 'important');
         
-        if (state.lyricsOn) {
-          updateLyricsPanelPosition();
-        }
+        updateLyricsPanelPosition();
         updateSettingsPanelPosition();
       });
       if (typeof chrome !== 'undefined' && chrome.storage && chrome.storage.local) {
-        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'lyricsOffset', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3'], function(res) {
+        chrome.storage.local.get(['vdi_loc_x', 'vdi_loc_y', 'vdi_transform', 'hideYouTube', 'hideYouTubeMusic', 'hideSpotify', 'hideAppleMusic', 'enableLyrics', 'lyricsOffset', 'freePlacement', 'amoledBlack', 'vdi_cfg_seenTooltip3', 'vdi_active_page'], function(res) {
           applyPos(res.vdi_loc_x, res.vdi_loc_y, res.vdi_transform);
+          if (res.vdi_active_page) {
+            state.activePage = res.vdi_active_page;
+          }
           if (res.hideYouTube !== undefined) settings.hideYouTube = res.hideYouTube;
           if (res.hideYouTubeMusic !== undefined) settings.hideYouTubeMusic = res.hideYouTubeMusic;
           
@@ -1900,6 +2219,7 @@ VDI.UI = (function() {
 
           // Start loop after settings load to prevent visual glitches
           bindEvents();
+          loadIslandTasks();
           startTick();
           setupFullscreen();
           resetIdle();
@@ -1907,6 +2227,14 @@ VDI.UI = (function() {
 
         chrome.storage.onChanged.addListener(function(changes, namespace) {
           if (namespace === 'local') {
+            if (changes.vdiTasks) {
+              loadIslandTasks();
+            }
+            if (changes.vdi_active_page) {
+              state.activePage = changes.vdi_active_page.newValue;
+              lastSavedActivePage = state.activePage;
+              updateUI();
+            }
             if (changes.hideYouTube) settings.hideYouTube = changes.hideYouTube.newValue;
             if (changes.hideYouTubeMusic) settings.hideYouTubeMusic = changes.hideYouTubeMusic.newValue;
             if (changes.amoledBlack) {
@@ -1956,6 +2284,125 @@ VDI.UI = (function() {
       }
     }
 
+    
+    
+    var swallowOverlay = null;
+    function triggerSwallowOverlay() {
+      if (swallowOverlay) return;
+      document.body.style.overflow = 'hidden';
+      
+      swallowOverlay = document.createElement('div');
+      swallowOverlay.id = 'vdi-swallow-backdrop';
+      swallowOverlay.style.position = 'fixed';
+      swallowOverlay.style.top = '0';
+      swallowOverlay.style.left = '0';
+      swallowOverlay.style.width = '100vw';
+      swallowOverlay.style.height = '100vh';
+      swallowOverlay.style.background = 'radial-gradient(circle at center, var(--vdi-glow, rgba(99,102,241,0.2)) 0%, rgba(0,0,0,0.95) 100%)';
+      swallowOverlay.style.zIndex = '2147483645'; // Just underneath the actual island (which is 2147483647)
+      swallowOverlay.style.opacity = '0';
+      swallowOverlay.style.transition = 'opacity 0.8s ease';
+      
+      // Close Tab Button (placed at the bottom)
+      var closeBtn = document.createElement('button');
+      closeBtn.style.position = 'absolute';
+      closeBtn.style.bottom = '80px';
+      closeBtn.style.left = '50%';
+      closeBtn.style.transform = 'translateX(-50%)';
+      closeBtn.style.padding = '12px 28px';
+      closeBtn.style.background = 'rgba(255,255,255,0.1)';
+      closeBtn.style.border = '1px solid rgba(255,255,255,0.2)';
+      closeBtn.style.borderRadius = '99px';
+      closeBtn.style.color = '#fff';
+      closeBtn.style.fontSize = '14px';
+      closeBtn.style.fontWeight = '600';
+      closeBtn.style.cursor = 'pointer';
+      closeBtn.style.backdropFilter = 'blur(10px)';
+      closeBtn.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+      closeBtn.textContent = 'Close this Tab';
+      closeBtn.onclick = function() {
+        chrome.runtime.sendMessage({ type: 'VDI_CLOSE_TAB' });
+      };
+      swallowOverlay.appendChild(closeBtn);
+
+      if (!focusState.strictMode) {
+        var bypassBtn = document.createElement('button');
+        bypassBtn.style.position = 'absolute';
+        bypassBtn.style.top = '32px';
+        bypassBtn.style.right = '40px';
+        bypassBtn.style.background = 'transparent';
+        bypassBtn.style.border = 'none';
+        bypassBtn.style.color = 'rgba(255,255,255,0.3)';
+        bypassBtn.style.fontSize = '14px';
+        bypassBtn.style.fontWeight = '500';
+        bypassBtn.style.cursor = 'pointer';
+        bypassBtn.style.textDecoration = 'underline';
+        bypassBtn.style.fontFamily = '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif';
+        bypassBtn.style.transition = 'color 0.2s ease';
+        bypassBtn.onmouseover = function() { this.style.color = 'rgba(255,255,255,0.8)'; };
+        bypassBtn.onmouseout = function() { this.style.color = 'rgba(255,255,255,0.3)'; };
+        bypassBtn.textContent = 'I need this for work (Bypass)';
+        bypassBtn.onclick = function() {
+          chrome.runtime.sendMessage({ type: 'VDI_FOCUS_BYPASS', site: window.location.hostname }, function() {
+            window.location.reload();
+          });
+        };
+        swallowOverlay.appendChild(bypassBtn);
+      }
+
+      document.body.appendChild(swallowOverlay);
+      
+      // Transform the ACTUAL island
+      if (island) {
+        island.classList.add('vdi-swallowed');
+      }
+
+      // Force reflow
+      void swallowOverlay.offsetWidth;
+      swallowOverlay.style.opacity = '1';
+    }
+
+    function removeSwallowOverlay() {
+      if (swallowOverlay) {
+        swallowOverlay.style.opacity = '0';
+        setTimeout(function() {
+          if (swallowOverlay && swallowOverlay.parentNode) {
+            swallowOverlay.parentNode.removeChild(swallowOverlay);
+          }
+          swallowOverlay = null;
+          document.body.style.overflow = '';
+        }, 800);
+      }
+      if (island) {
+        island.classList.remove('vdi-swallowed');
+      }
+    }
+
+    function checkBlocking() {
+      if (focusState.phase === 'idle' || (!focusState.running && focusState.phase !== 'waiting')) {
+        removeSwallowOverlay();
+        return;
+      }
+      if (typeof chrome === 'undefined' || !chrome.storage) return;
+      chrome.storage.local.get(['glance_focus_blocklist'], function(res) {
+        var list = res.glance_focus_blocklist || [];
+        var h = window.location.hostname;
+        var isBlocked = list.some(function(s) { return h === s || h.endsWith('.' + s); });
+        
+        if (isBlocked) {
+          chrome.runtime.sendMessage({ type: 'VDI_FOCUS_REQUEST' }, function(focus) {
+            if (focus && focus.bypassedSites && focus.bypassedSites.indexOf(h) !== -1) {
+              removeSwallowOverlay();
+            } else {
+              triggerSwallowOverlay();
+            }
+          });
+        } else {
+          removeSwallowOverlay();
+        }
+      });
+    }
+
     return {
       init: init,
       setState: setState,
@@ -1970,7 +2417,7 @@ VDI.UI = (function() {
     createIsland: createIsland,
     createSettingsPanel: createSettingsPanel,
     createSettingsTooltip: createSettingsTooltip,
-    createLyricsPanel: createLyricsPanel,
+    createLyricsPanel: createLyricsPanel,    createTasksPanel: createTasksPanel,
     createController: createController
   };
 })();

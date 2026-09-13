@@ -2,101 +2,313 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Site Blocked - Glance</title>
+  <title>Stay Focused — Glance</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <style>
-    body {
-      margin: 0;
-      padding: 0;
-      background-color: #09090b;
+    *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+
+    :root {
+      --accent:    #818cf8;
+      --accent-r:  129;
+      --accent-g:  140;
+      --accent-b:  248;
+      --glow:      rgba(129,140,248,0.18);
+      --glow-soft: rgba(129,140,248,0.08);
+      --dark:      #080810;
+    }
+
+    html, body {
+      width: 100%; height: 100%;
+      background: var(--dark);
       color: #fff;
-      font-family: system-ui, -apple-system, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      min-height: 100vh;
-      text-align: center;
+      font-family: 'Inter', system-ui, sans-serif;
+      -webkit-font-smoothing: antialiased;
+      overflow: hidden;
     }
-    .container {
-      max-width: 400px;
-      padding: 40px;
-      background: #18181b;
-      border-radius: 24px;
-      box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+
+    /* ── Page fades in ── */
+    body { animation: pageFade 0.5s ease both; }
+    @keyframes pageFade {
+      from { opacity: 0; }
+      to   { opacity: 1; }
     }
-    .icon {
-      width: 64px;
-      height: 64px;
-      margin: 0 auto 24px auto;
-      color: #ff3366; /* default accent */
-      animation: pulse 2s infinite;
+
+    /* ── Layered ambient glows ── */
+    .glow-layer {
+      position: fixed;
+      border-radius: 50%;
+      pointer-events: none;
+      top: 50%; left: 50%;
     }
-    .icon svg {
+    /* Outer diffuse glow */
+    .glow-outer {
+      width: 900px; height: 900px;
+      background: radial-gradient(circle, var(--glow-soft) 0%, transparent 65%);
+      transform: translate(-50%, -50%);
+      animation: breatheOuter 8s ease-in-out infinite;
+    }
+    /* Inner focused glow */
+    .glow-inner {
+      width: 500px; height: 500px;
+      background: radial-gradient(circle, var(--glow) 0%, transparent 65%);
+      transform: translate(-50%, -50%);
+      animation: breatheInner 5s ease-in-out infinite;
+    }
+    @keyframes breatheOuter {
+      0%, 100% { opacity: 0.7; transform: translate(-50%, -50%) scale(1); }
+      50%       { opacity: 1.0; transform: translate(-50%, -50%) scale(1.06); }
+    }
+    @keyframes breatheInner {
+      0%, 100% { opacity: 0.5; transform: translate(-50%, -50%) scale(1); }
+      50%       { opacity: 0.9; transform: translate(-50%, -50%) scale(1.12); }
+    }
+
+    /* ── Page layout ── */
+    .page {
+      position: relative; z-index: 1;
+      width: 100%; height: 100%;
+      display: flex; flex-direction: column;
+      align-items: center; justify-content: center;
+    }
+
+    /* ── Glass card ── */
+    .island-card {
+      background: linear-gradient(
+        160deg,
+        rgba(255,255,255,0.055) 0%,
+        rgba(255,255,255,0.025) 100%
+      );
+      border: 1px solid rgba(255,255,255,0.09);
+      border-radius: 36px;
+      padding: 36px 40px 32px;
+      width: 400px;
+      backdrop-filter: blur(48px) saturate(1.4);
+      -webkit-backdrop-filter: blur(48px) saturate(1.4);
+      box-shadow:
+        0 0 0 1px rgba(255,255,255,0.04) inset,
+        0 1px 0 rgba(255,255,255,0.1) inset,
+        0 24px 80px rgba(0,0,0,0.7),
+        0 0 120px var(--glow-soft);
+      display: flex; flex-direction: column;
+      align-items: center; gap: 22px;
+
+      /* Entrance: slides up and fades in */
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.1s both;
+    }
+    @keyframes cardIn {
+      from { opacity: 0; transform: translateY(28px) scale(0.96); }
+      to   { opacity: 1; transform: translateY(0) scale(1); }
+    }
+
+    /* ── Countdown ring ── */
+    .ring-wrap {
+      position: relative;
+      width: 136px; height: 136px;
+      display: flex; align-items: center; justify-content: center;
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.2s both;
+    }
+    .ring-svg {
+      position: absolute; inset: 0;
+      width: 100%; height: 100%;
+      transform: rotate(-90deg);
+    }
+    .ring-track {
+      fill: none;
+      stroke: rgba(255,255,255,0.05);
+      stroke-width: 3.5;
+    }
+    .ring-progress {
+      fill: none;
+      stroke: var(--accent);
+      stroke-width: 3.5;
+      stroke-linecap: round;
+      stroke-dasharray: 363.17; /* 2π × 57.8 */
+      stroke-dashoffset: 363.17; /* start empty, animate in */
+      transition: stroke-dashoffset 0.9s cubic-bezier(0.16,1,0.3,1),
+                  stroke 0.8s ease;
+      filter: drop-shadow(0 0 6px var(--accent)) drop-shadow(0 0 14px var(--glow));
+    }
+    .ring-inner {
+      position: relative; z-index: 1;
+      display: flex; flex-direction: column;
+      align-items: center; gap: 1px;
+    }
+    .ring-phase {
+      font-size: 9px; font-weight: 700;
+      text-transform: uppercase; letter-spacing: 0.14em;
+      color: var(--accent);
+      transition: color 0.8s ease;
+    }
+    .ring-time {
+      font-size: 32px; font-weight: 750;
+      letter-spacing: -0.04em;
+      color: #fff;
+      font-variant-numeric: tabular-nums;
+    }
+    .ring-session {
+      font-size: 9px; font-weight: 500;
+      color: rgba(255,255,255,0.3);
+      letter-spacing: 0.04em;
+    }
+
+    /* ── Divider ── */
+    .divider {
       width: 100%;
-      height: 100%;
+      height: 1px;
+      background: linear-gradient(to right, transparent, rgba(255,255,255,0.07), transparent);
     }
-    h1 {
-      margin: 0 0 8px 0;
-      font-size: 24px;
-      font-weight: 600;
+
+    /* ── Info section ── */
+    .info {
+      text-align: center;
+      display: flex; flex-direction: column; gap: 5px;
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.25s both;
     }
-    p {
-      color: #a1a1aa;
-      margin: 0 0 32px 0;
-      line-height: 1.5;
+    .info-site {
+      font-size: 11px; font-weight: 600;
+      letter-spacing: 0.1em; text-transform: uppercase;
+      color: rgba(255,255,255,0.18);
     }
-    .site-name {
-      color: #fff;
-      font-weight: 600;
+    .info-title {
+      font-size: 21px; font-weight: 800;
+      letter-spacing: -0.03em;
+      background: linear-gradient(to bottom, #fff 60%, rgba(255,255,255,0.6));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+    .info-sub {
+      font-size: 13px; font-weight: 400;
+      color: rgba(255,255,255,0.35);
+    }
+
+    /* ── Active task ── */
+    .task-line {
+      width: 100%;
+      background: rgba(255,255,255,0.035);
+      border: 1px solid rgba(255,255,255,0.07);
+      border-radius: 12px;
+      padding: 11px 14px;
+      display: none;
+      align-items: center; gap: 10px;
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.3s both;
+    }
+    .task-dot {
+      width: 7px; height: 7px; border-radius: 50%;
+      background: var(--accent);
+      flex-shrink: 0;
+      box-shadow: 0 0 8px var(--accent);
+      transition: background 0.8s ease, box-shadow 0.8s ease;
+    }
+    .task-text {
+      font-size: 12px; font-weight: 500;
+      color: rgba(255,255,255,0.6);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+
+    /* ── Buttons ── */
     .btn-row {
-      display: flex;
-      flex-direction: column;
-      gap: 12px;
+      display: flex; gap: 10px; width: 100%;
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.35s both;
     }
     .btn {
-      padding: 12px 24px;
-      border-radius: 12px;
-      border: none;
-      font-size: 14px;
-      font-weight: 600;
+      flex: 1; padding: 14px 0;
+      border-radius: 14px; border: none;
+      font-family: inherit; font-size: 14px; font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     }
-    .btn-primary {
-      background: #fff;
-      color: #09090b;
+    .btn-close {
+      background: rgba(255,255,255,0.09);
+      border: 1px solid rgba(255,255,255,0.1);
+      color: #fff;
     }
-    .btn-primary:hover {
-      background: #e4e4e7;
-      transform: translateY(-2px);
+    .btn-close:hover {
+      background: rgba(255,255,255,0.15);
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(0,0,0,0.4);
     }
-    .btn-secondary {
+    .btn-close:active { transform: scale(0.98); }
+    .btn-bypass {
       background: transparent;
-      color: #71717a;
+      border: 1px solid rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.25);
+      transition: all 0.2s ease;
     }
-    .btn-secondary:hover {
-      color: #a1a1aa;
+    .btn-bypass:hover {
+      color: rgba(255,255,255,0.55);
+      border-color: rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.04);
     }
-    @keyframes pulse {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.05); }
+    .btn-bypass:active { transform: scale(0.98); }
+
+    /* ── Glance branding ── */
+    .brand {
+      display: flex; align-items: center; gap: 6px;
+      opacity: 0.3;
+      transition: opacity 0.2s ease;
+      animation: cardIn 0.7s cubic-bezier(0.16, 1, 0.3, 1) 0.45s both;
+    }
+    .brand:hover { opacity: 0.6; }
+    .brand-dot {
+      width: 6px; height: 6px; border-radius: 50%;
+      background: var(--accent);
+      box-shadow: 0 0 6px var(--accent);
+    }
+    .brand-name {
+      font-size: 11px; font-weight: 700;
+      letter-spacing: 0.06em;
+      color: #fff;
+      text-transform: uppercase;
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <div class="icon" id="accent-icon">
-      <svg viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 2C9.243 2 7 4.243 7 7v3H6c-1.103 0-2 .897-2 2v8c0 1.103.897 2 2 2h12c1.103 0 2-.897 2-2v-8c0-1.103-.897-2-2-2h-1V7c0-2.757-2.243-5-5-5zm6 10v8H6v-8h12zm-9-2V7c0-1.654 1.346-3 3-3s3 1.346 3 3v3H9z"/>
-      </svg>
-    </div>
-    <h1>Focus Mode Active</h1>
-    <p>You blocked <span class="site-name" id="site-display">this site</span> to stay productive.</p>
-    
-    <div class="btn-row">
-      <button class="btn btn-primary" id="btn-close">Close Tab</button>
-      <button class="btn btn-secondary" id="btn-bypass" style="display:none;">I need this for work (Bypass)</button>
+  <!-- Ambient glow layers -->
+  <div class="glow-layer glow-outer" id="glow-outer"></div>
+  <div class="glow-layer glow-inner" id="glow-inner"></div>
+
+  <div class="page">
+    <div class="island-card">
+
+      <div class="ring-wrap">
+        <svg class="ring-svg" viewBox="0 0 120 120">
+          <circle class="ring-track"    cx="60" cy="60" r="57.8"/>
+          <circle class="ring-progress" cx="60" cy="60" r="57.8" id="ring-progress"/>
+        </svg>
+        <div class="ring-inner">
+          <div class="ring-phase"   id="ring-phase">Focus</div>
+          <div class="ring-time"    id="ring-time">--:--</div>
+          <div class="ring-session" id="ring-session"></div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="info">
+        <div class="info-site"  id="info-site"></div>
+        <div class="info-title">Stay focused.</div>
+        <div class="info-sub">You've got this.</div>
+      </div>
+
+      <div class="task-line" id="task-line">
+        <div class="task-dot" id="task-dot"></div>
+        <div class="task-text" id="task-text"></div>
+      </div>
+
+      <div class="btn-row">
+        <button class="btn btn-close"  id="btn-close">Close Tab</button>
+        <button class="btn btn-bypass" id="btn-bypass" style="display:none">Bypass once</button>
+      </div>
+
+      <!-- Glance branding -->
+      <div class="brand">
+        <span class="brand-dot"></span>
+        <span class="brand-name">Glance</span>
+      </div>
+
     </div>
   </div>
 

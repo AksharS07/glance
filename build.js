@@ -40,24 +40,24 @@ function buildVivaldi() {
 (function() {
   'use strict';
 
-  // Guard: only run once
-  if (document.getElementById('vdi')) return;
+  function initApp() {
+    if (document.getElementById('vdi')) return;
 
-  // Inject CSS
-  var css = document.createElement('style');
-  css.id = 'vdi-css';
-  css.textContent = VDI.Styles.generate({ islandTop: 54 });
-  document.head.appendChild(css);
+    var css = document.createElement('style');
+    css.id = 'vdi-css';
+    css.textContent = VDI.Styles.generate({ islandTop: 54 });
+    document.head.appendChild(css);
 
-  // Create UI
-  var island = VDI.UI.createIsland();
-  var lyrPanel = VDI.UI.createLyricsPanel();
-  var stgPanel = VDI.UI.createSettingsPanel();
-  var stgTooltip = VDI.UI.createSettingsTooltip();
-  document.body.appendChild(island);
-  document.body.appendChild(lyrPanel);
-  document.body.appendChild(stgPanel);
-  document.body.appendChild(stgTooltip);
+    var island = VDI.UI.createIsland();
+    var lyrPanel = VDI.UI.createLyricsPanel();
+    var tskPanel = VDI.UI.createTasksPanel();
+    var stgPanel = VDI.UI.createSettingsPanel();
+    var stgTooltip = VDI.UI.createSettingsTooltip();
+    document.body.appendChild(island);
+    document.body.appendChild(lyrPanel);
+    document.body.appendChild(tskPanel);
+    document.body.appendChild(stgPanel);
+    document.body.appendChild(stgTooltip);
 
   // Platform adapter
   var platform = {
@@ -151,6 +151,9 @@ function buildVivaldi() {
   poll();
 
   console.log('[Vivaldi Glance] Loaded OK');
+  }
+
+  initApp();
 })();
 `
   ];
@@ -172,24 +175,30 @@ function buildChromeContent() {
 (function() {
   'use strict';
 
-  // Guard: only run once
-  if (document.getElementById('vdi')) return;
+  function initApp() {
+    if (document.getElementById('vdi')) return;
+    if (!document.body) {
+      setTimeout(initApp, 100);
+      return;
+    }
 
-  // Inject CSS
-  var css = document.createElement('style');
-  css.id = 'vdi-css';
-  css.textContent = VDI.Styles.generate({ islandTop: 10 });
-  document.head.appendChild(css);
+    // Inject CSS
+    var css = document.createElement('style');
+    css.id = 'vdi-css';
+    css.textContent = VDI.Styles.generate({ islandTop: 10 });
+    document.head.appendChild(css);
 
-  // Create UI
-  var island = VDI.UI.createIsland();
-  var lyrPanel = VDI.UI.createLyricsPanel();
-  var stgPanel = VDI.UI.createSettingsPanel();
-  var stgTooltip = VDI.UI.createSettingsTooltip();
-  document.body.appendChild(island);
-  document.body.appendChild(lyrPanel);
-  document.body.appendChild(stgPanel);
-  document.body.appendChild(stgTooltip);
+    // Create UI
+    var island = VDI.UI.createIsland();
+    var lyrPanel = VDI.UI.createLyricsPanel();
+    var tskPanel = VDI.UI.createTasksPanel();
+    var stgPanel = VDI.UI.createSettingsPanel();
+    var stgTooltip = VDI.UI.createSettingsTooltip();
+    document.body.appendChild(island);
+    document.body.appendChild(lyrPanel);
+    document.body.appendChild(tskPanel);
+    document.body.appendChild(stgPanel);
+    document.body.appendChild(stgTooltip);
 
   // Platform adapter (Chrome Extension)
   var platform = {
@@ -236,6 +245,9 @@ function buildChromeContent() {
     });
   }
 
+  }
+
+  initApp();
 })();
 `
   ];
