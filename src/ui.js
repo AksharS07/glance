@@ -101,17 +101,6 @@ VDI.UI = (function() {
                 '</div>' +
               '</div>' +
             '</div>' +
-            '<div id="vdi-study-hint" style="' +
-              'position:absolute;bottom:8px;left:50%;transform:translateX(-50%);' +
-              'display:none;flex-direction:column;align-items:center;gap:4px;' +
-              'pointer-events:none;' +
-            '">' +
-              '<div style="display:flex;align-items:center;gap:5px;">' +
-                '<span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);box-shadow:0 0 5px var(--vdi-accent);flex-shrink:0;"></span>' +
-                '<span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.35);flex-shrink:0;"></span>' +
-              '</div>' +
-              '<span style="font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Study Mode →</span>' +
-            '</div>' +
           '</div>' +
           '<div id="vdi-page-focus" class="vdi-page">' +
             '<div id="vdi-focus-ring-container" class="vdi-ring-hide">' +
@@ -1122,10 +1111,23 @@ VDI.UI = (function() {
       }
 
       // Study Mode hint — show once, 1.5s after first hover
-      var studyHintEl = $('vdi-study-hint');
-      if (studyHintEl && !localStorage.getItem('vdi_seen_study_hint_v2') && state.activePage === 'media') {
+      if (!localStorage.getItem('vdi_seen_study_hint_v2')) {
+        var studyHintEl = document.createElement('div');
+        studyHintEl.id = 'vdi-study-hint';
+        studyHintEl.style.cssText = 'position:fixed;z-index:2147483646;display:none;flex-direction:column;align-items:center;gap:3px;pointer-events:none;transform:translateX(-50%);';
+        studyHintEl.innerHTML =
+          '<div style="display:flex;align-items:center;gap:5px;">' +
+            '<span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);box-shadow:0 0 5px var(--vdi-accent);flex-shrink:0;"></span>' +
+            '<span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.35);flex-shrink:0;"></span>' +
+          '</div>' +
+          '<span style="font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Study Mode \u2192</span>';
+        document.body.appendChild(studyHintEl);
+
         setTimeout(function() {
           if (island.classList.contains('vdi-expanded') && state.activePage === 'media' && !localStorage.getItem('vdi_seen_study_hint_v2')) {
+            var r = island.getBoundingClientRect();
+            studyHintEl.style.left = (r.left + r.width / 2) + 'px';
+            studyHintEl.style.top = (r.bottom + 6) + 'px';
             studyHintEl.style.display = 'flex';
           }
         }, 1500);
@@ -1150,8 +1152,8 @@ VDI.UI = (function() {
             if ($('vdi-settings-btn')) $('vdi-settings-btn').style.opacity = '';
           }, 300);
         }
-        // Hide study hint if it hasn't been dismissed yet — don't persist it across sessions
-        var sh = $('vdi-study-hint');
+        // Hide study hint if it hasn't been dismissed yet
+        var sh = document.getElementById('vdi-study-hint');
         if (sh && sh.style.display !== 'none' && !localStorage.getItem('vdi_seen_study_hint_v2')) {
           sh.style.display = 'none';
         }
@@ -1358,7 +1360,7 @@ VDI.UI = (function() {
           e.preventDefault();
           if (scrollCooldown) return;
           // Dismiss study hint the moment user scrolls
-          var sh = $('vdi-study-hint');
+          var sh = document.getElementById('vdi-study-hint');
           if (sh && sh.style.display !== 'none') {
             sh.style.display = 'none';
             localStorage.setItem('vdi_seen_study_hint_v2', '1');
@@ -1395,13 +1397,6 @@ VDI.UI = (function() {
              scrollCooldown = false;
           }, 500);
         }, { passive: false });
-      }
-
-      // Dismiss study hint if island collapses before user sees it
-      var studyHint = $('vdi-study-hint');
-      var STUDY_HINT_KEY = 'vdi_seen_study_hint_v2';
-      if (studyHint) {
-        studyHint.addEventListener('click', function(e) { e.stopPropagation(); });
       }
 
       // Focus Mode Controls
