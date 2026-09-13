@@ -4,7 +4,7 @@
 <p align="center">
   <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
   &nbsp;&nbsp;
-  <a href="https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
 </p>
 
 
@@ -102,7 +102,7 @@ Works on Firefox, Zen Browser, Chrome, Edge, Brave, or any modern Chromium brows
 
 ### Install from the Store (Recommended)
 - **Firefox / Zen Browser**: Install from the [Firefox Add-ons Store](https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/).
-- **Microsoft Edge**: Install from the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/jhglafdjkeohejcgfdmcfhenniahjgpk).
+- **Microsoft Edge**: Install from the [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh).
 - **Google Chrome**: (Coming soon to the Chrome Web Store). In the meantime, use the manual installation below.
 
 ### Manual Installation (For Chrome, Brave, or Developers):
