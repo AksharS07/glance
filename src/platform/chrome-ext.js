@@ -656,7 +656,27 @@ VDI.Platform.ChromeExt = (function() {
             lastNonBlockedTabId = info.tabId;
           }
         });
+        // Re-poll quickly after switching to give media time to load
+        multiPoll(poll, [500, 1500, 3000]);
       });
+
+      // Re-poll aggressively when a supported tab finishes loading (hard refresh recovery)
+      var SUPPORTED_HOSTS_CHECK = ['youtube.com', 'music.youtube.com', 'spotify.com', 'open.spotify.com', 'music.apple.com'];
+      chrome.tabs.onUpdated.addListener(function(tabId, changeInfo, tab) {
+        if (changeInfo.status !== 'complete') return;
+        if (!tab.url) return;
+        try {
+          var h = new URL(tab.url).hostname;
+          var isSupported = SUPPORTED_HOSTS_CHECK.some(function(host) {
+            return h === host || h.endsWith('.' + host);
+          });
+          if (isSupported) {
+            // Page just finished loading — poll at 1s, 2s, 4s, 7s to catch media initialisation
+            multiPoll(poll, [1000, 2000, 4000, 7000]);
+          }
+        } catch(e) {}
+      });
+
       chrome.windows.onFocusChanged.addListener(function() { poll(); });
 
       
