@@ -2821,6 +2821,17 @@ VDI.UI = (function() {
                 '</div>' +
               '</div>' +
             '</div>' +
+            '<div id="vdi-study-hint" style="' +
+              'position:absolute;bottom:10px;right:10px;' +
+              'display:none;align-items:center;gap:5px;' +
+              'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);' +
+              'border-radius:99px;padding:3px 10px 3px 7px;' +
+              'font-size:10px;font-weight:600;color:rgba(255,255,255,0.55);' +
+              'cursor:pointer;transition:opacity 0.2s;white-space:nowrap;' +
+            '">' +
+              '<span style="width:5px;height:5px;border-radius:50%;background:var(--vdi-accent);flex-shrink:0;"></span>' +
+              'Study Mode \u203a' +
+            '</div>' +
           '</div>' +
           '<div id="vdi-page-focus" class="vdi-page">' +
             '<div id="vdi-focus-ring-container" class="vdi-ring-hide">' +
@@ -4083,6 +4094,66 @@ VDI.UI = (function() {
              scrollCooldown = false;
           }, 500);
         }, { passive: false });
+      }
+
+      // ─── ONE-TIME STUDY MODE HINT ───
+      var studyHint = $('vdi-study-hint');
+      var STUDY_HINT_KEY = 'vdi_seen_study_hint';
+      if (studyHint && !localStorage.getItem(STUDY_HINT_KEY)) {
+        // Show after a short delay once the island first expands
+        var studyHintTimer = null;
+        var studyHintShown = false;
+
+        function showStudyHint() {
+          if (studyHintShown || localStorage.getItem(STUDY_HINT_KEY)) return;
+          studyHintTimer = setTimeout(function() {
+            if (!localStorage.getItem(STUDY_HINT_KEY)) {
+              studyHint.style.display = 'flex';
+              studyHintShown = true;
+            }
+          }, 1200);
+        }
+
+        function dismissStudyHint() {
+          clearTimeout(studyHintTimer);
+          studyHint.style.display = 'none';
+          localStorage.setItem(STUDY_HINT_KEY, '1');
+        }
+
+        // Hook into the island expand: island gets vdi-expanded class
+        var islandEl = $('vdi');
+        if (islandEl) {
+          var hintObserver = new MutationObserver(function(mutations) {
+            mutations.forEach(function(m) {
+              if (islandEl.classList.contains('vdi-expanded') && state.activePage === 'media') {
+                showStudyHint();
+              } else {
+                clearTimeout(studyHintTimer);
+                if (!studyHintShown) studyHint.style.display = 'none';
+              }
+            });
+          });
+          hintObserver.observe(islandEl, { attributes: true, attributeFilter: ['class'] });
+        }
+
+        // Clicking the hint: dismiss + scroll to study mode
+        studyHint.addEventListener('click', function(e) {
+          e.stopPropagation();
+          dismissStudyHint();
+          // Trigger the scroll to focus page
+          var outgoing = $('vdi-page-media');
+          var incoming = $('vdi-page-focus');
+          if (outgoing && incoming) {
+            incoming.classList.add('vdi-no-transition');
+            incoming.style.transform = 'translateX(-100%)';
+            void incoming.offsetWidth;
+            incoming.classList.remove('vdi-no-transition');
+            outgoing.style.transform = 'translateX(100%)';
+            incoming.style.transform = '';
+            state.activePage = 'focus';
+            updateUI();
+          }
+        });
       }
 
       // Focus Mode Controls

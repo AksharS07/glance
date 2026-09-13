@@ -23,15 +23,22 @@ document.addEventListener('DOMContentLoaded', function() {
   const tglFree = document.getElementById('freePlacement');
   const tglPreset = document.getElementById('presetPlacement');
 
-  // Onboarding Banner Logic
+  // Onboarding Banner — v1.7 key so existing users see it once
+  var ONBOARD_KEY = 'vdi_seen_onboarding_v17';
   const onboardingBanner = document.getElementById('popup-onboarding');
   const dismissBtn = document.getElementById('dismiss-popup-onboarding');
-  if (!localStorage.getItem('vdi_seen_popup_onboarding')) {
+  if (!localStorage.getItem(ONBOARD_KEY)) {
     onboardingBanner.style.display = 'block';
   }
-  dismissBtn?.addEventListener('click', function() {
-    localStorage.setItem('vdi_seen_popup_onboarding', 'true');
+  dismissBtn.addEventListener('click', function(e) {
+    e.stopPropagation();
+    localStorage.setItem(ONBOARD_KEY, '1');
     onboardingBanner.style.display = 'none';
+  });
+  // Clicking the banner (not dismiss) scrolls to Focus Mode
+  onboardingBanner.addEventListener('click', function() {
+    var focusCard = document.querySelector('[data-section="focus"]');
+    if (focusCard) focusCard.scrollIntoView({ behavior: 'smooth', block: 'start' });
   });
 
   // Load current settings
