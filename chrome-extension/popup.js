@@ -172,13 +172,22 @@ document.addEventListener('DOMContentLoaded', function() {
         art.src = state.artwork;
         
         // Bug 6 fix: read cached accent from storage (service worker can't extract via DOM in Edge/Chrome MV3)
-        chrome.storage.local.get({ vdi_accent_color: null }, function(stg) {
+        chrome.storage.local.get({ vdi_accent_color: null, vdi_glow_color: null }, function(stg) {
           if (stg.vdi_accent_color) {
-            document.documentElement.style.setProperty('--accent-color', stg.vdi_accent_color);
+            var root = document.documentElement;
+            root.style.setProperty('--accent', stg.vdi_accent_color);
+            root.style.setProperty('--accent-color', stg.vdi_accent_color);
+            // Derive dim/border from accent using color-mix (Chrome 111+)
+            root.style.setProperty('--accent-dim',    'color-mix(in srgb, ' + stg.vdi_accent_color + ' 15%, transparent)');
+            root.style.setProperty('--accent-border',  'color-mix(in srgb, ' + stg.vdi_accent_color + ' 30%, transparent)');
+            if (stg.vdi_glow_color) {
+              root.style.setProperty('--accent-glow', stg.vdi_glow_color);
+            }
           }
         });
       } else {
         art.src = '';
+        document.documentElement.style.removeProperty('--accent');
         document.documentElement.style.removeProperty('--accent-color');
       }
       
