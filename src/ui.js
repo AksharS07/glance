@@ -1125,6 +1125,16 @@ VDI.UI = (function() {
         }, 1200);
       }
 
+      // Study Mode hint — show once, 1.5s after first hover
+      var studyHintEl = $('vdi-study-hint');
+      if (studyHintEl && !localStorage.getItem('vdi_seen_study_hint_v2') && state.activePage === 'media') {
+        setTimeout(function() {
+          if (island.classList.contains('vdi-expanded') && state.activePage === 'media' && !localStorage.getItem('vdi_seen_study_hint_v2')) {
+            studyHintEl.style.display = 'flex';
+          }
+        }, 1500);
+      }
+
       resetIdle();
     }
 
@@ -1143,6 +1153,11 @@ VDI.UI = (function() {
             if ($('vdi-stg-tooltip')) $('vdi-stg-tooltip').style.display = 'none';
             if ($('vdi-settings-btn')) $('vdi-settings-btn').style.opacity = '';
           }, 300);
+        }
+        // Hide study hint if it hasn't been dismissed yet — don't persist it across sessions
+        var sh = $('vdi-study-hint');
+        if (sh && sh.style.display !== 'none' && !localStorage.getItem('vdi_seen_study_hint_v2')) {
+          sh.style.display = 'none';
         }
         if (state.lyricsOn) {
           state.lyricsOn = false;
@@ -1350,7 +1365,7 @@ VDI.UI = (function() {
           var sh = $('vdi-study-hint');
           if (sh && sh.style.display !== 'none') {
             sh.style.display = 'none';
-            localStorage.setItem('vdi_seen_study_hint', '1');
+            localStorage.setItem('vdi_seen_study_hint_v2', '1');
           }
           
           var direction = (e.deltaY > 0 || e.deltaX > 0) ? -1 : 1;
@@ -1386,50 +1401,11 @@ VDI.UI = (function() {
         }, { passive: false });
       }
 
-      // ─── ONE-TIME STUDY MODE HINT ───
+      // Dismiss study hint if island collapses before user sees it
       var studyHint = $('vdi-study-hint');
-      var STUDY_HINT_KEY = 'vdi_seen_study_hint';
-      if (studyHint && !localStorage.getItem(STUDY_HINT_KEY)) {
-        // Show after a short delay once the island first expands
-        var studyHintTimer = null;
-        var studyHintShown = false;
-
-        function showStudyHint() {
-          if (studyHintShown || localStorage.getItem(STUDY_HINT_KEY)) return;
-          studyHintTimer = setTimeout(function() {
-            if (!localStorage.getItem(STUDY_HINT_KEY)) {
-              studyHint.style.display = 'flex';
-              studyHintShown = true;
-            }
-          }, 1200);
-        }
-
-        function dismissStudyHint() {
-          clearTimeout(studyHintTimer);
-          studyHint.style.display = 'none';
-          localStorage.setItem(STUDY_HINT_KEY, '1');
-        }
-
-        // Hook into the island expand: island gets vdi-expanded class
-        var islandEl = $('vdi');
-        if (islandEl) {
-          var hintObserver = new MutationObserver(function(mutations) {
-            mutations.forEach(function(m) {
-              if (islandEl.classList.contains('vdi-expanded') && state.activePage === 'media') {
-                showStudyHint();
-              } else {
-                clearTimeout(studyHintTimer);
-                if (!studyHintShown) studyHint.style.display = 'none';
-              }
-            });
-          });
-          hintObserver.observe(islandEl, { attributes: true, attributeFilter: ['class'] });
-        }
-
-        // Dismiss when user scrolls away from media page (activePage changes)
-        // The MutationObserver above handles hiding when island collapses.
-        // We also dismiss as soon as they scroll to Study Mode — handled via
-        // the wheel listener adding to studyHintShown naturally on page switch.
+      var STUDY_HINT_KEY = 'vdi_seen_study_hint_v2';
+      if (studyHint) {
+        studyHint.addEventListener('click', function(e) { e.stopPropagation(); });
       }
 
       // Focus Mode Controls
