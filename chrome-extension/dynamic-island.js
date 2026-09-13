@@ -2823,14 +2823,18 @@ VDI.UI = (function() {
             '</div>' +
             '<div id="vdi-study-hint" style="' +
               'position:absolute;bottom:10px;right:10px;' +
-              'display:none;align-items:center;gap:5px;' +
-              'background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.12);' +
-              'border-radius:99px;padding:3px 10px 3px 7px;' +
-              'font-size:10px;font-weight:600;color:rgba(255,255,255,0.55);' +
-              'cursor:pointer;transition:opacity 0.2s;white-space:nowrap;' +
+              'display:none;align-items:center;gap:6px;' +
+              'background:color-mix(in srgb, var(--vdi-accent) 18%, rgba(0,0,0,0.6));' +
+              'border:1px solid color-mix(in srgb, var(--vdi-accent) 55%, transparent);' +
+              'border-radius:99px;padding:4px 11px 4px 8px;' +
+              'font-size:11px;font-weight:700;letter-spacing:0.01em;' +
+              'color:rgba(255,255,255,0.92);' +
+              'cursor:default;transition:opacity 0.3s;white-space:nowrap;' +
+              'box-shadow:0 0 12px color-mix(in srgb, var(--vdi-accent) 40%, transparent);' +
+              'pointer-events:auto;' +
             '">' +
-              '<span style="width:5px;height:5px;border-radius:50%;background:var(--vdi-accent);flex-shrink:0;"></span>' +
-              'Study Mode \u203a' +
+              '<span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);flex-shrink:0;box-shadow:0 0 6px var(--vdi-accent);"></span>' +
+              'Scroll to see Study Mode \u2193' +
             '</div>' +
           '</div>' +
           '<div id="vdi-page-focus" class="vdi-page">' +
@@ -4062,6 +4066,12 @@ VDI.UI = (function() {
           e.stopPropagation();
           e.preventDefault();
           if (scrollCooldown) return;
+          // Dismiss study hint the moment user scrolls
+          var sh = $('vdi-study-hint');
+          if (sh && sh.style.display !== 'none') {
+            sh.style.display = 'none';
+            localStorage.setItem('vdi_seen_study_hint', '1');
+          }
           
           var direction = (e.deltaY > 0 || e.deltaX > 0) ? -1 : 1;
           var outgoingId = state.activePage === 'media' ? 'vdi-page-media' : 'vdi-page-focus';
@@ -4136,24 +4146,10 @@ VDI.UI = (function() {
           hintObserver.observe(islandEl, { attributes: true, attributeFilter: ['class'] });
         }
 
-        // Clicking the hint: dismiss + scroll to study mode
-        studyHint.addEventListener('click', function(e) {
-          e.stopPropagation();
-          dismissStudyHint();
-          // Trigger the scroll to focus page
-          var outgoing = $('vdi-page-media');
-          var incoming = $('vdi-page-focus');
-          if (outgoing && incoming) {
-            incoming.classList.add('vdi-no-transition');
-            incoming.style.transform = 'translateX(-100%)';
-            void incoming.offsetWidth;
-            incoming.classList.remove('vdi-no-transition');
-            outgoing.style.transform = 'translateX(100%)';
-            incoming.style.transform = '';
-            state.activePage = 'focus';
-            updateUI();
-          }
-        });
+        // Dismiss when user scrolls away from media page (activePage changes)
+        // The MutationObserver above handles hiding when island collapses.
+        // We also dismiss as soon as they scroll to Study Mode — handled via
+        // the wheel listener adding to studyHintShown naturally on page switch.
       }
 
       // Focus Mode Controls
