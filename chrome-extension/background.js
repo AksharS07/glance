@@ -1554,6 +1554,38 @@ VDI.Platform.ChromeExt = (function() {
       });
     }
 
+    // ── Focus block domain helpers ────────────────────────────────────────
+    // Extracts the brand SLD from a user-entered domain.
+    // Returns the SLD string for TLD-variant blocking, or null for specific subdomains.
+    //   youtube.com   → 'youtube'  (block all TLD variants, not music.youtube.com)
+    //   google.com    → 'google'   (block google.com, google.co.in, google.fr, …)
+    //   google.co.in  → 'google'   (ccTLD: second-to-last seg is short)
+    //   music.youtube.com → null   (explicit subdomain — exact match only)
+    function getFocusSLD(domain) {
+      var d = domain.replace(/^www\./, '').toLowerCase();
+      var parts = d.split('.');
+      if (parts.length <= 2) return parts[0]; // simple: youtube.com → youtube
+      // 3+ parts: ccTLD if second-to-last segment is ≤ 3 chars (co, com, net, gov…)
+      // google.co.in  → secondToLast='co'(2) → SLD='google'
+      // music.youtube.com → secondToLast='youtube'(7) → specific subdomain
+      var secondToLast = parts[parts.length - 2];
+      return secondToLast.length <= 3 ? parts[0] : null;
+    }
+
+    // Returns true if tabHostname should be blocked given a blocklist domain entry.
+    function isFocusBlocked(tabHostname, domain) {
+      var sld = getFocusSLD(domain);
+      if (sld) {
+        // Match: bare hostname starts with 'sld.' (covers all TLD variants)
+        // but does NOT match subdomains (mail.google.com → stripped = mail.google.com, indexOf('google.') = 5 ≠ 0)
+        var h = tabHostname.replace(/^www\./, '');
+        return h === sld || h.indexOf(sld + '.') === 0;
+      } else {
+        // Specific subdomain — exact match only
+        return tabHostname === domain || tabHostname === 'www.' + domain;
+      }
+    }
+
     // Site Blocker — Dynamic Rule Management
     function updateBlockRules(blocklist, enable) {
       if (typeof chrome.declarativeNetRequest === 'undefined') return;
@@ -1568,29 +1600,27 @@ VDI.Platform.ChromeExt = (function() {
           var activeBlocks = blocklist.filter(function(s) { return F.bypassedSites.indexOf(s) === -1; });
           for (var j = 0; j < activeBlocks.length; j++) {
             var domain = activeBlocks[j];
-            // Build exact domain list — includes www. variant but NOT subdomains
-            // This prevents youtube.com from matching music.youtube.com
-            var matchDomains = [domain];
-            if (domain.indexOf('www.') !== 0) matchDomains.push('www.' + domain);
-            // Always exclude music.youtube.com from a youtube.com block
-            var excludedDomains = [];
-            if (domain === 'youtube.com' || domain === 'www.youtube.com') {
-              excludedDomains = ['music.youtube.com'];
+            var sld = getFocusSLD(domain);
+            var condition;
+            if (sld) {
+              // SLD-based regex: matches brand.com, brand.co.in, brand.fr, www.brand.*
+              // but NOT subdomains like mail.brand.com (they don't start with brand.)
+              var escaped = sld.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+              condition = {
+                regexFilter: '^https?://(?:www\\.)?' + escaped + '\\.',
+                resourceTypes: ['main_frame'],
+                isUrlFilterCaseSensitive: false
+              };
+            } else {
+              // Specific subdomain entry (e.g. music.youtube.com) — exact match only
+              var matchDomains = [domain];
+              if (domain.indexOf('www.') !== 0) matchDomains.push('www.' + domain);
+              condition = { requestDomains: matchDomains, resourceTypes: ['main_frame'] };
             }
-            var condition = {
-              requestDomains: matchDomains,
-              resourceTypes: ['main_frame']
-            };
-            if (excludedDomains.length) condition.excludedRequestDomains = excludedDomains;
             rules.push({
               id: 1000 + j,
               priority: 1,
-              action: {
-                type: 'redirect',
-                redirect: {
-                  extensionPath: '/blocked.html?site=' + encodeURIComponent(activeBlocks[j])
-                }
-              },
+              action: { type: 'redirect', redirect: { extensionPath: '/blocked.html?site=' + encodeURIComponent(domain) } },
               condition: condition
             });
           }
@@ -1930,11 +1960,7 @@ VDI.Platform.ChromeExt = (function() {
                   var tabHostname = new URL(tab.url).hostname;
                   for (var j = 0; j < blocklist.length; j++) {
                     var blocked = blocklist[j];
-                    // Exact hostname match or www. variant — never match subdomains
-                    var isMatch = tabHostname === blocked || tabHostname === 'www.' + blocked;
-                    // Special case: youtube.com block must not catch music.youtube.com
-                    if (blocked === 'youtube.com' && tabHostname === 'music.youtube.com') isMatch = false;
-                    if (isMatch &&
+                    if (isFocusBlocked(tabHostname, blocked) &&
                         tab.url.indexOf('blocked.html') === -1 &&
                         F.bypassedSites.indexOf(blocked) === -1) {
                       chrome.tabs.update(tab.id, {
