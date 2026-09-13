@@ -2,11 +2,11 @@
 *(Cross-Browser Extension)*
 
 <p align="center">
-  <a href="https://chromewebstore.google.com/detail/glance/ijplknahhfcicfpgandihmonfgmkemnf"><img src="https://img.shields.io/badge/Chrome-Get_it_on_Chrome-4285F4?style=for-the-badge&logo=Google-Chrome&logoColor=white" alt="Get it for Chrome"></a>
-  &nbsp;&nbsp;
   <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
   &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
+  &nbsp;&nbsp;
+  <img src="https://img.shields.io/badge/Chrome-Pending_Review-lightgrey?style=for-the-badge&logo=Google-Chrome&logoColor=white" alt="Chrome Web Store — Pending Review">
 </p>
 
 <p align="center">
@@ -80,7 +80,7 @@ Works on Chrome, Edge, Firefox, Zen Browser, Brave, or any modern Chromium brows
 ## Install
 
 ### From the Store (Recommended)
-- **Google Chrome**: [Chrome Web Store](https://chromewebstore.google.com/detail/glance/ijplknahhfcicfpgandihmonfgmkemnf)
+- **Google Chrome**: Pending review on the Chrome Web Store — use manual install below in the meantime
 - **Microsoft Edge**: [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh)
 - **Firefox / Zen Browser**: [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/)
 
