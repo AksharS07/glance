@@ -1567,6 +1567,21 @@ VDI.Platform.ChromeExt = (function() {
         if (enable && blocklist && blocklist.length > 0) {
           var activeBlocks = blocklist.filter(function(s) { return F.bypassedSites.indexOf(s) === -1; });
           for (var j = 0; j < activeBlocks.length; j++) {
+            var domain = activeBlocks[j];
+            // Build exact domain list — includes www. variant but NOT subdomains
+            // This prevents youtube.com from matching music.youtube.com
+            var matchDomains = [domain];
+            if (domain.indexOf('www.') !== 0) matchDomains.push('www.' + domain);
+            // Always exclude music.youtube.com from a youtube.com block
+            var excludedDomains = [];
+            if (domain === 'youtube.com' || domain === 'www.youtube.com') {
+              excludedDomains = ['music.youtube.com'];
+            }
+            var condition = {
+              requestDomains: matchDomains,
+              resourceTypes: ['main_frame']
+            };
+            if (excludedDomains.length) condition.excludedRequestDomains = excludedDomains;
             rules.push({
               id: 1000 + j,
               priority: 1,
@@ -1576,10 +1591,7 @@ VDI.Platform.ChromeExt = (function() {
                   extensionPath: '/blocked.html?site=' + encodeURIComponent(activeBlocks[j])
                 }
               },
-              condition: {
-                urlFilter: '||' + activeBlocks[j],
-                resourceTypes: ['main_frame']
-              }
+              condition: condition
             });
           }
         }
@@ -1914,16 +1926,24 @@ VDI.Platform.ChromeExt = (function() {
               for (var i = 0; i < tabs.length; i++) {
                 var tab = tabs[i];
                 if (!tab.url) continue;
-                for (var j = 0; j < blocklist.length; j++) {
-                  if (tab.url.indexOf(blocklist[j]) !== -1 &&
-                      tab.url.indexOf('blocked.html') === -1 &&
-                      F.bypassedSites.indexOf(blocklist[j]) === -1) {
-                    chrome.tabs.update(tab.id, {
-                      url: chrome.runtime.getURL('blocked.html?site=' + encodeURIComponent(blocklist[j]))
-                    });
-                    break;
+                try {
+                  var tabHostname = new URL(tab.url).hostname;
+                  for (var j = 0; j < blocklist.length; j++) {
+                    var blocked = blocklist[j];
+                    // Exact hostname match or www. variant — never match subdomains
+                    var isMatch = tabHostname === blocked || tabHostname === 'www.' + blocked;
+                    // Special case: youtube.com block must not catch music.youtube.com
+                    if (blocked === 'youtube.com' && tabHostname === 'music.youtube.com') isMatch = false;
+                    if (isMatch &&
+                        tab.url.indexOf('blocked.html') === -1 &&
+                        F.bypassedSites.indexOf(blocked) === -1) {
+                      chrome.tabs.update(tab.id, {
+                        url: chrome.runtime.getURL('blocked.html?site=' + encodeURIComponent(blocked))
+                      });
+                      break;
+                    }
                   }
-                }
+                } catch (e) {}
               }
             });
           });
