@@ -966,6 +966,11 @@ VDI.Core = (function() {
           }
         }
 
+        var hasDetectableMedia = !!(
+          (el && ((isFinite(el.duration) && el.duration > 0) || el.currentTime > 0 || !el.paused)) ||
+          (ms && ms.metadata && ms.metadata.title)
+        );
+
         return {
           title: finalTitle,
           artist: finalArtist,
@@ -973,7 +978,7 @@ VDI.Core = (function() {
           isPlaying: (ms && ms.playbackState === 'playing') || (el ? !el.paused : false),
           duration: (uiDur !== null && uiDur > 0) ? uiDur : (el ? (isFinite(el.duration) ? el.duration : 0) : 0),
           position: finalPos,
-          hasMedia: !!(el || (ms && ms.metadata && ms.metadata.title)),
+          hasMedia: hasDetectableMedia,
           volume: el ? el.volume : 1,
           pipOk: pipOk,
           isFullscreen: !!document.fullscreenElement,
