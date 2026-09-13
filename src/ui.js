@@ -102,19 +102,15 @@ VDI.UI = (function() {
               '</div>' +
             '</div>' +
             '<div id="vdi-study-hint" style="' +
-              'position:absolute;bottom:10px;right:10px;' +
-              'display:none;align-items:center;gap:6px;' +
-              'background:color-mix(in srgb, var(--vdi-accent) 18%, rgba(0,0,0,0.6));' +
-              'border:1px solid color-mix(in srgb, var(--vdi-accent) 55%, transparent);' +
-              'border-radius:99px;padding:4px 11px 4px 8px;' +
-              'font-size:11px;font-weight:700;letter-spacing:0.01em;' +
-              'color:rgba(255,255,255,0.92);' +
-              'cursor:default;transition:opacity 0.3s;white-space:nowrap;' +
-              'box-shadow:0 0 12px color-mix(in srgb, var(--vdi-accent) 40%, transparent);' +
-              'pointer-events:auto;' +
+              'position:absolute;bottom:8px;left:50%;transform:translateX(-50%);' +
+              'display:none;flex-direction:column;align-items:center;gap:4px;' +
+              'pointer-events:none;' +
             '">' +
-              '<span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);flex-shrink:0;box-shadow:0 0 6px var(--vdi-accent);"></span>' +
-              'Scroll to see Study Mode \u2193' +
+              '<div style="display:flex;align-items:center;gap:5px;">' +
+                '<span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);box-shadow:0 0 5px var(--vdi-accent);flex-shrink:0;"></span>' +
+                '<span style="width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,0.25);border:1px solid rgba(255,255,255,0.35);flex-shrink:0;"></span>' +
+              '</div>' +
+              '<span style="font-size:9px;font-weight:600;letter-spacing:0.06em;text-transform:uppercase;color:rgba(255,255,255,0.35);">Study Mode →</span>' +
             '</div>' +
           '</div>' +
           '<div id="vdi-page-focus" class="vdi-page">' +
