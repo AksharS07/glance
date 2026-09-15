@@ -2,6 +2,10 @@
 *(Cross-Browser Extension)*
 
 <p align="center">
+  <a href="https://akshars07.github.io/glance/"><img src="https://img.shields.io/badge/Website-Landing_Page-4f8ef7?style=for-the-badge&logo=github-pages&logoColor=white" alt="Visit Landing Page"></a>
+</p>
+
+<p align="center">
   <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
   &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
