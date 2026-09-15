@@ -23,9 +23,6 @@ Works on Chrome, Edge, Firefox, Zen Browser, Brave, or any modern Chromium brows
 
 ## In Action
 
-### Welcome Page (v1.6)
-![Welcome Page Demo](welcome_page_demo_v1.6.gif)
-
 ### Lyrics Panel Teleport (v1.6)
 ![Lyrics Panel Teleport](lyricspanel_teleport_v1.6.gif)
 
