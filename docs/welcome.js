@@ -240,14 +240,16 @@ const observer = new IntersectionObserver(entries => {
 document.querySelectorAll('.reveal').forEach(el => observer.observe(el));
 
 // --- CLOSE TAB ---
-closeBtn.addEventListener('click', () => {
-  window.close();
-  setTimeout(() => {
-    if (!window.closed) {
-      window.location.href = 'about:blank';
-    }
-  }, 100);
-});
+if (closeBtn) {
+  closeBtn.addEventListener('click', () => {
+    window.close();
+    setTimeout(() => {
+      if (!window.closed) {
+        window.location.href = 'about:blank';
+      }
+    }, 100);
+  });
+}
 
 // --- INIT ---
 applyTrack(0); // Start with Blinding Lights for mass appeal
