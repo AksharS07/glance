@@ -1,0 +1,510 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Glance</title>
+  <link rel="icon" href="icon128.png" type="image/png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700;14..32,800;14..32,900&display=swap" rel="stylesheet">
+  
+  <style>
+    /* --- APPLE DESIGN LANGUAGE & CSS VARIABLES --- */
+    :root {
+      --apple-ease: cubic-bezier(0.16, 1, 0.3, 1);
+      --vdi-accent: #d4820a;
+      --vdi-grad: linear-gradient(135deg, #4a2000, #d4820a);
+      --vdi-dark: #1a0a00;
+      --vdi-glow: rgba(212, 130, 10, 0.25);
+    }
+    /* AMOLED MODE OVERRIDE */
+    body.amoled-mode {
+      --vdi-dark: #000000 !important;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, sans-serif;
+      background: var(--vdi-dark);
+      color: #f5f5f7;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+      transition: background 0.9s var(--apple-ease);
+    }
+
+    /* --- 1:1 DYNAMIC ISLAND DEMO --- */
+    #island-wrap { position: fixed; top: 12px; left: 50%; transform: translateX(-50%); z-index: 9999; pointer-events: none; }
+    #island {
+      position: relative; overflow: hidden; pointer-events: all; cursor: default;
+      width: 168px; height: 34px; border-radius: 32px;
+      background: var(--vdi-dark);
+      box-shadow: 0 0 0 1px rgba(255,255,255,.08), 0 10px 40px rgba(0,0,0,.8), 0 0 80px var(--vdi-glow);
+      opacity: 0; pointer-events: none;
+      transition: width .6s cubic-bezier(0.2, 0.8, 0.2, 1), height .6s cubic-bezier(0.2, 0.8, 0.2, 1), 
+                  border-radius .6s cubic-bezier(0.2, 0.8, 0.2, 1), background .7s ease, box-shadow .7s ease, opacity .3s ease;
+      transform: scale(0.95);
+    }
+    #island.vdi-visible { opacity: 1; pointer-events: all; transform: scale(1); }
+    #island.vdi-expanded { width: 400px; height: 152px; border-radius: 26px; }
+
+    #vdi-col {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%);
+      width: 168px; height: 34px; box-sizing: border-box; display: flex; align-items: center; gap: 8px; padding: 0 13px;
+      opacity: 1; transition: opacity .18s ease;
+    }
+    #island.vdi-expanded #vdi-col { opacity: 0; pointer-events: none; }
+    #vdi-eq { display: flex; align-items: flex-end; justify-content: center; gap: 3px; width: 16px; height: 12px; flex-shrink: 0; }
+    .vdi-eq-bar { width: 3px; height: 3px; background: var(--vdi-accent); border-radius: 1.5px; transition: height .15s ease, background .7s ease; }
+    #vdi-col-text { flex: 1; overflow: hidden; white-space: nowrap; }
+    #vdi-col-inner { display: inline-block; font-size: 11px; font-weight: 500; color: rgba(255,255,255,.82); animation: vdi-scroll 9s linear infinite; }
+    @keyframes vdi-scroll{0%,28%{transform:translateX(0)}72%{transform:translateX(-55%)}100%{transform:translateX(0)}}
+    #vdi-col-btn { width: 18px; height: 18px; border-radius: 50%; background: rgba(255,255,255,.1); display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
+    #vdi-col-btn svg { width: 10px; height: 10px; fill: #fff; }
+
+    #vdi-exp {
+      position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%) scale(.9);
+      width: 400px; height: 152px; box-sizing: border-box; display: flex; align-items: center; padding: 14px 15px; gap: 13px;
+      opacity: 0; transition: opacity .28s ease .13s, transform .28s ease .13s; pointer-events: none;
+    }
+    #island.vdi-expanded #vdi-exp { opacity: 1; transform: translate(-50%, -50%) scale(1); pointer-events: all; }
+
+    /* FIXED: Exact Gear SVG from your UI.js */
+    #vdi-settings-btn {
+      position: absolute; top: 10px; left: 10px; width: 24px; height: 24px; border-radius: 50%;
+      display: flex; align-items: center; justify-content: center; cursor: pointer; opacity: 0;
+      transition: all 0.2s; background: rgba(255,255,255,0.1); z-index: 3;
+    }
+    #island:hover #vdi-settings-btn { opacity: 1; }
+    #vdi-settings-btn:hover { background: rgba(255,255,255,0.25); transform: rotate(45deg); }
+    #vdi-settings-btn svg { width: 14px; height: 14px; fill: rgba(255,255,255,0.8); }
+
+    #vdi-teleport-btn { position: absolute; top: 10px; right: 40px; width: 24px; height: 24px; background: rgba(255,255,255,.08); border: none; border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; z-index: 10; color: rgba(255,255,255,.7); }
+    #vdi-teleport-btn:hover { background: rgba(255,255,255,.15); color: var(--vdi-accent, #fff); }
+    #vdi-teleport-btn svg { width: 12px; height: 12px; }
+    #vdi-close-btn { position: absolute; top: 12px; right: 12px; z-index: 100; background: rgba(255,255,255,0.1); border: none; border-radius: 50%; width: 24px; height: 24px; color: rgba(255,255,255,0.6); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: background 0.2s; }
+    #vdi-close-btn:hover { background: rgba(255,255,255,0.2); }
+
+    #vdi-art {
+      width: 74px !important; height: 74px !important; min-width: 74px !important; min-height: 74px !important;
+      border-radius: 14px !important; flex-shrink: 0 !important; overflow: hidden !important;
+      background: var(--vdi-grad); box-shadow: 0 4px 20px rgba(0,0,0,.5);
+      display: flex; align-items: center; justify-content: center; transition: background .7s ease; position: relative;
+    }
+    #vdi-art-ph { font-size: 28px; line-height: 1; transition: opacity .4s; }
+    #vdi-art-img {
+      position: absolute !important; inset: 0 !important; width: 100% !important; height: 100% !important;
+      max-width: 100% !important; max-height: 100% !important; object-fit: cover !important; border-radius: 14px !important;
+      opacity: 0; transition: opacity .4s ease; box-sizing: border-box !important; padding: 0 !important; margin: 0 !important;
+      border: none !important; display: block !important; min-width: 100% !important; min-height: 100% !important;
+    }
+    #vdi-art-img.ok { opacity: 1 !important; }
+
+    #vdi-track { flex: 1; display: flex; flex-direction: column; gap: 5px; min-width: 0; }
+    #vdi-title-row { display: flex; align-items: center; gap: 6px; min-width: 0; }
+    #vdi-title { flex: 1; font-size: 13px; font-weight: 600; color: #fff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #vdi-artist { font-size: 11px; color: rgba(255,255,255,.38); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    #vdi-prog-row { display: flex; align-items: center; gap: 5px; }
+    .vdi-t { font-size: 9px; color: rgba(255,255,255,.5); min-width: 22px; }
+    #vdi-prog { flex: 1; height: 4px; background: rgba(255,255,255,.15); border-radius: 99px; position: relative; }
+    #vdi-prog-fill { height: 100%; width: 0%; border-radius: 99px; background: var(--vdi-accent); transition: width .6s linear, background .7s ease; }
+    #vdi-ctrl-row { display: flex; align-items: center; justify-content: space-between; margin-top: 6px; }
+    #vdi-ctrl-main { display: flex; align-items: center; gap: 6px; }
+    
+    .vdi-btn { width: 32px; height: 32px; border-radius: 50%; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; background: transparent; color: rgba(255,255,255,.75); transition: color .15s, transform .15s, background .2s; }
+    .vdi-btn:hover { background: rgba(255,255,255,.08); color: var(--vdi-accent); transform: scale(1.1); }
+    .vdi-btn:active { transform: scale(.92); }
+    .vdi-btn svg { width: 16px; height: 16px; pointer-events: none; }
+    .vdi-icon-btn { width: 28px !important; height: 28px !important; border-radius: 8px !important; border: none !important; cursor: pointer; display: flex; align-items: center; justify-content: center; background: rgba(255,255,255,.04) !important; color: rgba(255,255,255,.55) !important; transition: color .15s, transform .15s, background .2s; }
+    .vdi-icon-btn:hover { background: rgba(255,255,255,.12); color: var(--vdi-accent); transform: scale(1.08); }
+    .vdi-icon-btn svg { width: 15px; height: 15px; pointer-events: none; }
+    #vdi-play { width: 44px !important; height: 44px !important; border-radius: 50% !important; background: rgba(255,255,255,0.12) !important; color: #fff !important; display: flex; align-items: center; justify-content: center; border: none !important; cursor: pointer; transition: transform .15s cubic-bezier(0.4, 0, 0.2, 1), background .2s; backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); box-shadow: 0 4px 12px rgba(0,0,0,0.15) !important; }
+    #vdi-play:hover { background: rgba(255,255,255,0.22) !important; color: var(--vdi-accent) !important; transform: scale(1.05); }
+    #vdi-play svg { width: 20px; height: 20px; fill: currentColor !important; }
+
+    /* --- APPLE CINEMATIC SCROLL REVEALS --- */
+    .reveal { opacity: 0; transform: translateY(35px) scale(0.96); filter: blur(4px); transition: opacity 0.9s var(--apple-ease), transform 0.9s var(--apple-ease), filter 0.9s var(--apple-ease); will-change: transform, opacity, filter; }
+    .reveal.visible { opacity: 1; transform: translateY(0) scale(1); filter: blur(0); }
+    .reveal-delay-1 { transition-delay: .1s; }
+    .reveal-delay-2 { transition-delay: .2s; }
+    .reveal-delay-3 { transition-delay: .3s; }
+    .reveal-delay-4 { transition-delay: .4s; }
+
+    /* --- SECTIONS --- */
+    section { position: relative; width: 100%; padding: 80px 24px; display: flex; justify-content: center; }
+    .container { max-width: 1000px; width: 100%; }
+
+    #hero { min-height: 90vh; flex-direction: column; align-items: center; text-align: center; padding-top: 140px; }
+    #hero::before { content: ''; position: absolute; inset: 0; background: radial-gradient(ellipse 70% 60% at 50% 0%, var(--vdi-accent) 0%, transparent 60%); opacity: 0.3; pointer-events: none; transition: background 1.2s var(--apple-ease); }
+    .hero-logo { width: 80px; height: 80px; border-radius: 20px; margin-bottom: 20px; box-shadow: 0 0 40px var(--vdi-glow); background: rgba(255,255,255,0.05); backdrop-filter: blur(10px); padding: 12px; border: 1px solid rgba(255,255,255,0.1); }
+    .hero-eyebrow { font-size: 12px; font-weight: 600; letter-spacing: .12em; color: var(--vdi-accent); margin-bottom: 20px; transition: color .7s var(--apple-ease); text-transform: uppercase; }
+    .hero-title { font-size: clamp(48px, 8vw, 96px); font-weight: 800; letter-spacing: -.04em; line-height: 1.05; margin-bottom: 24px; }
+    .hero-sub { font-size: clamp(16px, 2vw, 20px); color: rgba(255,255,255,0.5); line-height: 1.6; max-width: 500px; margin: 0 auto 40px; font-weight: 400; }
+
+    /* --- HIGHLIGHTED SECTION: "IT READS THE ROOM" & PREMIUM FEATURE CARD --- */
+    #s-demo { background: rgba(0,0,0,0.3); padding-top: 40px; transition: background .8s var(--apple-ease); }
+    #s-demo .eyebrow { 
+      font-size: 11px; font-weight: 600; letter-spacing: .14em; margin-bottom: 16px; transition: color .7s var(--apple-ease); text-transform: uppercase;
+      background: linear-gradient(to right, var(--vdi-accent), #fff, var(--vdi-accent));
+      background-size: 200% 100%;
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      animation: shimmer 3s linear infinite;
+    }
+    @keyframes shimmer { 0% { background-position: 200% 0; } 100% { background-position: -200% 0; } }
+    @keyframes pulse-dot { 0%,100% { opacity:1; box-shadow:0 0 6px #818cf8; } 50% { opacity:0.5; box-shadow:0 0 14px #818cf8; } }
+
+    #s-demo h2 { font-size: clamp(36px, 5vw, 64px); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 20px; color: #fff; }
+    #s-demo p { color: rgba(255,255,255,0.5); font-size: 15px; line-height: 1.7; max-width: 420px; margin: 0 auto 40px; }
+
+    /* SPECIAL PREMIUM AMOLED TOGGLE CARD (CLEANED) */
+    .feature-spotlight {
+      display: flex; justify-content: space-between; align-items: center;
+      width: 100%; max-width: 480px; margin: 0 auto 32px auto;
+      padding: 14px 22px;
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 18px;
+      backdrop-filter: blur(10px);
+      transition: all 0.4s var(--apple-ease);
+    }
+    .feature-spotlight:hover { background: rgba(255,255,255,0.06); border-color: rgba(255,255,255,0.15); transform: scale(1.02); }
+    .feature-spotlight.active { border-color: var(--vdi-accent); box-shadow: 0 0 20px var(--vdi-glow); }
+    
+    .feature-left { display: flex; align-items: center; gap: 14px; }
+    .feature-text { display: flex; flex-direction: column; align-items: flex-start; }
+    .feature-title { font-size: 14px; font-weight: 600; color: rgba(255,255,255,0.9); }
+    .feature-sub { font-size: 11px; color: rgba(255,255,255,0.4); }
+
+    /* Custom Switch */
+    .amoled-switch { position: relative; display: inline-block; width: 42px; height: 24px; flex-shrink: 0; }
+    .amoled-switch input { opacity: 0; width: 0; height: 0; }
+    .amoled-slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(255,255,255,0.2); transition: 0.3s; border-radius: 24px; }
+    .amoled-slider:before { position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px; background-color: #fff; transition: 0.3s; border-radius: 50%; }
+    input:checked + .amoled-slider { background-color: var(--vdi-accent); }
+    input:checked + .amoled-slider:before { transform: translateX(18px); }
+
+    /* TRACK CARDS */
+    .track-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 16px; margin-top: 10px; }
+    .track-card {
+      background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 16px;
+      display: flex; flex-direction: column; gap: 12px; cursor: pointer;
+      transition: all 0.5s var(--apple-ease); transform: scale(0.95); opacity: 0.5; filter: grayscale(0.5);
+    }
+    .track-card:hover { transform: scale(1.02); filter: grayscale(0); opacity: 0.8; }
+    .track-card.active { transform: scale(1); opacity: 1; filter: grayscale(0); border-color: var(--vdi-accent); box-shadow: 0 0 15px var(--vdi-glow); animation: pulse-glow 2s ease-in-out infinite alternate; }
+    @keyframes pulse-glow { 0% { box-shadow: 0 0 15px var(--vdi-glow); } 100% { box-shadow: 0 0 30px var(--vdi-glow), 0 0 60px rgba(212, 130, 10, 0.15); } }
+    .track-thumb { width: 100%; aspect-ratio: 1/1; border-radius: 10px; overflow: hidden; display: flex; align-items: center; justify-content: center; transition: background .7s var(--apple-ease); background: var(--vdi-grad); position: relative; }
+    .track-thumb img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; transition: opacity .4s; }
+    .track-thumb .fallback { position: relative; z-index: 1; font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.1); }
+
+    /* --- REST OF SECTIONS --- */
+    #s-arch { background: #000; padding: 120px 24px; }
+    #s-arch h2 { font-size: clamp(40px, 5vw, 72px); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 16px; }
+    #s-arch .sub { color: rgba(255,255,255,0.4); font-size: 15px; line-height: 1.7; max-width: 500px; margin: 0 auto 40px; }
+    .arch-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 40px; }
+    @media (max-width: 720px) { .arch-grid { grid-template-columns: 1fr; } }
+    .arch-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 32px 24px; transition: all 0.3s var(--apple-ease); }
+    .arch-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-4px); border-color: var(--vdi-accent); }
+    .arch-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .05em; color: var(--vdi-accent); border: 1px solid var(--vdi-accent); border-radius: 99px; padding: 2px 10px; width: fit-content; margin-bottom: 8px; }
+    .arch-card h3 { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
+    .arch-card p { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
+
+    #s-langs { background: rgba(0,0,0,0.1); }
+    #s-langs .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; color: var(--vdi-accent); margin-bottom: 16px; text-transform: uppercase; }
+    #s-langs h2 { font-size: clamp(32px, 4.5vw, 54px); font-weight: 800; letter-spacing: -.03em; line-height: 1.08; margin-bottom: 20px; }
+    #s-langs p { color: rgba(255,255,255,0.4); font-size: 15px; line-height: 1.7; max-width: 420px; }
+    .lang-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
+    .lang-badge { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 99px; padding: 10px 20px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); transition: all 0.4s var(--apple-ease); cursor: pointer; transform: translateY(0); }
+    .lang-badge:hover { background: rgba(255,255,255,0.08); border-color: var(--vdi-accent); color: #fff; transform: translateY(-2px); }
+    .lang-badge.active { background: var(--vdi-accent); color: #fff; border-color: var(--vdi-accent); box-shadow: 0 0 20px var(--vdi-glow); transform: translateY(-3px) scale(1.02); }
+
+    /* --- PLATFORMS SECTION (BETTER INTERACTION) --- */
+    #s-platforms { background: #f5f5f7; color: #1d1d1f; padding: 100px 24px; }
+    #s-platforms .container { text-align: center; }
+    #s-platforms h2 { font-size: clamp(32px, 4.5vw, 52px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 16px; color: #000; }
+    .plat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto; }
+    @media (max-width: 640px) { .plat-row { grid-template-columns: 1fr 1fr; } }
+    .plat-card { background: #fff; border-radius: 16px; padding: 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.3s var(--apple-ease); box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.02); }
+    .plat-card:hover { background: #fafafa; transform: translateY(-6px) scale(1.02); box-shadow: 0 8px 30px rgba(0,0,0,0.05); border-color: var(--vdi-accent); }
+    .plat-card svg { width: 28px; height: 28px; fill: #1d1d1f; transition: color 0.4s var(--apple-ease); }
+    .plat-card:hover svg { color: var(--vdi-accent); fill: var(--vdi-accent); }
+    .plat-card span { font-size: 13px; font-weight: 600; transition: color 0.4s; }
+    .plat-card:hover span { color: #000; }
+
+    /* --- CLEAN HONEST SECTION (NO GLOW) --- */
+    #s-honest { background: #0a0a0a; padding: 100px 24px; }
+    .honest-quote { font-size: clamp(20px, 3vw, 28px); font-weight: 400; line-height: 1.7; color: rgba(255,255,255,0.7); letter-spacing: -.02em; max-width: 640px; margin: 0 auto; }
+    .honest-quote em { font-style: normal; color: #fff; font-weight: 600; transition: color 0.3s; }
+    .honest-quote em:hover { color: var(--vdi-accent); }
+
+    #s-cta { min-height: 40vh; text-align: center; flex-direction: column; align-items: center; }
+    .cta-btn { display: inline-block; padding: 16px 48px; background: #fff; color: #000; border-radius: 99px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: transform .3s var(--apple-ease), background .3s var(--apple-ease), box-shadow .3s var(--apple-ease), color .3s var(--apple-ease); }
+    .cta-btn:hover { transform: scale(1.05); background: var(--vdi-accent); color: #fff; box-shadow: 0 0 40px var(--vdi-glow); }
+
+    .kofi-welcome-card {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 28px;
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.15), rgba(255, 195, 113, 0.15));
+      border: 1px solid rgba(255, 95, 109, 0.3);
+      border-radius: 14px;
+      color: #ffc371;
+      font-size: 15px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: all 0.3s var(--apple-ease);
+      margin-bottom: 20px;
+    }
+    .kofi-welcome-card:hover {
+      background: linear-gradient(135deg, rgba(255, 95, 109, 0.25), rgba(255, 195, 113, 0.25));
+      transform: scale(1.03);
+      border-color: rgba(255, 195, 113, 0.5);
+    }
+    .kofi-welcome-icon {
+      font-size: 20px;
+    }
+    
+    .footer-actions { display: flex; justify-content: center; gap: 16px; margin: 24px 0; flex-wrap: wrap; }
+    .footer-actions a { color: rgba(255,255,255,0.5); text-decoration: none; font-size: 13px; font-weight: 500; padding: 8px 16px; border-radius: 99px; background: rgba(255,255,255,0.05); transition: all 0.3s var(--apple-ease); }
+    .footer-actions a:hover { background: rgba(255,255,255,0.1); color: #fff; transform: scale(1.05); }
+    .copyright { font-size: 12px; color: rgba(255,255,255,0.3); text-align: center; margin-top: 12px; }
+  </style>
+</head>
+<body>
+  <!-- 1:1 DYNAMIC ISLAND DEMO -->
+  <div id="island-wrap">
+    <div id="island" class="vdi-visible">
+      <div id="vdi-col">
+        <div id="vdi-eq"><div class="vdi-eq-bar b1"></div><div class="vdi-eq-bar b2"></div><div class="vdi-eq-bar b3"></div></div>
+        <div id="vdi-col-text"><span id="vdi-col-inner">Blinding Lights - The Weeknd</span></div>
+        <div id="vdi-col-btn"><svg id="vdi-col-icon" viewBox="0 0 24 24" fill="white" width="10" height="10"><path d="M8 5v14l11-7z"/></svg></div>
+      </div>
+      <div id="vdi-exp">
+        <div id="vdi-settings-btn" title="Settings">
+          <!-- EXACT GEAR SVG PATH FROM UI.JS -->
+          <svg viewBox="0 0 24 24"><path d="M19.14,12.94c0.04-0.3,0.06-0.61,0.06-0.94c0-0.32-0.02-0.64-0.06-0.94l2.03-1.58c0.18-0.14,0.23-0.41,0.12-0.61 l-1.92-3.32c-0.12-0.22-0.37-0.29-0.59-0.22l-2.39,0.96c-0.5-0.38-1.03-0.7-1.62-0.94L14.4,2.81c-0.04-0.24-0.24-0.41-0.48-0.41 h-3.84c-0.24,0-0.43,0.17-0.47,0.41L9.25,5.35C8.66,5.59,8.12,5.92,7.63,6.29L5.24,5.33c-0.22-0.08-0.47,0-0.59,0.22L2.73,8.87 C2.62,9.08,2.66,9.34,2.86,9.48l2.03,1.58C4.84,11.36,4.8,11.69,4.8,12s0.02,0.64,0.06,0.94l-2.03,1.58 c-0.18,0.14-0.23,0.41-0.12,0.61l1.92,3.32c0.12,0.22,0.37,0.29,0.59,0.22l2.39-0.96c0.5,0.38,1.03,0.7,1.62,0.94l0.36,2.54 c0.05,0.24,0.24,0.41,0.48,0.41h3.84c0.24,0,0.44-0.17,0.47-0.41l0.36-2.54c0.59-0.24,1.13-0.56,1.62-0.94l2.39,0.96 c0.22,0.08,0.47,0,0.59-0.22l1.92-3.32c0.12-0.22,0.07-0.49-0.12-0.61L19.14,12.94z M12,15.6c-1.98,0-3.6-1.62-3.6-3.6 s1.62-3.6,3.6-3.6s3.6,1.62,3.6,3.6S13.98,15.6,12,15.6z"></path></svg>
+        </div>
+        <button id="vdi-close-btn" title="Hide Island"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="14" height="14"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+        <button id="vdi-teleport-btn" title="Jump to Media Tab"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="7" y1="17" x2="17" y2="7"></line><polyline points="7 7 17 7 17 17"></polyline></svg></button>
+        
+        <div id="vdi-art">
+          <div id="vdi-art-ph">🎵</div>
+          <img id="vdi-art-img" src="" alt="" crossorigin="anonymous"/>
+        </div>
+        
+        <div id="vdi-track">
+          <div id="vdi-title-row"><div id="vdi-title">Blinding Lights</div></div>
+          <div id="vdi-artist">The Weeknd</div>
+          <div id="vdi-prog-row">
+            <span class="vdi-t" id="vdi-pos">0:00</span>
+            <div id="vdi-prog"><div id="vdi-prog-fill"></div></div>
+            <span class="vdi-t" id="vdi-dur" style="text-align:right">3:22</span>
+          </div>
+          <div id="vdi-ctrl-row">
+            <div id="vdi-ctrl-main">
+              <button class="vdi-btn" id="vdi-shuffle" title="Shuffle"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg></button>
+              <button class="vdi-btn" id="vdi-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>
+              <button class="vdi-btn" id="vdi-play" title="Play/Pause"><svg id="vdi-pp" viewBox="0 0 24 24" fill="currentColor"><path d="M8 5v14l11-7z"/></svg></button>
+              <button class="vdi-btn" id="vdi-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>
+              <button class="vdi-btn" id="vdi-repeat" title="Repeat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>
+            </div>
+            <div id="vdi-ctrl-extra">
+              <button class="vdi-icon-btn" id="vdi-lyr-btn" title="Lyrics"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 18V5l12-2v13"></path><circle cx="6" cy="18" r="3"></circle><circle cx="18" cy="16" r="3"></circle></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- HERO SECTION -->
+  <section id="hero">
+    <img src="icon128.png" alt="Glance Logo" class="hero-logo reveal">
+    <div class="hero-eyebrow reveal">Glance</div>
+    <h1 class="hero-title reveal reveal-delay-1">Your music,<br>at a glance.</h1>
+    <p class="hero-sub reveal reveal-delay-2">A floating media remote that lives in your browser — powered by a 60FPS engine, real-time color extraction, and dual-source lyrics.</p>
+  </section>
+
+  <!-- FOCUS MODE FEATURE — v1.7 HERO SECTION -->
+  <section id="s-focus" style="padding: 0 24px 80px;">
+    <div style="
+      max-width: 760px; margin: 0 auto;
+      background: linear-gradient(135deg, color-mix(in srgb, var(--vdi-accent) 8%, transparent) 0%, transparent 50%, color-mix(in srgb, var(--vdi-accent) 5%, transparent) 100%);
+      border: 1px solid color-mix(in srgb, var(--vdi-accent) 30%, transparent);
+      border-radius: 28px;
+      padding: 52px 48px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 0 80px var(--vdi-glow), inset 0 1px 0 rgba(255,255,255,0.05);
+    ">
+      <!-- Ambient glow blobs -->
+      <div style="position:absolute;top:-60px;right:-60px;width:220px;height:220px;background:radial-gradient(circle, var(--vdi-glow) 0%,transparent 70%);pointer-events:none;opacity:0.6;"></div>
+      <div style="position:absolute;bottom:-40px;left:-40px;width:160px;height:160px;background:radial-gradient(circle, var(--vdi-glow) 0%,transparent 70%);pointer-events:none;opacity:0.4;"></div>
+
+      <div class="reveal" style="text-align:center;position:relative;">
+        <!-- Badge -->
+        <div style="
+          display:inline-flex;align-items:center;gap:6px;
+          background:color-mix(in srgb, var(--vdi-accent) 15%, transparent);
+          border:1px solid color-mix(in srgb, var(--vdi-accent) 40%, transparent);
+          border-radius:99px;padding:5px 14px;margin-bottom:22px;
+          font-size:11px;font-weight:700;letter-spacing:0.08em;text-transform:uppercase;color:var(--vdi-accent);
+        ">
+          <span style="width:6px;height:6px;border-radius:50%;background:var(--vdi-accent);box-shadow:0 0 8px var(--vdi-accent);animation:pulse-dot 2s ease-in-out infinite;display:inline-block;"></span>
+          New in v1.7
+        </div>
+
+        <h2 class="reveal reveal-delay-1" style="font-size:clamp(32px,5vw,52px);font-weight:800;letter-spacing:-0.03em;line-height:1.1;margin-bottom:14px;color:#fff">
+          Focus Mode.
+        </h2>
+        <p class="reveal reveal-delay-2" style="font-size:16px;color:rgba(255,255,255,0.5);line-height:1.7;max-width:480px;margin:0 auto 44px">
+          Block distracting sites during your Pomodoro session. The blocked page carries your album art accent — so even focus feels like&nbsp;Glance.
+        </p>
+
+        <!-- 3 feature cards -->
+        <div class="reveal reveal-delay-3" style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;text-align:left">
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--vdi-accent);margin-bottom:6px">Countdown Ring</div>
+            <div style="font-size:14px;font-weight:600;color:#f5f5f7;margin-bottom:6px">Live Focus Timer</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">A glowing SVG ring counts down in real time, colour matched to your album art.</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--vdi-accent);margin-bottom:6px">Smart Redirect</div>
+            <div style="font-size:14px;font-weight:600;color:#f5f5f7;margin-bottom:6px">Blocked Sites</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">Distraction sites redirect instantly. Already-open tabs are caught too.</div>
+          </div>
+          <div style="background:rgba(0,0,0,0.2);border:1px solid rgba(255,255,255,0.07);border-radius:18px;padding:22px 20px;">
+            <div style="font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:var(--vdi-accent);margin-bottom:6px">One Tap</div>
+            <div style="font-size:14px;font-weight:600;color:#f5f5f7;margin-bottom:6px">Bypass Once</div>
+            <div style="font-size:12px;color:rgba(255,255,255,0.45);line-height:1.5">Quick check needed? Bypass without stopping your timer. Hidden in strict mode.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- HIGHLIGHTED DEMO: COLOR EXTRACTION ENGINE -->
+  <section id="s-demo">
+    <div class="container">
+      <div class="reveal"><div class="eyebrow">The Real Color Extraction Engine</div></div>
+      <div class="reveal reveal-delay-1"><h2>It reads the room.</h2></div>
+      <div class="reveal reveal-delay-2"><p>Click any album cover below. The island dynamically themes its entire color palette—accent, gradient, glow, and background—using a canvas-based algorithm that analyzes over 65,000 pixels in real-time.</p></div>
+      
+      <!-- SPECIAL V1.6 FEATURE: AMOLED TOGGLE (CLEANED) -->
+      <div class="feature-spotlight reveal reveal-delay-3" id="amoled-spotlight">
+        <div class="feature-left">
+          <div class="feature-text">
+            <span class="feature-title">AMOLED Black Mode</span>
+            <span class="feature-sub">Pure pitch-black background for OLED screens.</span>
+          </div>
+        </div>
+        <label class="amoled-switch">
+          <input type="checkbox" id="amoled-checkbox">
+          <span class="amoled-slider"></span>
+        </label>
+      </div>
+
+      <div class="track-grid reveal reveal-delay-4" id="track-grid"></div>
+    </div>
+  </section>
+
+  <!-- ARCHITECTURE SHOWCASE -->
+  <section id="s-arch">
+    <div class="container">
+      <div class="reveal"><h2>Built, not faked.</h2></div>
+      <div class="sub reveal reveal-delay-1">This is a deeply engineered media companion, not a CSS clone. Here's how it works under the hood.</div>
+      <div class="arch-grid reveal reveal-delay-2">
+        <div class="arch-card"><div class="arch-badge">60FPS Engine</div><h3>Zero-Jitter Interpolation</h3><p>Decouples the progress bar from the background script's polling. Uses requestAnimationFrame to smoothly glide between syncs, eliminating rubber-banding and lag.</p></div>
+        <div class="arch-card"><div class="arch-badge">Platform Isolation</div><h3>3 Dedicated Media Engines</h3><p>Uses Apple's native MusicKit SDK for Apple Music, stable `data-testid` selectors for Spotify, and intelligent audio filtering for YouTube/YT Music.</p></div>
+        <div class="arch-card"><div class="arch-badge">Dual-Source Caching</div><h3>LyricsPlus & LRCLib</h3><p>Fetches from both providers simultaneously using Promise.allSettled, merges the data, and caches it to localStorage for 24 hours. Zero redundant API calls.</p></div>
+        <div class="arch-card"><div class="arch-badge">Universal Teleport</div><h3>Cross-Tab Picture-in-Picture</h3><p>Overcomes Chromium's strict gesture requirement by silently teleporting to the media tab, triggering the standard HTML5 API, and instantly teleporting back—all in milliseconds.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INTERACTIVE LANGUAGE & ROMANIZATION DEMO -->
+  <section id="s-langs">
+    <div class="container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;">
+      <div class="reveal">
+        <div class="eyebrow">Live Romanization</div>
+        <h2>Every script,<br>translated on the fly.</h2>
+        <p>Whether it's Kannada, Hindi, Tamil, or Telugu, the island silently queries the Google Translate API to provide highly accurate Romanization underneath the original text.</p>
+        <div class="lang-grid reveal reveal-delay-1">
+          <span class="lang-badge active" data-lang="kn">ಕನ್ನಡ (Kannada)</span>
+          <span class="lang-badge" data-lang="hi">हिंदी (Hindi)</span>
+          <span class="lang-badge" data-lang="ta">தமிழ் (Tamil)</span>
+          <span class="lang-badge" data-lang="te">తెలుగు (Telugu)</span>
+          <span class="lang-badge" data-lang="ml">മലയാളം (Malayalam)</span>
+        </div>
+      </div>
+      <div class="rom-demo-box reveal reveal-delay-1" id="rom-demo-box" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 24px; transition: all 0.5s var(--apple-ease);">
+        <div style="font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.8); line-height: 1.8; font-family: 'Inter', sans-serif; text-align: center;" id="rom-demo">
+          <div>ಅಭಿಮಾನಿಗಳೇ</div>
+          <div style="font-size: 14px; font-weight: 400; color: var(--vdi-accent); margin-top: 4px;">Abhimanigale</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PLATFORMS SECTION -->
+  <section id="s-platforms">
+    <div class="container">
+      <div class="eyebrow-dark reveal" style="font-size: 11px; font-weight: 600; letter-spacing: .14em; color: #6e6e73; text-transform: uppercase; margin-bottom: 16px;">Exclusive Platform Support</div>
+      <h2 class="reveal reveal-delay-1">Four apps.<br>One island.</h2>
+      <p class="reveal reveal-delay-2" style="color: #6e6e73; font-size: 15px; line-height: 1.6; max-width: 400px; margin: 0 auto;">Deeply integrated with the platforms you actually use — not generic hooks, but native APIs and DOM signals wired precisely for each one.</p>
+      <div class="plat-row reveal reveal-delay-3">
+        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.54.659.301 1.02zm1.44-3.3c-.301.42-.84.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.6.18-1.2.78-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.56.3z"/></svg><span>Spotify</span></div>
+        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.688.78-1.325 2.22-.11 3.587 1.338.104 2.61-.714 3.397-1.575z"/></svg><span>Apple Music</span></div>
+        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg><span>YouTube</span></div>
+        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg><span>YouTube Music</span></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HONEST SECTION -->
+  <section id="s-honest">
+    <div class="container reveal">
+      <p class="honest-quote">
+        I am a <em>3rd-year CS student from Karnataka</em>. I did not write the HTML or CSS syntax — that was handled by AI.<br><br>
+        What I did do: <em>defined the product, made every architectural decision, and acted as QA</em> throughout. I caught bugs the AI missed repeatedly — a silent `ReferenceError` that broke color theming, a JavaScript closure bug that bound every lyrics click listener to the last line, and an infinite loop in the Apple Music fetcher.<br><br>
+        The AI generated code; <em>I decided what the code was supposed to do and whether it actually did it.</em> This is what real AI-assisted engineering looks like.
+      </p>
+    </div>
+  </section>
+
+  <!-- CTA: GRACEFUL CLOSURE -->
+  <section id="s-cta">
+    <div class="reveal">
+      <div class="hero-eyebrow" style="margin-bottom: 16px;">Available Now</div>
+      <h2 class="hero-title" style="font-size: clamp(36px, 6vw, 72px);">Get Glance.</h2>
+      <p class="hero-sub" style="margin-bottom: 40px;">Open any of the 4 supported apps and the island will find it. If you love it, consider dropping a review!</p>
+      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
+        <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Firefox</a>
+        <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Edge</a>
+        <button class="cta-btn" style="text-decoration: none; opacity: 0.5; cursor: not-allowed;" title="Pending Review in Web Store" disabled>Chrome (Pending)</button>
+      </div>
+      <a href="https://ko-fi.com/aksharsrijan" target="_blank" rel="noopener" class="kofi-welcome-card" id="kofi-welcome-btn">
+        <span class="kofi-welcome-icon">☕</span>
+        <span class="kofi-welcome-label">Support on Ko-fi</span>
+      </a>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <div class="footer-actions">
+      <a href="https://github.com/AksharS07/glance" target="_blank">⭐ Star on GitHub</a>
+    </div>
+    <div class="copyright">© Glance · v1.7</div>
+  </footer>
+
+  <!-- COMBINED JAVASCRIPT -->
+  <script src="welcome.js"></script>
+</body>
+</html>
