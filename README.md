@@ -60,7 +60,7 @@ Works on Chrome, Edge, Firefox, Zen Browser, Brave, or any modern Chromium brows
 
 ## What's New in V1.4
 
-- **Spotify Web Integration**: Full support for `open.spotify.com` — track info, album art, and controls.
+- **Spotify Web Integration**: Full support for `open.spotify.com` - track info, album art, and controls.
 - **Micro-Stutter Latency Fix**: The island compensates for cross-process communication delays in the 60FPS engine.
 - **Gapless Playback Fix**: Smoothly bridges YouTube Music's hidden gapless playback buffer gaps.
 
@@ -100,9 +100,9 @@ No build step, no dependencies, no account required.
 
 ## How this was actually built
 
-I am a 3rd-year CS/IoT/Cybersecurity engineering student. I do not enjoy frontend development. I did not write the HTML, CSS, or JS syntax for this project — that was handled by agentic AI (Google's Antigravity 2.0 and Claude).
+I am a 3rd-year CS/IoT/Cybersecurity engineering student. I do not enjoy frontend development. I did not write the HTML, CSS, or JS syntax for this project. That was handled by agentic AI (Google's Antigravity 2.0 and Claude).
 
-What I did do: defined the product, made every architectural decision, and acted as QA throughout. I caught bugs the AI missed repeatedly — a silent `ReferenceError` killing color theming, a JavaScript closure bug binding every lyrics listener to the last line, an infinite loop in the Apple Music metadata fetcher, and Chromium's strict User Gesture requirement that forced a cross-tab navigation approach for PiP. The AI generated code; I decided what the code was supposed to do and whether it actually did it.
+What I did do: defined the product, made every architectural decision, and acted as QA throughout. I caught bugs the AI missed repeatedly: a silent `ReferenceError` killing color theming, a JavaScript closure bug binding every lyrics listener to the last line, an infinite loop in the Apple Music metadata fetcher, and Chromium's strict User Gesture requirement that forced a cross-tab navigation approach for PiP. The AI wrote the code; I decided what it was supposed to do and whether it actually did it.
 
 This is what AI-assisted development actually looks like in practice. It is a lot of iterative debugging and knowing when the output is wrong.
 
