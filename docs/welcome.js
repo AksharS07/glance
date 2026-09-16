@@ -1,10 +1,6 @@
 // --- DATA ---
 const tracks = [
-  { title: 'Blinding Lights', artist: 'The Weeknd', c1: '#4a2000', c2: '#d4820a', bg: '#1a0a00', glow: 'rgba(212,130,10,0.25)', img: 'blinding_lights.png' },
-  { title: 'Arabic Kuthu', artist: 'Anirudh', c1: '#3a2000', c2: '#d4a820', bg: '#180a00', glow: 'rgba(212,168,32,0.25)', img: 'arabic_kuthu.png' },
-  { title: 'Apna Bana Le', artist: 'Arijit Singh', c1: '#0d2a4a', c2: '#3a8ecc', bg: '#0a1626', glow: 'rgba(58,142,204,0.25)', img: 'apna_bana_le.png' },
-  { title: 'Illuminati', artist: 'Sushin Shyam', c1: '#4a1a00', c2: '#d4a020', bg: '#180a00', glow: 'rgba(212,160,32,0.25)', img: 'illuminati.png' },
-  { title: 'Abhimanigale', artist: 'Puneeth & Shivarajkumar', c1: '#9e8a66', c2: '#ce1e1e', bg: '#1a1a1a', glow: 'rgba(206,30,30,0.25)', img: 'doddmane_hudga.png' }
+  { title: 'Your Music', artist: 'At a glance', c1: '#4f46e5', c2: '#818cf8', bg: '#0b0b10', glow: 'rgba(129, 140, 248, 0.25)', img: 'icon128.png' }
 ];
 
 
