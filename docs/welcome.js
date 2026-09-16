@@ -27,12 +27,10 @@ const fillEl = document.getElementById('vdi-prog-fill');
 const posEl = document.getElementById('vdi-pos');
 const durEl = document.getElementById('vdi-dur');
 const ppIcon = document.getElementById('vdi-pp');
-const grid = document.getElementById('track-grid');
 const eqBars = document.querySelectorAll('.vdi-eq-bar');
-
 const shuffleBtn = document.getElementById('vdi-shuffle');
 const repeatBtn = document.getElementById('vdi-repeat');
-const amoledCheckbox = document.getElementById('amoled-checkbox');
+
 const closeBtn = document.getElementById('close-btn');
 
 let isPlaying = true;
@@ -56,10 +54,7 @@ function applyTrack(index) {
   root.style.setProperty('--vdi-accent', t.c2);
   root.style.setProperty('--vdi-grad', `linear-gradient(135deg, ${t.c1}, ${t.c2})`);
   
-  root.style.setProperty('--vdi-dark-original', t.bg);
-  if (!amoledCheckbox.checked) {
-    root.style.setProperty('--vdi-dark', t.bg);
-  }
+  root.style.setProperty('--vdi-dark', t.bg);
   root.style.setProperty('--vdi-glow', t.glow);
 
   // Update Island Data
@@ -81,10 +76,7 @@ function applyTrack(index) {
     };
   }
 
-  // Update Cards
-  document.querySelectorAll('.track-card').forEach((card, i) => {
-    card.classList.toggle('active', i === index);
-  });
+
 
   progress = 5 + Math.random() * 30;
   duration = 180 + Math.floor(Math.random() * 60);
@@ -135,23 +127,7 @@ function toggleRepeat() {
   }
 }
 
-// --- BUILD TRACK GRID ---
-tracks.forEach((t, i) => {
-  const card = document.createElement('div');
-  card.className = 'track-card' + (i === 0 ? ' active' : '');
-  card.innerHTML = `
-    <div class="track-thumb">
-      <img src="${t.img}" alt="${t.title}" onerror="this.style.display='none'">
-      <div class="fallback">♪</div>
-    </div>
-    <div>
-      <div style="font-size:13px; font-weight:600; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">${t.title}</div>
-      <div style="font-size:11px; color:rgba(255,255,255,0.4);">${t.artist}</div>
-    </div>
-  `;
-  card.addEventListener('click', () => applyTrack(i));
-  grid.appendChild(card);
-});
+
 
 // --- ISLAND CONTROLS ---
 island.addEventListener('mouseenter', () => {
@@ -176,19 +152,7 @@ document.getElementById('vdi-next').addEventListener('click', (e) => { e.stopPro
 shuffleBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleShuffle(); });
 repeatBtn.addEventListener('click', (e) => { e.stopPropagation(); toggleRepeat(); });
 
-// --- AMOLED TOGGLE LOGIC ---
-amoledCheckbox.addEventListener('change', (e) => {
-  const isChecked = e.target.checked;
-  document.body.classList.toggle('amoled-mode', isChecked);
-  
-  const root = document.documentElement;
-  const currentTrack = tracks[activeIndex];
-  if (isChecked) {
-    root.style.setProperty('--vdi-dark', '#000000');
-  } else {
-    root.style.setProperty('--vdi-dark', currentTrack.bg);
-  }
-});
+
 
 // --- 60FPS PROGRESS ---
 let lastTime = 0;
