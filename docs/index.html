@@ -201,47 +201,7 @@
     .track-thumb img { width: 100%; height: 100%; object-fit: cover; position: absolute; inset: 0; transition: opacity .4s; }
     .track-thumb .fallback { position: relative; z-index: 1; font-size: 20px; font-weight: 700; color: rgba(255,255,255,0.1); }
 
-    /* --- REST OF SECTIONS --- */
-    #s-arch { background: #000; padding: 120px 24px; }
-    #s-arch h2 { font-size: clamp(40px, 5vw, 72px); font-weight: 800; letter-spacing: -.03em; line-height: 1.1; margin-bottom: 16px; }
-    #s-arch .sub { color: rgba(255,255,255,0.4); font-size: 15px; line-height: 1.7; max-width: 500px; margin: 0 auto 40px; }
-    .arch-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 24px; margin-top: 40px; }
-    @media (max-width: 720px) { .arch-grid { grid-template-columns: 1fr; } }
-    .arch-card { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.06); border-radius: 16px; padding: 32px 24px; transition: all 0.3s var(--apple-ease); }
-    .arch-card:hover { background: rgba(255,255,255,0.06); transform: translateY(-4px); border-color: var(--vdi-accent); }
-    .arch-badge { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: .05em; color: var(--vdi-accent); border: 1px solid var(--vdi-accent); border-radius: 99px; padding: 2px 10px; width: fit-content; margin-bottom: 8px; }
-    .arch-card h3 { color: #fff; font-size: 16px; font-weight: 700; margin-bottom: 6px; }
-    .arch-card p { color: rgba(255,255,255,0.5); font-size: 14px; line-height: 1.6; }
 
-    #s-langs { background: rgba(0,0,0,0.1); }
-    #s-langs .eyebrow { font-size: 11px; font-weight: 600; letter-spacing: .14em; color: var(--vdi-accent); margin-bottom: 16px; text-transform: uppercase; }
-    #s-langs h2 { font-size: clamp(32px, 4.5vw, 54px); font-weight: 800; letter-spacing: -.03em; line-height: 1.08; margin-bottom: 20px; }
-    #s-langs p { color: rgba(255,255,255,0.4); font-size: 15px; line-height: 1.7; max-width: 420px; }
-    .lang-grid { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 24px; }
-    .lang-badge { background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.08); border-radius: 99px; padding: 10px 20px; font-size: 14px; font-weight: 500; color: rgba(255,255,255,0.6); transition: all 0.4s var(--apple-ease); cursor: pointer; transform: translateY(0); }
-    .lang-badge:hover { background: rgba(255,255,255,0.08); border-color: var(--vdi-accent); color: #fff; transform: translateY(-2px); }
-    .lang-badge.active { background: var(--vdi-accent); color: #fff; border-color: var(--vdi-accent); box-shadow: 0 0 20px var(--vdi-glow); transform: translateY(-3px) scale(1.02); }
-
-    /* --- PLATFORMS SECTION (BETTER INTERACTION) --- */
-    #s-platforms { background: #f5f5f7; color: #1d1d1f; padding: 100px 24px; }
-    #s-platforms .container { text-align: center; }
-    #s-platforms h2 { font-size: clamp(32px, 4.5vw, 52px); font-weight: 800; letter-spacing: -.03em; margin-bottom: 16px; color: #000; }
-    .plat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-top: 40px; max-width: 800px; margin-left: auto; margin-right: auto; }
-    @media (max-width: 640px) { .plat-row { grid-template-columns: 1fr 1fr; } }
-    .plat-card { background: #fff; border-radius: 16px; padding: 24px 16px; display: flex; flex-direction: column; align-items: center; gap: 8px; transition: all 0.3s var(--apple-ease); box-shadow: 0 2px 8px rgba(0,0,0,0.02); border: 1px solid rgba(0,0,0,0.02); }
-    .plat-card:hover { background: #fafafa; transform: translateY(-6px) scale(1.02); box-shadow: 0 8px 30px rgba(0,0,0,0.05); border-color: var(--vdi-accent); }
-    .plat-card svg { width: 28px; height: 28px; fill: #1d1d1f; transition: color 0.4s var(--apple-ease); }
-    .plat-card:hover svg { color: var(--vdi-accent); fill: var(--vdi-accent); }
-    .plat-card span { font-size: 13px; font-weight: 600; transition: color 0.4s; }
-    .plat-card:hover span { color: #000; }
-
-    /* --- CLEAN HONEST SECTION (NO GLOW) --- */
-    #s-honest { background: #0a0a0a; padding: 100px 24px; }
-    .honest-quote { font-size: clamp(20px, 3vw, 28px); font-weight: 400; line-height: 1.7; color: rgba(255,255,255,0.7); letter-spacing: -.02em; max-width: 640px; margin: 0 auto; }
-    .honest-quote em { font-style: normal; color: #fff; font-weight: 600; transition: color 0.3s; }
-    .honest-quote em:hover { color: var(--vdi-accent); }
-
-    #s-cta { min-height: 40vh; text-align: center; flex-direction: column; align-items: center; }
     .cta-btn { display: inline-block; padding: 16px 48px; background: #fff; color: #000; border-radius: 99px; font-size: 16px; font-weight: 700; border: none; cursor: pointer; transition: transform .3s var(--apple-ease), background .3s var(--apple-ease), box-shadow .3s var(--apple-ease), color .3s var(--apple-ease); }
     .cta-btn:hover { transform: scale(1.05); background: var(--vdi-accent); color: #fff; box-shadow: 0 0 40px var(--vdi-glow); }
 
@@ -328,6 +288,17 @@
     <div class="hero-eyebrow reveal">Glance</div>
     <h1 class="hero-title reveal reveal-delay-1">Your music,<br>at a glance.</h1>
     <p class="hero-sub reveal reveal-delay-2">A floating media remote that lives in your browser — powered by a 60FPS engine, real-time color extraction, and dual-source lyrics.</p>
+    
+    <div class="reveal reveal-delay-3" style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 16px;">
+      <a href="https://chromewebstore.google.com/detail/ijplknahhfcicfpgandihmonfgmkemnf" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Chrome</a>
+      <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Firefox</a>
+      <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Edge</a>
+    </div>
+
+    <a href="https://ko-fi.com/aksharsrijan" target="_blank" rel="noopener" class="kofi-welcome-card reveal reveal-delay-4" style="margin-top: 24px;" id="kofi-welcome-btn">
+      <span class="kofi-welcome-icon">☕</span>
+      <span class="kofi-welcome-label">Support on Ko-fi</span>
+    </a>
   </section>
 
   <!-- FOCUS MODE FEATURE — v1.7 HERO SECTION -->
@@ -414,87 +385,7 @@
     </div>
   </section>
 
-  <!-- ARCHITECTURE SHOWCASE -->
-  <section id="s-arch">
-    <div class="container">
-      <div class="reveal"><h2>Built, not faked.</h2></div>
-      <div class="sub reveal reveal-delay-1">This is a deeply engineered media companion, not a CSS clone. Here's how it works under the hood.</div>
-      <div class="arch-grid reveal reveal-delay-2">
-        <div class="arch-card"><div class="arch-badge">60FPS Engine</div><h3>Zero-Jitter Interpolation</h3><p>Decouples the progress bar from the background script's polling. Uses requestAnimationFrame to smoothly glide between syncs, eliminating rubber-banding and lag.</p></div>
-        <div class="arch-card"><div class="arch-badge">Platform Isolation</div><h3>3 Dedicated Media Engines</h3><p>Uses Apple's native MusicKit SDK for Apple Music, stable `data-testid` selectors for Spotify, and intelligent audio filtering for YouTube/YT Music.</p></div>
-        <div class="arch-card"><div class="arch-badge">Dual-Source Caching</div><h3>LyricsPlus & LRCLib</h3><p>Fetches from both providers simultaneously using Promise.allSettled, merges the data, and caches it to localStorage for 24 hours. Zero redundant API calls.</p></div>
-        <div class="arch-card"><div class="arch-badge">Universal Teleport</div><h3>Cross-Tab Picture-in-Picture</h3><p>Overcomes Chromium's strict gesture requirement by silently teleporting to the media tab, triggering the standard HTML5 API, and instantly teleporting back—all in milliseconds.</p></div>
-      </div>
-    </div>
-  </section>
 
-  <!-- INTERACTIVE LANGUAGE & ROMANIZATION DEMO -->
-  <section id="s-langs">
-    <div class="container" style="display: grid; grid-template-columns: 1fr 1fr; gap: 60px; align-items: center;">
-      <div class="reveal">
-        <div class="eyebrow">Live Romanization</div>
-        <h2>Every script,<br>translated on the fly.</h2>
-        <p>Whether it's Kannada, Hindi, Tamil, or Telugu, the island silently queries the Google Translate API to provide highly accurate Romanization underneath the original text.</p>
-        <div class="lang-grid reveal reveal-delay-1">
-          <span class="lang-badge active" data-lang="kn">ಕನ್ನಡ (Kannada)</span>
-          <span class="lang-badge" data-lang="hi">हिंदी (Hindi)</span>
-          <span class="lang-badge" data-lang="ta">தமிழ் (Tamil)</span>
-          <span class="lang-badge" data-lang="te">తెలుగు (Telugu)</span>
-          <span class="lang-badge" data-lang="ml">മലയാളം (Malayalam)</span>
-        </div>
-      </div>
-      <div class="rom-demo-box reveal reveal-delay-1" id="rom-demo-box" style="background: rgba(0,0,0,0.4); backdrop-filter: blur(16px); border: 1px solid rgba(255,255,255,0.06); border-radius: 20px; padding: 24px; transition: all 0.5s var(--apple-ease);">
-        <div style="font-size: 18px; font-weight: 600; color: rgba(255,255,255,0.8); line-height: 1.8; font-family: 'Inter', sans-serif; text-align: center;" id="rom-demo">
-          <div>ಅಭಿಮಾನಿಗಳೇ</div>
-          <div style="font-size: 14px; font-weight: 400; color: var(--vdi-accent); margin-top: 4px;">Abhimanigale</div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <!-- PLATFORMS SECTION -->
-  <section id="s-platforms">
-    <div class="container">
-      <div class="eyebrow-dark reveal" style="font-size: 11px; font-weight: 600; letter-spacing: .14em; color: #6e6e73; text-transform: uppercase; margin-bottom: 16px;">Exclusive Platform Support</div>
-      <h2 class="reveal reveal-delay-1">Four apps.<br>One island.</h2>
-      <p class="reveal reveal-delay-2" style="color: #6e6e73; font-size: 15px; line-height: 1.6; max-width: 400px; margin: 0 auto;">Deeply integrated with the platforms you actually use — not generic hooks, but native APIs and DOM signals wired precisely for each one.</p>
-      <div class="plat-row reveal reveal-delay-3">
-        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M12 0C5.4 0 0 5.4 0 12s5.4 12 12 12 12-5.4 12-12S18.66 0 12 0zm5.521 17.34c-.24.359-.66.48-1.021.24-2.82-1.74-6.36-2.101-10.561-1.141-.418.122-.779-.179-.899-.539-.12-.421.18-.78.54-.9 4.56-1.021 8.52-.6 11.64 1.32.42.18.54.659.301 1.02zm1.44-3.3c-.301.42-.84.6-1.262.3-3.239-1.98-8.159-2.58-11.939-1.38-.479.12-1.02-.12-1.14-.6-.12-.48.12-1.021.6-1.141C9.6 9.9 15 10.561 18.72 12.84c.361.181.54.78.241 1.2zm.12-3.36C15.24 8.4 8.82 8.16 5.16 9.301c-.6.179-1.2-.181-1.38-.781-.18-.6.18-1.2.78-1.381 4.26-1.26 11.28-1.02 15.721 1.621.539.3.719 1.02.419 1.56-.299.421-1.02.599-1.56.3z"/></svg><span>Spotify</span></div>
-        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.688.78-1.325 2.22-.11 3.587 1.338.104 2.61-.714 3.397-1.575z"/></svg><span>Apple Music</span></div>
-        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M19.615 3.184c-3.604-.246-11.631-.245-15.23 0-3.897.266-4.356 2.62-4.385 8.816.029 6.185.484 8.549 4.385 8.816 3.6.245 11.626.246 15.23 0 3.897-.266 4.356-2.62 4.385-8.816-.029-6.185-.484-8.549-4.385-8.816zm-10.615 12.816v-8l8 3.993-8 4.007z"/></svg><span>YouTube</span></div>
-        <div class="plat-card"><svg viewBox="0 0 24 24"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 14.5v-9l6 4.5-6 4.5z"/></svg><span>YouTube Music</span></div>
-      </div>
-    </div>
-  </section>
-
-  <!-- HONEST SECTION -->
-  <section id="s-honest">
-    <div class="container reveal">
-      <p class="honest-quote">
-        I am a <em>3rd-year CS student from Karnataka</em>. I did not write the HTML or CSS syntax — that was handled by AI.<br><br>
-        What I did do: <em>defined the product, made every architectural decision, and acted as QA</em> throughout. I caught bugs the AI missed repeatedly — a silent `ReferenceError` that broke color theming, a JavaScript closure bug that bound every lyrics click listener to the last line, and an infinite loop in the Apple Music fetcher.<br><br>
-        The AI wrote the code; <em>I decided what it was supposed to do and whether it actually did it.</em> This is what real AI-assisted engineering looks like.
-      </p>
-    </div>
-  </section>
-
-  <!-- CTA: GRACEFUL CLOSURE -->
-  <section id="s-cta">
-    <div class="reveal">
-      <div class="hero-eyebrow" style="margin-bottom: 16px;">Available Now</div>
-      <h2 class="hero-title" style="font-size: clamp(36px, 6vw, 72px);">Get Glance.</h2>
-      <p class="hero-sub" style="margin-bottom: 40px;">Open any of the 4 supported apps and the island will find it. If you love it, consider dropping a review!</p>
-      <div style="display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-bottom: 24px;">
-        <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Firefox</a>
-        <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Edge</a>
-        <a href="https://chromewebstore.google.com/detail/ijplknahhfcicfpgandihmonfgmkemnf" target="_blank" class="cta-btn" style="text-decoration: none;">Get for Chrome</a>
-      </div>
-      <a href="https://ko-fi.com/aksharsrijan" target="_blank" rel="noopener" class="kofi-welcome-card" id="kofi-welcome-btn">
-        <span class="kofi-welcome-icon">☕</span>
-        <span class="kofi-welcome-label">Support on Ko-fi</span>
-      </a>
-    </div>
-  </section>
 
   <!-- FOOTER -->
   <footer>

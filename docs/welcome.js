@@ -7,13 +7,7 @@ const tracks = [
   { title: 'Abhimanigale', artist: 'Puneeth & Shivarajkumar', c1: '#9e8a66', c2: '#ce1e1e', bg: '#1a1a1a', glow: 'rgba(206,30,30,0.25)', img: 'doddmane_hudga.png' }
 ];
 
-const langs = [
-  { code: 'kn', text: 'ಅಭಿಮಾನಿಗಳೇ', rom: 'Abhimanigale' },
-  { code: 'hi', text: 'अपना बना ले', rom: 'Apna Bana Le' },
-  { code: 'ta', text: 'அரபிக் குத்து', rom: 'Arabic Kuthu' },
-  { code: 'te', text: 'బట్టబొమ్మ', rom: 'Buttabomma' },
-  { code: 'ml', text: 'ഇല്ലുമിനാറ്റി', rom: 'Illuminati' }
-];
+
 
 const SHUFFLE_OFF = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M10.59 9.17L5.41 4 4 5.41l5.17 5.17 1.42-1.41zM14.5 4l2.04 2.04L4 18.59 5.41 20 17.96 7.46 20 9.5V4h-5.5zm.33 9.41l-1.41 1.41 3.13 3.13L14.5 20H20v-5.5l-2.04 2.04-3.13-3.13z"/></svg>';
 const SHUFFLE_ON = '<svg viewBox="0 0 24 24" fill="currentColor"><path d="M16.293 13.293a1 1 0 011.414 0L22.414 18l-4.707 4.707a1 1 0 01-1.414-1.413L18.586 19H17.21a7.001 7.001 0 01-5.824-3.117l-.186-.278 1.202-1.803.648.972A5.001 5.001 0 0017.21 17h1.375l-2.293-2.293a1 1 0 010-1.414Zm0-12a1 1 0 011.414 0L22.414 6l-4.707 4.707a1 1 0 01-1.414-1.414L18.586 7H17.21a5 5 0 00-4.16 2.227l-4.438 6.656A7 7 0 012.79 19H2a1 1 0 010-2h.79a5 5 0 004.16-2.226l4.437-6.656A7 7 0 0117.21 5h1.375l-2.293-2.292a1 1 0 010-1.415ZM3 10.001a2 2 0 110 4 2 2 0 010-4Zm-.21-5a7 7 0 015.823 3.117l.185.277-1.202 1.803-.647-.971A5 5 0 002.79 7H2a1 1 0 010-2h.79Z"></path></svg>';
@@ -35,7 +29,7 @@ const durEl = document.getElementById('vdi-dur');
 const ppIcon = document.getElementById('vdi-pp');
 const grid = document.getElementById('track-grid');
 const eqBars = document.querySelectorAll('.vdi-eq-bar');
-const romDemo = document.getElementById('rom-demo');
+
 const shuffleBtn = document.getElementById('vdi-shuffle');
 const repeatBtn = document.getElementById('vdi-repeat');
 const amoledCheckbox = document.getElementById('amoled-checkbox');
@@ -216,20 +210,6 @@ setInterval(() => {
   });
 }, 200);
 
-// --- ROMANIZATION INTERACTION ---
-const langBadges = document.querySelectorAll('.lang-badge');
-langBadges.forEach(badge => {
-  badge.addEventListener('click', () => {
-    langBadges.forEach(b => b.classList.remove('active'));
-    badge.classList.add('active');
-
-    const code = badge.getAttribute('data-lang');
-    const data = langs.find(l => l.code === code);
-    if (data) {
-      romDemo.innerHTML = `<div>${data.text}</div><div style="font-size: 14px; font-weight: 400; color: var(--vdi-accent); margin-top: 4px;">${data.rom}</div>`;
-    }
-  });
-});
 
 // --- SCROLL REVEAL ---
 const observer = new IntersectionObserver(entries => {
