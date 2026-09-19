@@ -327,6 +327,7 @@ VDI.Styles = (function() {
     rules.push('.vdi-btn:active{transform:scale(.92) !important;}');
     rules.push('.vdi-hidden{display:none !important;}');
     rules.push('.vdi-btn svg{width:16px !important;height:16px !important;pointer-events:none !important;}');
+    rules.push('#vdi-source-next svg{width:15px !important;height:15px !important;}');
     rules.push('.vdi-platform-apple #vdi-shuffle svg, .vdi-platform-apple #vdi-repeat svg { width: 38px !important; height: 34px !important; }');
     rules.push('.vdi-platform-youtube #vdi-shuffle svg, .vdi-platform-youtube #vdi-repeat svg, .vdi-platform-ytmusic #vdi-shuffle svg, .vdi-platform-ytmusic #vdi-repeat svg { width: 22px !important; height: 22px !important; }');
     rules.push('#vdi-shuffle, #vdi-repeat{background:transparent;color:rgba(255,255,255,.35);position:relative;transition:color 0.2s,background 0.2s;}');

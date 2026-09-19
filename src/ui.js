@@ -89,6 +89,7 @@ VDI.UI = (function() {
                   '<button class="vdi-btn" id="vdi-prev" title="Previous"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg></button>' +
                   '<button class="vdi-btn" id="vdi-play" title="Play/Pause"><svg id="vdi-pp" viewBox="0 0 24 24" fill="currentColor">' + VDI.Core.getPlayIcon(false) + '</svg></button>' +
                   '<button class="vdi-btn" id="vdi-next" title="Next"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg></button>' +
+                  '<button class="vdi-btn vdi-hidden" id="vdi-source-next" title="Next Source"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M5 4l8 8-8 8 1.5 1.5L16 12 6.5 2.5zM13 4l8 8-8 8 1.5 1.5L24 12 14.5 2.5z"/></svg></button>' +
                   '<button class="vdi-btn vdi-hidden" id="vdi-repeat" title="Repeat"><svg viewBox="0 0 24 24" fill="currentColor"><path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z"/></svg></button>' +
                 '</div>' +
                 '<div id="vdi-ctrl-extra">' +
@@ -290,6 +291,7 @@ VDI.UI = (function() {
       hasMedia: false,
       tabId: null,
       windowId: null,
+      sources: [],
       lastArtwork: null,
       lastArtTitle: null,
       supportsPiP: false,
@@ -589,6 +591,10 @@ VDI.UI = (function() {
           $('vdi-repeat').innerHTML = state.repSvg || repOffSvg;
           $('vdi-repeat').title = 'Repeat Off';
         }
+      }
+
+      if ($('vdi-source-next')) {
+        $('vdi-source-next').classList.toggle('vdi-hidden', state.sources.length < 2);
       }
 
       setPlayIcon(state.isPlaying);
@@ -1365,6 +1371,7 @@ VDI.UI = (function() {
       var expContainer = $('vdi-exp');
       if (expContainer) {
         expContainer.addEventListener('wheel', function(e) {
+          if (e.target.closest && e.target.closest('#vdi-lyrics-scroll')) return;
           e.stopPropagation();
           e.preventDefault();
           if (scrollCooldown) return;
@@ -1469,6 +1476,13 @@ VDI.UI = (function() {
         e.stopPropagation();
         platform.sendAction(state.tabId, 'next');
       });
+
+      if ($('vdi-source-next')) {
+        $('vdi-source-next').addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (state.sources.length > 1) platform.sendAction(state.tabId, 'next-source');
+        });
+      }
 
       if ($('vdi-shuffle')) {
         $('vdi-shuffle').addEventListener('click', function(e) {
@@ -1946,6 +1960,7 @@ VDI.UI = (function() {
       state.smartShuffleOn = newState.smartShuffleOn || false;
       state.repeatMode = newState.repeatMode || 'off';
       state.platform = newState.platform || 'other';
+      state.sources = Array.isArray(newState.sources) ? newState.sources : state.sources;
       
       // Use exact clock interpolation instead of dt accumulation
       if (!state.isSeeking) {
