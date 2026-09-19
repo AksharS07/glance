@@ -18,7 +18,7 @@
 <p align="center">
   <a href="https://ko-fi.com/aksharsrijan"><img src="https://ko-fi.com/img/githubbutton_sm.svg" alt="Support me on Ko-fi"></a>
   &nbsp;&nbsp;
-  <a href="https://www.producthunt.com/posts/glance-17?embed=true&utm_source=badge-featured&utm_medium=badge&utm_souce=badge-glance&#045;17"><img src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=glance-17&theme=dark" alt="Glance - A floating Dynamic Island for your browser with live lyrics | Product Hunt" style="width: 250px; height: 54px;" width="250" height="54" /></a>
+  <a href="https://www.producthunt.com/products/glance-17?embed=true&amp;utm_source=badge-featured&amp;utm_medium=badge&amp;utm_campaign=badge-glance-21" target="_blank" rel="noopener noreferrer"><img alt="Product Hunt" width="250" height="54" src="https://api.producthunt.com/widgets/embed-image/v1/featured.svg?post_id=1254821&amp;theme=dark&amp;t=1789822438732"></a>
 </p>
 
 A beautifully animated, Apple-style media controller that lives natively in your browser. Supports Spotify Web, Apple Music, YouTube, and YouTube Music with a 60FPS sync engine, Universal Picture-in-Picture teleportation, live time-synced lyrics, and a built-in Focus Mode with Pomodoro timer.
