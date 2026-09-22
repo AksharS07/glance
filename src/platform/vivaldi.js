@@ -102,12 +102,27 @@ VDI.Platform.Vivaldi = (function() {
     try {
       if (!chrome || !chrome.tabs) return;
 
-      chrome.tabs.query({ audible: true }, function(tabs) {
+      var SUPPORTED_HOSTS = ['youtube.com', 'music.youtube.com', 'spotify.com', 'open.spotify.com', 'music.apple.com'];
+      chrome.tabs.query({}, function(tabs) {
         try {
           if (chrome.runtime.lastError) return;
-          var tab = (tabs && tabs.length) ? tabs[0] : null;
-
-          callback(tab);
+          var mediaTabs = [];
+          if (tabs && tabs.length) {
+            for (var t = 0; t < tabs.length; t++) {
+              if (tabs[t].url) {
+                try {
+                  var h = new URL(tabs[t].url).hostname;
+                  for (var s = 0; s < SUPPORTED_HOSTS.length; s++) {
+                    if (h === SUPPORTED_HOSTS[s] || h.endsWith('.' + SUPPORTED_HOSTS[s])) {
+                      mediaTabs.push(tabs[t]);
+                      break;
+                    }
+                  }
+                } catch(e) {}
+              }
+            }
+          }
+          callback(mediaTabs);
         } catch (e) {}
       });
     } catch (e) {}
