@@ -104,9 +104,9 @@ No build step, no dependencies, no account required.
 
 I am a 3rd-year CS/IoT/Cybersecurity engineering student. I do not enjoy frontend development. I did not write the HTML, CSS, or JS syntax for this project. That was handled by agentic AI (Google's Antigravity 2.0 and Claude).
 
-What I did do: defined the product, made every architectural decision, and acted as QA throughout. I caught bugs the AI missed repeatedly: a silent `ReferenceError` killing color theming, a JavaScript closure bug binding every lyrics listener to the last line, an infinite loop in the Apple Music metadata fetcher, and Chromium's strict User Gesture requirement that forced a cross-tab navigation approach for PiP. The AI wrote the code; I decided what it was supposed to do and whether it actually did it.
+What I did do: defined the product vision, designed the user experience, and acted as rigorous QA. I didn't debug the raw code myself — instead, whenever something broke visually or functionally (like lyrics skipping to the wrong line, colors failing to extract, or the progress bar lagging), I caught it during testing, explained the exact failure to the AI, and directed it to fix the logic until the extension worked flawlessly. The AI wrote the code; I decided what it was supposed to do, tested it relentlessly, and rejected it when it was wrong.
 
-This is what AI-assisted development actually looks like in practice. It is a lot of iterative debugging and knowing when the output is wrong.
+This is what AI-assisted development actually looks like in practice. It's less about writing syntax, and more about relentless testing, clear communication, and knowing when the output isn't good enough yet.
 
 ---
 
