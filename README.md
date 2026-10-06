@@ -6,7 +6,7 @@
 </p>
 
 <p align="center">
-  <a href="https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
+  <a href="https://microsoftedge.microsoft.com/addons/detail/glance/jhglafdjkeohejcgfdmcfhenniahjgpk"><img src="https://img.shields.io/badge/Edge-Get_it_from_Microsoft_Edge-0078D7?style=for-the-badge&logo=Microsoft-Edge&logoColor=white" alt="Get it for Microsoft Edge"></a>
   &nbsp;&nbsp;
   <a href="https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/"><img src="https://img.shields.io/badge/Firefox-Get_the_Add--on-FF7139?style=for-the-badge&logo=Firefox-Browser&logoColor=white" alt="Get the Add-on for Firefox"></a>
   &nbsp;&nbsp;
@@ -86,7 +86,7 @@ Works on Chrome, Edge, Firefox, Zen Browser, Brave, or any modern Chromium brows
 
 ### From the Store (Recommended)
 - **Google Chrome**: [Download from the Chrome Web Store](https://chromewebstore.google.com/detail/ijplknahhfcicfpgandihmonfgmkemnf)
-- **Microsoft Edge**: [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/glance/ihblpkbkbaeojengejgbnlcpfnaneegh)
+- **Microsoft Edge**: [Edge Add-ons Store](https://microsoftedge.microsoft.com/addons/detail/glance/jhglafdjkeohejcgfdmcfhenniahjgpk)
 - **Firefox / Zen Browser**: [Firefox Add-ons (AMO)](https://addons.mozilla.org/en-US/firefox/addon/glance-for-web/)
 
 ### Manual Installation (Developers / Brave)
